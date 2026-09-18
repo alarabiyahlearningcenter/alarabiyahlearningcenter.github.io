@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate QR Generator | Al-Arabiyah Learning Center (Admin Tool)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12312c; --ink-2:#0c2420; --gold:#c8922b; --gold-light:#e3b968;
+    --parchment:#f7f1e2; --parchment-2:#efe6cd; --charcoal:#2a2620;
+    --charcoal-soft:#55503f; --line:rgba(18,49,44,0.14); --logo-black:#0c0b09;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--parchment); color:var(--charcoal);
+    font-family:'Work Sans',sans-serif; display:flex; align-items:flex-start; justify-content:center;
+    padding:50px 20px;
+  }
+  .card{
+    max-width:560px; width:100%; background:#fffdf8;
+    border:1px solid var(--line); box-shadow:0 24px 60px rgba(18,49,44,0.14);
+  }
+  .head{background:var(--ink); color:var(--parchment); padding:26px 30px;}
+  .head .tag{font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold-light);}
+  .head h1{font-family:'Amiri',serif; margin:8px 0 0; font-size:24px;}
+  .body{padding:30px;}
+  label{display:block; font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:6px; letter-spacing:0.02em;}
+  input{
+    width:100%; padding:13px 14px; font-size:15px; border:1px solid rgba(18,49,44,0.25);
+    border-radius:4px; font-family:'Work Sans',sans-serif; background:#fffdf8; color:var(--charcoal);
+  }
+  input:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,146,43,0.18);}
+  .field{margin-bottom:18px;}
+  .row{display:flex; gap:12px;}
+  button{
+    padding:13px 22px; border:none; border-radius:4px; cursor:pointer; font-weight:700; font-size:14.5px;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold) 70%); color:var(--logo-black);
+  }
+  button:hover{filter:brightness(1.03);}
+  button.secondary{background:var(--parchment-2); color:var(--ink); border:1px solid var(--line);}
+  .out{margin-top:28px; text-align:center;}
+  #qr{display:inline-block; padding:16px; background:#fff; border:1px solid var(--line);}
+  .url-preview{
+    margin-top:14px; font-size:12.5px; color:var(--charcoal-soft); word-break:break-all;
+    background:var(--parchment-2); padding:10px 12px; border-radius:4px;
+  }
+  .actions{margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .hint{font-size:12.5px; color:var(--charcoal-soft); margin-top:6px;}
+  .id-preview{font-weight:700; color:var(--ink); margin-top:10px; font-size:15px;}
+  @media print{
+    body *{visibility:hidden;}
+    .out, .out *{visibility:visible;}
+    .out{position:absolute; top:0; left:0; right:0;}
+    .actions, .url-preview{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="tag">Admin Tool · Not linked from the public site</div>
+    <h1>Certificate QR Generator</h1>
+  </div>
+  <div class="body">
+    <div class="field">
+      <label for="baseUrl">Verification page URL</label>
+      <input id="baseUrl" value="https://alarabiyahlearningcenter.github.io/verify.html">
+      <div class="hint">Only change this if your website address changes later.</div>
+    </div>
+    <div class="field">
+      <label for="certId">Certificate ID</label>
+      <input id="certId" placeholder="ALC-2026-00001" autocapitalize="characters">
+      <div class="hint">Format: ALC-YYYY-NNNNN (must match the ID stored in Supabase exactly).</div>
+    </div>
+    <div class="row">
+      <button onclick="make()">Generate QR</button>
+    </div>
+
+    <div class="out" id="out" style="display:none;">
+      <div id="qr"></div>
+      <div class="id-preview" id="idPreview"></div>
+      <div class="url-preview" id="urlPreview"></div>
+      <div class="actions">
+        <button class="secondary" onclick="downloadPng()">Download PNG</button>
+        <button class="secondary" onclick="window.print()">Print</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+  let currentId = "";
+  function make(){
+    const base = document.getElementById("baseUrl").value.trim().replace(/\/+$/, "");
+    const id = document.getElementById("certId").value.trim().toUpperCase();
+    if (!id) { alert("Please enter a Certificate ID."); return; }
+    currentId = id;
+    const url = base + "?id=" + encodeURIComponent(id);
+
+    const qrDiv = document.getElementById("qr");
+    qrDiv.innerHTML = "";
+    new QRCode(qrDiv, { text: url, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+
+    document.getElementById("idPreview").textContent = id;
+    document.getElementById("urlPreview").textContent = url;
+    document.getElementById("out").style.display = "block";
+  }
+
+  function downloadPng(){
+    const qrDiv = document.getElementById("qr");
+    const canvas = qrDiv.querySelector("canvas");
+    const img = qrDiv.querySelector("img");
+    const link = document.createElement("a");
+    link.download = (currentId || "certificate-qr") + ".png";
+    if (canvas) {
+      link.href = canvas.toDataURL("image/png");
+    } else if (img) {
+      link.href = img.src;
+    } else {
+      alert("Generate a QR code first.");
+      return;
+    }
+    link.click();
+  }
+
+  document.getElementById("certId").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") make();
+  });
+</script>
+</body>
+</html>
