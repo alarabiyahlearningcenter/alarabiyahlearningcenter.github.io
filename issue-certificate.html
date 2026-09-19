@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issue Certificate | Al-Arabiyah Learning Center (Admin)</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12312c; --ink-2:#0c2420; --gold:#c8922b; --gold-light:#e3b968;
+    --parchment:#f7f1e2; --parchment-2:#efe6cd; --charcoal:#2a2620;
+    --charcoal-soft:#55503f; --line:rgba(18,49,44,0.14); --logo-black:#0c0b09;
+    --rubric:#7a2e2e; --good:#1f6b3a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--parchment); color:var(--charcoal);
+    font-family:'Work Sans',sans-serif;
+    background-image:radial-gradient(rgba(18,49,44,0.05) 1px, transparent 1px);
+    background-size:22px 22px;
+  }
+  h1,h2{font-family:'Amiri',serif; margin:0; color:var(--ink);}
+  .wrap{max-width:760px; margin:0 auto; padding:40px 20px 70px;}
+  .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;}
+  .top .tag{font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold);}
+  .top h1{font-size:26px; margin-top:4px;}
+  .card{
+    background:#fffdf8; border:1px solid var(--line);
+    box-shadow:0 20px 50px rgba(18,49,44,0.12);
+    padding:30px; margin-bottom:24px;
+  }
+  label{display:block; font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:6px;}
+  input, select{
+    width:100%; padding:12px 14px; font-size:15px; border:1px solid rgba(18,49,44,0.25);
+    border-radius:4px; font-family:'Work Sans',sans-serif; background:#fffdf8; color:var(--charcoal);
+  }
+  input:focus, select:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,146,43,0.18);}
+  .field{margin-bottom:16px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  button{
+    padding:13px 24px; border:none; border-radius:4px; cursor:pointer; font-weight:700; font-size:14.5px;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold) 70%); color:var(--logo-black);
+  }
+  button:hover{filter:brightness(1.03);}
+  button.secondary{background:var(--parchment-2); color:var(--ink); border:1px solid var(--line); font-weight:600;}
+  button.danger{background:#f6e6e3; color:var(--rubric); border:1px solid #e3c3bd; font-weight:600;}
+  button:disabled{opacity:0.5; cursor:not-allowed;}
+  .msg{margin-top:14px; font-size:13.5px; padding:12px 14px; border-radius:4px; display:none;}
+  .msg.show{display:block;}
+  .msg.error{background:#faf0ee; color:var(--rubric); border:1px solid #e3c3bd;}
+  .msg.ok{background:#eef6f0; color:var(--good); border:1px solid #bcdbc4;}
+
+  .out{margin-top:22px; text-align:center; display:none;}
+  .out.show{display:block;}
+  #qr{display:inline-block; padding:14px; background:#fff; border:1px solid var(--line);}
+  .id-big{font-family:'Amiri',serif; font-size:22px; color:var(--ink); margin-top:12px;}
+  .actions{margin-top:14px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+
+  table{width:100%; border-collapse:collapse; margin-top:8px; font-size:13.5px;}
+  th, td{padding:10px 8px; text-align:left; border-bottom:1px solid var(--line);}
+  th{font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--charcoal-soft);}
+  .badge{padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700;}
+  .badge.valid{background:#eef6f0; color:var(--good);}
+  .badge.revoked{background:#faf0ee; color:var(--rubric);}
+  .refresh{font-size:12.5px; color:var(--gold); cursor:pointer; background:none; border:none; padding:0; font-weight:600;}
+
+  #loginCard input{margin-bottom:12px;}
+  .hint{font-size:12px; color:var(--charcoal-soft); margin-top:6px;}
+  .who{font-size:13px; color:var(--charcoal-soft);}
+  .who button{padding:6px 14px; font-size:12.5px; margin-left:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <div class="tag">Admin Tool · Not linked from the public site</div>
+      <h1>Issue a Certificate</h1>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="card" id="loginCard">
+    <h2 style="font-size:19px; margin-bottom:16px;">Sign In</h2>
+    <div class="field">
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" autocomplete="current-password">
+    </div>
+    <button id="loginBtn">Sign In</button>
+    <div class="msg" id="loginMsg"></div>
+    <div class="hint">This is the login you created in Supabase → Authentication → Users.</div>
+  </div>
+
+  <!-- ISSUE FORM (hidden until logged in) -->
+  <div id="appArea" style="display:none;">
+
+    <div class="card">
+      <div class="who">Signed in as <b id="whoEmail"></b><button class="secondary" id="logoutBtn">Sign Out</button></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:19px; margin-bottom:18px;">New Certificate</h2>
+
+      <div class="field">
+        <label for="studentName">Student Name</label>
+        <input id="studentName" placeholder="Full name">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="certType">Certificate Type</label>
+          <select id="certType">
+            <option>Certificate of Completion</option>
+            <option>Certificate of Achievement</option>
+            <option>Certificate of Participation</option>
+            <option value="__other__">Other (type below)</option>
+          </select>
+          <input id="certTypeOther" placeholder="Custom certificate type" style="margin-top:8px; display:none;">
+        </div>
+        <div class="field">
+          <label for="courseName">Course</label>
+          <select id="courseName">
+            <option>Qur'an Reading with Tajweed</option>
+            <option>Basic Islamic Knowledge</option>
+            <option>Personalized Qur'an Course</option>
+            <option value="__other__">Other (type below)</option>
+          </select>
+          <input id="courseNameOther" placeholder="Custom course name" style="margin-top:8px; display:none;">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="issueDate">Issue Date</label>
+          <input id="issueDate" type="date">
+        </div>
+        <div class="field">
+          <label for="certId">Certificate ID <button class="refresh" id="regenId" type="button">suggest next</button></label>
+          <input id="certId" placeholder="ALC-2026-00002">
+        </div>
+      </div>
+
+      <button id="issueBtn">Issue Certificate &amp; Generate QR</button>
+      <div class="msg" id="issueMsg"></div>
+
+      <div class="out" id="out">
+        <div id="qr"></div>
+        <div class="id-big" id="idPreview"></div>
+        <div class="actions">
+          <button class="secondary" id="downloadBtn">Download QR (PNG)</button>
+          <button class="secondary" id="printBtn">Print</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:19px; margin-bottom:6px;">Recent Certificates</h2>
+      <div class="hint" style="margin-bottom:10px;">Click Revoke / Restore to change status instantly.</div>
+      <table>
+        <thead><tr><th>ID</th><th>Student</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="listBody"><tr><td colspan="4" class="hint">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script>
+(() => {
+  const VERIFY_BASE = "https://alarabiyahlearningcenter.github.io/verify.html";
+  const client = supabase.createClient(window.ALC_SUPABASE_URL, window.ALC_SUPABASE_KEY);
+
+  const $ = (id) => document.getElementById(id);
+  const showMsg = (el, text, kind) => {
+    el.textContent = text;
+    el.className = "msg show " + kind;
+  };
+
+  // ---------- auth ----------
+  async function refreshSession() {
+    const { data: { session } } = await client.auth.getSession();
+    if (session) {
+      $("loginCard").style.display = "none";
+      $("appArea").style.display = "block";
+      $("whoEmail").textContent = session.user.email;
+      loadList();
+      suggestNextId();
+    } else {
+      $("loginCard").style.display = "block";
+      $("appArea").style.display = "none";
+    }
+  }
+
+  $("loginBtn").onclick = async () => {
+    $("loginBtn").disabled = true;
+    const { error } = await client.auth.signInWithPassword({
+      email: $("loginEmail").value.trim(),
+      password: $("loginPassword").value,
+    });
+    $("loginBtn").disabled = false;
+    if (error) {
+      showMsg($("loginMsg"), error.message, "error");
+    } else {
+      $("loginMsg").className = "msg";
+      refreshSession();
+    }
+  };
+
+  $("logoutBtn").onclick = async () => {
+    await client.auth.signOut();
+    refreshSession();
+  };
+
+  // ---------- other-field toggles ----------
+  $("certType").onchange = () => {
+    $("certTypeOther").style.display = $("certType").value === "__other__" ? "block" : "none";
+  };
+  $("courseName").onchange = () => {
+    $("courseNameOther").style.display = $("courseName").value === "__other__" ? "block" : "none";
+  };
+
+  $("issueDate").value = new Date().toISOString().slice(0, 10);
+
+  // ---------- suggest next certificate ID ----------
+  async function suggestNextId() {
+    const year = new Date().getFullYear();
+    const { data, error } = await client
+      .from("certificates")
+      .select("certificate_id")
+      .ilike("certificate_id", `ALC-${year}-%`)
+      .order("certificate_id", { ascending: false })
+      .limit(1);
+    let next = 1;
+    if (!error && data && data.length) {
+      const m = data[0].certificate_id.match(/(\d+)$/);
+      if (m) next = parseInt(m[1], 10) + 1;
+    }
+    $("certId").value = `ALC-${year}-${String(next).padStart(5, "0")}`;
+  }
+  $("regenId").onclick = suggestNextId;
+
+  // ---------- issue certificate ----------
+  $("issueBtn").onclick = async () => {
+    const studentName = $("studentName").value.trim();
+    const certType = $("certType").value === "__other__" ? $("certTypeOther").value.trim() : $("certType").value;
+    const courseName = $("courseName").value === "__other__" ? $("courseNameOther").value.trim() : $("courseName").value;
+    const issueDate = $("issueDate").value;
+    const certId = $("certId").value.trim().toUpperCase();
+
+    if (!studentName || !certType || !courseName || !issueDate || !certId) {
+      showMsg($("issueMsg"), "Please fill in every field.", "error");
+      return;
+    }
+
+    $("issueBtn").disabled = true;
+    const { error } = await client.from("certificates").insert({
+      certificate_id: certId,
+      student_name: studentName,
+      certificate_type: certType,
+      course_name: courseName,
+      issue_date: issueDate,
+      status: "valid",
+    });
+    $("issueBtn").disabled = false;
+
+    if (error) {
+      showMsg($("issueMsg"), error.message.includes("duplicate")
+        ? "That Certificate ID already exists — try 'suggest next' again."
+        : error.message, "error");
+      return;
+    }
+
+    showMsg($("issueMsg"), "Certificate issued successfully!", "ok");
+
+    const url = VERIFY_BASE + "?id=" + encodeURIComponent(certId);
+    $("qr").innerHTML = "";
+    new QRCode($("qr"), { text: url, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+    $("idPreview").textContent = certId;
+    $("out").classList.add("show");
+
+    // reset form for the next one, but keep date
+    $("studentName").value = "";
+    suggestNextId();
+    loadList();
+  };
+
+  $("downloadBtn").onclick = () => {
+    const canvas = $("qr").querySelector("canvas");
+    const img = $("qr").querySelector("img");
+    const link = document.createElement("a");
+    link.download = ($("idPreview").textContent || "certificate-qr") + ".png";
+    if (canvas) link.href = canvas.toDataURL("image/png");
+    else if (img) link.href = img.src;
+    else return;
+    link.click();
+  };
+  $("printBtn").onclick = () => window.print();
+
+  // ---------- recent certificates list ----------
+  async function loadList() {
+    const { data, error } = await client
+      .from("certificates")
+      .select("certificate_id,student_name,status")
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const body = $("listBody");
+    if (error) {
+      body.innerHTML = `<tr><td colspan="4" class="hint">Could not load list.</td></tr>`;
+      return;
+    }
+    if (!data.length) {
+      body.innerHTML = `<tr><td colspan="4" class="hint">No certificates yet.</td></tr>`;
+      return;
+    }
+    body.innerHTML = data.map(row => `
+      <tr>
+        <td>${row.certificate_id}</td>
+        <td>${row.student_name}</td>
+        <td><span class="badge ${row.status}">${row.status}</span></td>
+        <td><button class="${row.status === 'valid' ? 'danger' : 'secondary'}" data-id="${row.certificate_id}" data-next="${row.status === 'valid' ? 'revoked' : 'valid'}">
+          ${row.status === 'valid' ? 'Revoke' : 'Restore'}
+        </button></td>
+      </tr>
+    `).join("");
+
+    body.querySelectorAll("button[data-id]").forEach(btn => {
+      btn.onclick = async () => {
+        btn.disabled = true;
+        await client.from("certificates").update({ status: btn.dataset.next }).eq("certificate_id", btn.dataset.id);
+        loadList();
+      };
+    });
+  }
+
+  refreshSession();
+})();
+</script>
+</body>
+</html>
