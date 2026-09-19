@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issue Invoice | Al-Arabiyah Learning Center (Admin)</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=EB+Garamond:wght@500;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12312c; --ink-2:#0c2420; --gold:#c8922b; --gold-light:#e3b968;
+    --parchment:#f7f1e2; --parchment-2:#efe6cd; --charcoal:#2a2620;
+    --charcoal-soft:#55503f; --line:rgba(18,49,44,0.14); --logo-black:#0c0b09;
+    --rubric:#7a2e2e; --good:#1f6b3a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--parchment); color:var(--charcoal);
+    font-family:'Work Sans',sans-serif;
+    background-image:radial-gradient(rgba(18,49,44,0.05) 1px, transparent 1px);
+    background-size:22px 22px;
+  }
+  h1,h2{font-family:'Amiri',serif; margin:0; color:var(--ink);}
+  .wrap{max-width:900px; margin:0 auto; padding:40px 20px 70px;}
+  .tag{font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold);}
+  .wrap h1{font-size:26px; margin-top:4px; margin-bottom:24px;}
+  .card{
+    background:#fffdf8; border:1px solid var(--line);
+    box-shadow:0 20px 50px rgba(18,49,44,0.12);
+    padding:30px; margin-bottom:24px;
+  }
+  label{display:block; font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:6px;}
+  input, select{
+    width:100%; padding:11px 13px; font-size:14.5px; border:1px solid rgba(18,49,44,0.25);
+    border-radius:4px; font-family:'Work Sans',sans-serif; background:#fffdf8; color:var(--charcoal);
+  }
+  input:focus, select:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,146,43,0.18);}
+  .field{margin-bottom:14px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .row4{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;}
+  h3.section{font-size:16px; margin:0 0 14px; color:var(--ink); font-family:'Amiri',serif;}
+  .item-row{border:1px dashed var(--line); padding:14px; margin-bottom:12px; background:var(--parchment-2);}
+  .item-row .row5{display:grid; grid-template-columns:1.4fr 1.4fr 1fr 0.8fr 0.8fr; gap:10px;}
+  button{
+    padding:13px 24px; border:none; border-radius:4px; cursor:pointer; font-weight:700; font-size:14.5px;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold) 70%); color:var(--logo-black);
+  }
+  button:hover{filter:brightness(1.03);}
+  button.secondary{background:var(--parchment-2); color:var(--ink); border:1px solid var(--line); font-weight:600;}
+  button.danger{background:#f6e6e3; color:var(--rubric); border:1px solid #e3c3bd; font-weight:600;}
+  button:disabled{opacity:0.5; cursor:not-allowed;}
+  .msg{margin-top:14px; font-size:13.5px; padding:12px 14px; border-radius:4px; display:none;}
+  .msg.show{display:block;}
+  .msg.error{background:#faf0ee; color:var(--rubric); border:1px solid #e3c3bd;}
+  .msg.ok{background:#eef6f0; color:var(--good); border:1px solid #bcdbc4;}
+
+  .out{margin-top:22px; display:none;}
+  .out.show{display:block;}
+  #previewWrap{overflow-x:auto; border:1px solid var(--line); background:#fff;}
+  #invoiceCanvas{width:100%; display:block;}
+  .actions{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;}
+
+  table{width:100%; border-collapse:collapse; margin-top:8px; font-size:13.5px;}
+  th, td{padding:10px 8px; text-align:left; border-bottom:1px solid var(--line);}
+  th{font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--charcoal-soft);}
+  .badge{padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700;}
+  .badge.unpaid{background:#faf0ee; color:var(--rubric);}
+  .badge.paid{background:#eef6f0; color:var(--good);}
+  .refresh{font-size:12.5px; color:var(--gold); cursor:pointer; background:none; border:none; padding:0; font-weight:600;}
+
+  .hint{font-size:12px; color:var(--charcoal-soft); margin-top:6px;}
+  .who{font-size:13px; color:var(--charcoal-soft);}
+  .who button{padding:6px 14px; font-size:12.5px; margin-left:10px;}
+  .totals-preview{margin-top:8px; text-align:right; font-size:14px; color:var(--ink);}
+  .totals-preview b{font-size:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="tag">Admin Tool · Not linked from the public site</div>
+  <h1>Issue an Invoice</h1>
+
+  <!-- LOGIN -->
+  <div class="card" id="loginCard">
+    <h3 class="section">Sign In</h3>
+    <div class="field">
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" autocomplete="current-password">
+    </div>
+    <button id="loginBtn">Sign In</button>
+    <div class="msg" id="loginMsg"></div>
+    <div class="hint">Same login as your certificate admin tool.</div>
+  </div>
+
+  <div id="appArea" style="display:none;">
+
+    <div class="card">
+      <div class="who">Signed in as <b id="whoEmail"></b><button class="secondary" id="logoutBtn">Sign Out</button></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Bill To</h3>
+      <div class="row2">
+        <div class="field"><label>Student Name</label><input id="studentName"></div>
+        <div class="field"><label>Email</label><input id="studentEmail" type="email"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Phone</label><input id="studentPhone"></div>
+        <div class="field"><label>Address</label><input id="studentAddress"></div>
+      </div>
+
+      <div class="row4">
+        <div class="field">
+          <label>Invoice Type</label>
+          <select id="invoiceType">
+            <option value="monthly">Monthly (after class)</option>
+            <option value="advance">Advance / Prepayment</option>
+          </select>
+        </div>
+        <div class="field"><label>Issue Date</label><input id="issueDate" type="date"></div>
+        <div class="field"><label>Due Date</label><input id="dueDate" type="date"></div>
+        <div class="field">
+          <label>Invoice No <button class="refresh" id="regenId" type="button">suggest next</button></label>
+          <input id="invoiceId" placeholder="ALC-2026-00001">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Line Items <span class="hint">(up to 3, matching the invoice template)</span></h3>
+
+      <div class="item-row">
+        <div class="row5">
+          <div class="field"><label>Description</label><input class="itDesc" placeholder="Monthly Tuition"></div>
+          <div class="field"><label>Course / Service</label><input class="itCourse" placeholder="Qur'an Reading with Tajweed"></div>
+          <div class="field"><label>Duration / Qty</label><input class="itDur" placeholder="1 Month"></div>
+          <div class="field"><label>Unit Price ($)</label><input class="itUnit" type="number" step="0.01"></div>
+          <div class="field"><label>Total ($)</label><input class="itTotal" type="number" step="0.01"></div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="row5">
+          <div class="field"><label>Description</label><input class="itDesc"></div>
+          <div class="field"><label>Course / Service</label><input class="itCourse"></div>
+          <div class="field"><label>Duration / Qty</label><input class="itDur"></div>
+          <div class="field"><label>Unit Price ($)</label><input class="itUnit" type="number" step="0.01"></div>
+          <div class="field"><label>Total ($)</label><input class="itTotal" type="number" step="0.01"></div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="row5">
+          <div class="field"><label>Description</label><input class="itDesc"></div>
+          <div class="field"><label>Course / Service</label><input class="itCourse"></div>
+          <div class="field"><label>Duration / Qty</label><input class="itDur"></div>
+          <div class="field"><label>Unit Price ($)</label><input class="itUnit" type="number" step="0.01"></div>
+          <div class="field"><label>Total ($)</label><input class="itTotal" type="number" step="0.01"></div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field"><label>Discount ($)</label><input id="discount" type="number" step="0.01" value="0"></div>
+        <div></div>
+      </div>
+      <div class="totals-preview">Subtotal: $<span id="subtotalPreview">0.00</span> &nbsp;·&nbsp; Total: $<b id="totalPreview">0.00</b></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Payment Details (printed on invoice)</h3>
+      <div class="row2">
+        <div class="field"><label>Bank Name / Method</label><input id="bankName" value="bKash / Nagad / Bank Transfer"></div>
+        <div class="field"><label>Account Name</label><input id="accountName" value="Al-Arabiyah Learning Center"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Account No</label><input id="accountNo" value="01737326555"></div>
+        <div class="field"><label>Payment Ref</label><input id="paymentRef" disabled placeholder="(same as Invoice No)"></div>
+      </div>
+
+      <button id="generateBtn">Generate Invoice</button>
+      <div class="msg" id="genMsg"></div>
+
+      <div class="out" id="out">
+        <div id="previewWrap"><canvas id="invoiceCanvas"></canvas></div>
+        <div class="actions">
+          <button class="secondary" id="downloadPngBtn">Download PNG</button>
+          <button class="secondary" id="downloadPdfBtn">Download PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Recent Invoices</h3>
+      <div class="hint" style="margin-bottom:10px;">Click Mark Paid / Mark Unpaid to update status.</div>
+      <table>
+        <thead><tr><th>Invoice No</th><th>Student</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="listBody"><tr><td colspan="5" class="hint">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="config.js"></script>
+<script>
+(() => {
+  const client = supabase.createClient(window.ALC_SUPABASE_URL, window.ALC_SUPABASE_KEY);
+  const $ = (id) => document.getElementById(id);
+  const showMsg = (el, text, kind) => { el.textContent = text; el.className = "msg show " + kind; };
+
+  const TEMPLATE_URL = "invoice-template-usd-blank.webp";
+  const WA_NUMBER = "8801737326555";
+  const GREEN = "#12312c";
+  const FONT = "'EB Garamond', Georgia, serif";
+
+  let templateImg = null;
+
+  // ---------- auth ----------
+  async function refreshSession() {
+    const { data: { session } } = await client.auth.getSession();
+    if (session) {
+      $("loginCard").style.display = "none";
+      $("appArea").style.display = "block";
+      $("whoEmail").textContent = session.user.email;
+      loadList();
+      suggestNextId();
+    } else {
+      $("loginCard").style.display = "block";
+      $("appArea").style.display = "none";
+    }
+  }
+  $("loginBtn").onclick = async () => {
+    $("loginBtn").disabled = true;
+    const { error } = await client.auth.signInWithPassword({
+      email: $("loginEmail").value.trim(), password: $("loginPassword").value,
+    });
+    $("loginBtn").disabled = false;
+    if (error) showMsg($("loginMsg"), error.message, "error");
+    else { $("loginMsg").className = "msg"; refreshSession(); }
+  };
+  $("logoutBtn").onclick = async () => { await client.auth.signOut(); refreshSession(); };
+
+  $("issueDate").value = new Date().toISOString().slice(0, 10);
+  const due = new Date(); due.setDate(due.getDate() + 14);
+  $("dueDate").value = due.toISOString().slice(0, 10);
+
+  // keep Payment Ref mirrored to Invoice No
+  function syncPaymentRef() { $("paymentRef").value = $("invoiceId").value; }
+  $("invoiceId").addEventListener("input", syncPaymentRef);
+
+  async function suggestNextId() {
+    const year = new Date().getFullYear();
+    const { data, error } = await client
+      .from("invoices").select("invoice_id")
+      .ilike("invoice_id", `ALC-${year}-%`)
+      .order("invoice_id", { ascending: false }).limit(1);
+    let next = 1;
+    if (!error && data && data.length) {
+      const m = data[0].invoice_id.match(/(\d+)$/);
+      if (m) next = parseInt(m[1], 10) + 1;
+    }
+    $("invoiceId").value = `ALC-${year}-${String(next).padStart(5, "0")}`;
+    syncPaymentRef();
+  }
+  $("regenId").onclick = suggestNextId;
+
+  // ---------- line items ----------
+  const rows = [...document.querySelectorAll(".item-row")];
+  function getItems() {
+    return rows.map(r => ({
+      description: r.querySelector(".itDesc").value.trim(),
+      course: r.querySelector(".itCourse").value.trim(),
+      duration: r.querySelector(".itDur").value.trim(),
+      unit_price: parseFloat(r.querySelector(".itUnit").value) || 0,
+      total: parseFloat(r.querySelector(".itTotal").value) || 0,
+    })).filter(it => it.description || it.course || it.total);
+  }
+  function updateTotalsPreview() {
+    const items = getItems();
+    const subtotal = items.reduce((s, it) => s + it.total, 0);
+    const discount = parseFloat($("discount").value) || 0;
+    const total = Math.max(subtotal - discount, 0);
+    $("subtotalPreview").textContent = subtotal.toFixed(2);
+    $("totalPreview").textContent = total.toFixed(2);
+    return { items, subtotal, discount, total };
+  }
+  rows.forEach(r => {
+    const unit = r.querySelector(".itUnit"), total = r.querySelector(".itTotal");
+    unit.addEventListener("input", () => { if (!total.dataset.touched) total.value = unit.value; updateTotalsPreview(); });
+    total.addEventListener("input", () => { total.dataset.touched = "1"; updateTotalsPreview(); });
+    r.querySelectorAll("input").forEach(inp => inp.addEventListener("input", updateTotalsPreview));
+  });
+  $("discount").addEventListener("input", updateTotalsPreview);
+
+  // ---------- load template + font ----------
+  function loadTemplate() {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = TEMPLATE_URL;
+    });
+  }
+
+  // ---------- draw invoice on canvas ----------
+  async function drawInvoice(data) {
+    if (!templateImg) templateImg = await loadTemplate();
+    await document.fonts.load(`700 46px ${FONT}`);
+    await document.fonts.load(`600 38px ${FONT}`);
+
+    const canvas = $("invoiceCanvas");
+    canvas.width = templateImg.naturalWidth;
+    canvas.height = templateImg.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(templateImg, 0, 0);
+    ctx.fillStyle = GREEN;
+    ctx.textBaseline = "top";
+
+    const T = (text, x, y, size, weight = 700) => {
+      ctx.font = `${weight} ${size}px ${FONT}`;
+      ctx.fillText(text || "", x, y);
+    };
+
+    // Header fields
+    T(data.invoice_id, 615, 955, 46);
+    T(fmtDate(data.issue_date), 615, 1031, 46);
+    T(fmtDate(data.due_date), 615, 1107, 46);
+
+    // Bill To
+    T(data.student_name, 2875, 995, 42);
+    T(data.student_email, 2875, 1052, 34);
+    T(data.student_phone, 2875, 1109, 42);
+    T(data.student_address, 2875, 1165, 40);
+
+    // Table
+    const rowsY = [1400, 1501, 1600];
+    const colX = { desc: 469, course: 1222, dur: 2028, unit: 2618, total: 3132 };
+    data.items.slice(0, 3).forEach((it, i) => {
+      const y = rowsY[i] - 24;
+      T(it.description, colX.desc, y, 36, 600);
+      T(it.course, colX.course, y, 36, 600);
+      T(it.duration, colX.dur, y, 36, 600);
+      T(it.unit_price ? "$" + it.unit_price.toFixed(2) : "", colX.unit, y, 36, 600);
+      T(it.total ? "$" + it.total.toFixed(2) : "", colX.total, y, 36, 600);
+    });
+
+    // Totals
+    T("$" + data.subtotal.toFixed(2), 3130, 1678, 42);
+    T("$" + data.discount.toFixed(2), 3130, 1778, 42);
+    T(data.total.toFixed(2), 3195, 1875, 48);
+
+    // Payment Details
+    T(data.bank_name, 1750, 1898, 34);
+    T(data.account_name, 1750, 1979, 34);
+    T(data.account_no, 1750, 2060, 34);
+    T(data.invoice_id, 1750, 2141, 34);
+
+    // QR code -> WhatsApp payment confirmation link
+    const waText = `Payment for Invoice ${data.invoice_id}, Amount $${data.total.toFixed(2)}`;
+    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waText)}`;
+    const qrHolder = document.createElement("div");
+    new QRCode(qrHolder, { text: waUrl, width: 600, height: 600, correctLevel: QRCode.CorrectLevel.M });
+    await new Promise(r => setTimeout(r, 60)); // let qrcodejs render
+    const qrCanvas = qrHolder.querySelector("canvas");
+    const qrImg = qrHolder.querySelector("img");
+    if (qrCanvas) ctx.drawImage(qrCanvas, 2295, 2010, 290, 290);
+    else if (qrImg) ctx.drawImage(qrImg, 2295, 2010, 290, 290);
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+  }
+
+  // ---------- generate ----------
+  $("generateBtn").onclick = async () => {
+    const { items, subtotal, discount, total } = updateTotalsPreview();
+    const invoiceId = $("invoiceId").value.trim().toUpperCase();
+    const studentName = $("studentName").value.trim();
+
+    if (!invoiceId || !studentName || items.length === 0) {
+      showMsg($("genMsg"), "Please fill in Student Name, at least one line item, and Invoice No.", "error");
+      return;
+    }
+
+    const record = {
+      invoice_id: invoiceId,
+      student_name: studentName,
+      student_email: $("studentEmail").value.trim(),
+      student_phone: $("studentPhone").value.trim(),
+      student_address: $("studentAddress").value.trim(),
+      invoice_type: $("invoiceType").value,
+      issue_date: $("issueDate").value,
+      due_date: $("dueDate").value,
+      items, subtotal, discount, total,
+      bank_name: $("bankName").value.trim(),
+      account_name: $("accountName").value.trim(),
+      account_no: $("accountNo").value.trim(),
+    };
+
+    $("generateBtn").disabled = true;
+    try {
+      await drawInvoice(record);
+    } catch (e) {
+      $("generateBtn").disabled = false;
+      showMsg($("genMsg"), "Could not render the invoice image: " + e.message, "error");
+      return;
+    }
+    $("out").classList.add("show");
+
+    const { error } = await client.from("invoices").insert({
+      invoice_id: record.invoice_id,
+      student_name: record.student_name,
+      student_email: record.student_email,
+      student_phone: record.student_phone,
+      student_address: record.student_address,
+      invoice_type: record.invoice_type,
+      issue_date: record.issue_date,
+      due_date: record.due_date,
+      items: record.items,
+      subtotal: record.subtotal,
+      discount: record.discount,
+      total_amount: record.total,
+      currency: "USD",
+      status: "unpaid",
+    });
+    $("generateBtn").disabled = false;
+
+    if (error) {
+      showMsg($("genMsg"), error.message.includes("duplicate")
+        ? "That Invoice No already exists — click 'suggest next'."
+        : "Invoice image created, but saving the record failed: " + error.message, "error");
+    } else {
+      showMsg($("genMsg"), "Invoice generated and saved!", "ok");
+      loadList();
+    }
+  };
+
+  $("downloadPngBtn").onclick = () => {
+    const canvas = $("invoiceCanvas");
+    const link = document.createElement("a");
+    link.download = ($("invoiceId").value || "invoice") + ".png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
+  $("downloadPdfBtn").onclick = () => {
+    const canvas = $("invoiceCanvas");
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
+    const w = canvas.width * ratio, h = canvas.height * ratio;
+    const x = (pageW - w) / 2, y = (pageH - h) / 2;
+    pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", x, y, w, h);
+    pdf.save(($("invoiceId").value || "invoice") + ".pdf");
+  };
+
+  // ---------- recent invoices ----------
+  async function loadList() {
+    const { data, error } = await client
+      .from("invoices").select("invoice_id,student_name,total_amount,status")
+      .order("created_at", { ascending: false }).limit(20);
+    const body = $("listBody");
+    if (error) { body.innerHTML = `<tr><td colspan="5" class="hint">Could not load list.</td></tr>`; return; }
+    if (!data.length) { body.innerHTML = `<tr><td colspan="5" class="hint">No invoices yet.</td></tr>`; return; }
+    body.innerHTML = data.map(row => `
+      <tr>
+        <td>${row.invoice_id}</td>
+        <td>${row.student_name}</td>
+        <td>$${Number(row.total_amount).toFixed(2)}</td>
+        <td><span class="badge ${row.status}">${row.status}</span></td>
+        <td><button class="${row.status === 'unpaid' ? 'secondary' : 'danger'}" data-id="${row.invoice_id}" data-next="${row.status === 'unpaid' ? 'paid' : 'unpaid'}">
+          ${row.status === 'unpaid' ? 'Mark Paid' : 'Mark Unpaid'}
+        </button></td>
+      </tr>`).join("");
+    body.querySelectorAll("button[data-id]").forEach(btn => {
+      btn.onclick = async () => {
+        btn.disabled = true;
+        await client.from("invoices").update({ status: btn.dataset.next }).eq("invoice_id", btn.dataset.id);
+        loadList();
+      };
+    });
+  }
+
+  refreshSession();
+})();
+</script>
+</body>
+</html>
