@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | Al-Arabiyah Learning Center</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12312c; --ink-2:#0c2420; --gold:#c8922b; --gold-light:#e3b968;
+    --parchment:#f7f1e2; --parchment-2:#efe6cd; --charcoal:#2a2620;
+    --charcoal-soft:#55503f; --line:rgba(18,49,44,0.14); --logo-black:#0c0b09;
+    --rubric:#7a2e2e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--parchment); color:var(--charcoal);
+    font-family:'Work Sans',sans-serif;
+    background-image:radial-gradient(rgba(18,49,44,0.05) 1px, transparent 1px);
+    background-size:22px 22px;
+  }
+  h1,h2{font-family:'Amiri',serif; margin:0; color:var(--ink);}
+  a{text-decoration:none; color:inherit;}
+
+  .head{
+    background:radial-gradient(120% 160% at 15% 0%, #1a4038 0%, var(--ink) 45%, var(--ink-2) 100%);
+    color:var(--parchment); padding:44px 20px 40px; text-align:center;
+  }
+  .mark{
+    width:60px; height:60px; margin:0 auto 14px; border-radius:50%;
+    background:var(--logo-black); border:1px solid rgba(227,185,104,0.5);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .mark svg{width:30px; height:30px; color:var(--gold-light);}
+  .tag{font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-light);}
+  .head h1{font-size:28px; margin-top:8px;}
+  .head p{margin-top:8px; font-size:14px; color:var(--parchment-2);}
+
+  .wrap{max-width:880px; margin:0 auto; padding:36px 20px 60px;}
+  .grid{display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:640px){ .grid{grid-template-columns:1fr 1fr;} }
+
+  .tool-card{
+    background:#fffdf8; border:1px solid var(--line);
+    box-shadow:0 16px 40px rgba(18,49,44,0.1);
+    padding:26px; display:flex; flex-direction:column; gap:10px;
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .tool-card:hover{transform:translateY(-4px); box-shadow:0 22px 50px rgba(18,49,44,0.16);}
+  .tool-card .icon{
+    width:44px; height:44px; border-radius:8px; background:var(--parchment-2);
+    display:flex; align-items:center; justify-content:center; color:var(--gold);
+  }
+  .tool-card .icon svg{width:24px; height:24px;}
+  .tool-card h2{font-size:19px;}
+  .tool-card p{margin:0; font-size:13.5px; color:var(--charcoal-soft); line-height:1.6;}
+  .tool-card .go{
+    margin-top:auto; font-size:13px; font-weight:700; color:var(--gold);
+    display:flex; align-items:center; gap:6px;
+  }
+  .tool-card.secondary{opacity:0.88;}
+  .tool-card .badge{
+    align-self:flex-start; font-size:10.5px; font-weight:700; letter-spacing:0.05em;
+    text-transform:uppercase; padding:3px 9px; border-radius:20px;
+    background:var(--parchment-2); color:var(--charcoal-soft);
+  }
+  .tool-card .badge.public{background:#eef6f0; color:#1f6b3a;}
+
+  .section-label{
+    font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold);
+    margin:34px 0 14px; font-weight:600;
+  }
+  .foot-note{
+    margin-top:40px; padding-top:20px; border-top:1px solid var(--line);
+    font-size:12.5px; color:var(--charcoal-soft); text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div class="mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 5c-2-1.3-4.6-1.6-7-1v13c2.4-.6 5 0 7 1.3 2-1.3 4.6-1.9 7-1.3V4c-2.4-.6-5-.3-7 1Z"/><path d="M12 5v14"/></svg>
+  </div>
+  <div class="tag">Admin Dashboard</div>
+  <h1>Al-Arabiyah Learning Center</h1>
+  <p>All your management tools, in one place. Not linked from the public site.</p>
+</div>
+
+<div class="wrap">
+
+  <div class="section-label">Issue Something New</div>
+  <div class="grid">
+
+    <a class="tool-card" href="issue-certificate.html">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7l9 5 9-5-9-5Z"/><path d="M3 7v10l9 5 9-5V7"/><path d="M12 12v10"/></svg>
+      </span>
+      <h2>Issue Certificate</h2>
+      <p>Fill in a student's details, save the record, and get a downloadable QR code — all in one step.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+    <a class="tool-card" href="issue-invoice.html">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h9l3 3v15H6V3Z"/><path d="M15 3v3h3"/><path d="M9 10h6M9 13h6M9 16h4"/></svg>
+      </span>
+      <h2>Issue Invoice</h2>
+      <p>Generate a branded invoice (monthly or advance), download as PNG/PDF, and track paid/unpaid status.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
+
+  <div class="section-label">Look Up / Manage</div>
+  <div class="grid">
+
+    <a class="tool-card" href="verify.html" target="_blank" rel="noopener">
+      <span class="badge public">Public Page</span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7l9 5 9-5-9-5Z"/><path d="M3 7v10l9 5 9-5V7"/><path d="m8.5 12 2.3 2.3L16 9.5"/></svg>
+      </span>
+      <h2>Verify Certificate</h2>
+      <p>The page parents and students use to check a certificate is genuine. Useful to test after issuing a new one.</p>
+      <span class="go">Open page →</span>
+    </a>
+
+    <a class="tool-card secondary" href="qr-generator.html">
+      <span class="badge">Backup Tool</span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-4v4M21 17v4h-4"/></svg>
+      </span>
+      <h2>QR Generator</h2>
+      <p>Stand-alone QR maker for a certificate ID, in case you ever need one without using the issue tool.</p>
+      <span class="go">Open tool →</span>
+    </a>
+
+  </div>
+
+  <div class="section-label">Your Website</div>
+  <div class="grid">
+    <a class="tool-card" href="index.html" target="_blank" rel="noopener">
+      <span class="badge public">Public Page</span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.8 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.8-3.8-9S9.5 5.6 12 3Z"/></svg>
+      </span>
+      <h2>Main Website</h2>
+      <p>Your public site — courses, testimonials, resources, and the free trial booking form.</p>
+      <span class="go">Open site →</span>
+    </a>
+  </div>
+
+  <div class="foot-note">
+    Bookmark this page for yourself — it isn't linked from your public website's menu.<br>
+    Certificate and Invoice tools share the same login.
+  </div>
+</div>
+
+</body>
+</html>
