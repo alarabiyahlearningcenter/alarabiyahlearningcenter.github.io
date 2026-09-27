@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Resources | Al-Arabiyah Learning Center</title>
+<meta name="description" content="Free guides and resources to help you learn Quran effectively.">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0A3622">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' },
+  fontFamily: { heading: ['Playfair Display', 'serif'], body: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] }
+}}}
+</script>
+<style>
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.islamic-pattern { background-image: radial-gradient(circle at 20% 30%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(10,54,34,0.05) 0%, transparent 50%); }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s ease; box-shadow: 0 4px 14px rgba(10,54,34,0.25); }
+.btn-primary:hover { background: #062218; transform: translateY(-2px); }
+.card-hover { transition: all 0.4s ease; }
+.card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(10,54,34,0.12); }
+.gold-divider { height: 3px; width: 60px; background: linear-gradient(90deg, #D4AF37, #E8C766); border-radius: 2px; }
+.whatsapp-float { position: fixed; bottom: 24px; right: 24px; z-index: 999; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(37,211,102,0.4); transition: transform 0.3s; }
+.whatsapp-float:hover { transform: scale(1.1); }
+</style>
+</head>
+<body class="bg-cream text-charcoal">
+
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-2 border-secondary"><span class="text-secondary text-2xl font-arabic">ق</span></div>
+      <div class="hidden sm:block"><div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div><div class="text-xs text-primary/70">Learning Center</div></div>
+    </a>
+    <nav class="hidden lg:flex items-center gap-8">
+      <a href="/" class="text-primary/80 hover:text-secondary transition">Home</a>
+      <a href="/courses.html" class="text-primary/80 hover:text-secondary transition">Courses</a>
+      <a href="/teachers.html" class="text-primary/80 hover:text-secondary transition">Teachers</a>
+      <a href="/about.html" class="text-primary/80 hover:text-secondary transition">About</a>
+      <a href="/reviews.html" class="text-primary/80 hover:text-secondary transition">Reviews</a>
+      <a href="/contact.html" class="text-primary/80 hover:text-secondary transition">Contact</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <a href="/auth/login.html" class="hidden sm:inline-block px-5 py-2 text-primary font-medium hover:text-secondary transition">Login</a>
+      <a href="/auth/signup.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Start Learning</a>
+      <button id="menuBtn" class="lg:hidden p-2 text-primary"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
+  </div>
+  <div id="mobileMenu" class="hidden lg:hidden border-t border-primary/10 bg-cream">
+    <nav class="px-4 py-4 flex flex-col gap-3">
+      <a href="/" class="text-primary/80 py-2">Home</a>
+      <a href="/courses.html" class="text-primary/80 py-2">Courses</a>
+      <a href="/teachers.html" class="text-primary/80 py-2">Teachers</a>
+      <a href="/about.html" class="text-primary/80 py-2">About</a>
+      <a href="/contact.html" class="text-primary/80 py-2">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<section class="islamic-pattern py-12 md:py-16">
+  <div class="max-w-7xl mx-auto px-4 text-center">
+    <p class="text-secondary font-semibold mb-2 tracking-wider">STUDENT RESOURCES</p>
+    <h1 class="text-4xl md:text-5xl font-bold text-primary mb-4">Helpful Guides for Your Journey</h1>
+    <div class="gold-divider mx-auto mb-4"></div>
+    <p class="text-charcoal/60 max-w-2xl mx-auto">Free resources to help students and parents get the most out of their Quran learning.</p>
+  </div>
+</section>
+
+<section class="py-12 md:py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
+      <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      </div>
+      <h3 class="font-bold text-primary mb-2">How to Help Your Child Learn Quran</h3>
+      <p class="text-charcoal/60 text-sm mb-4">Simple tips for parents to support their child's Quran learning journey at home.</p>
+      <button class="text-secondary font-semibold text-sm hover:underline">Read Guide</button>
+    </div>
+
+    <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
+      <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </div>
+      <h3 class="font-bold text-primary mb-2">Noorani Qaida Learning Guide</h3>
+      <p class="text-charcoal/60 text-sm mb-4">Step-by-step guide to mastering Noorani Qaida for beginners.</p>
+      <button class="text-secondary font-semibold text-sm hover:underline">Read Guide</button>
+    </div>
+
+    <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
+      <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+      </div>
+      <h3 class="font-bold text-primary mb-2">Tajweed Basics</h3>
+      <p class="text-charcoal/60 text-sm mb-4">Introduction to Tajweed rules for beautiful and correct recitation.</p>
+      <button class="text-secondary font-semibold text-sm hover:underline">Read Guide</button>
+    </div>
+
+    <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
+      <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <h3 class="font-bold text-primary mb-2">Choosing a Quran Teacher</h3>
+      <p class="text-charcoal/60 text-sm mb-4">What to look for when choosing the right teacher for your child.</p>
+      <button class="text-secondary font-semibold text-sm hover:underline">Read Guide</button>
+    </div>
+
+    <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
+      <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+      </div>
+      <h3 class="font-bold text-primary mb-2">Parent Practice Checklist</h3>
+      <p class="text-charcoal/60 text-sm mb-4">Daily checklist to track your child's Quran practice at home.</p>
+      <button class="text-secondary font-semibold text-sm hover:underline">Read Guide</button>
+    </div>
+
+    <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
+      <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3 class="font-bold text-primary mb-2">Best Time to Learn</h3>
+      <p class="text-charcoal/60 text-sm mb-4">When is the best time for Quran learning? Tips for maximum focus.</p>
+      <button class="text-secondary font-semibold text-sm hover:underline">Read Guide</button>
+    </div>
+  </div>
+</section>
+
+<section class="py-16 bg-primary">
+  <div class="max-w-4xl mx-auto px-4 text-center">
+    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Need More Help?</h2>
+    <p class="text-white/80 mb-8">Message us on WhatsApp and we will guide you personally.</p>
+    <a href="https://wa.me/8801773266555" target="_blank" class="bg-secondary text-primary px-8 py-3.5 rounded-full font-semibold hover:bg-secondary-light transition inline-block">Chat on WhatsApp</a>
+  </div>
+</section>
+
+<footer class="bg-primary-dark text-white pt-16 pb-6">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid md:grid-cols-4 gap-8 mb-12">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-2 border-secondary"><span class="text-secondary text-2xl font-arabic">ق</span></div>
+          <div><div class="font-heading font-bold text-white">Al-Arabiyah</div><div class="text-xs text-white/60">Learning Center</div></div>
+        </div>
+        <p class="text-white/70 text-sm">Learn - Practice - Grow</p>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-secondary">Quick Links</h4>
+        <ul class="space-y-2 text-sm text-white/70">
+          <li><a href="/" class="hover:text-secondary transition">Home</a></li>
+          <li><a href="/courses.html" class="hover:text-secondary transition">Courses</a></li>
+          <li><a href="/teachers.html" class="hover:text-secondary transition">Teachers</a></li>
+          <li><a href="/about.html" class="hover:text-secondary transition">About Us</a></li>
+          <li><a href="/contact.html" class="hover:text-secondary transition">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-secondary">Resources</h4>
+        <ul class="space-y-2 text-sm text-white/70">
+          <li><a href="/reviews.html" class="hover:text-secondary transition">Reviews</a></li>
+          <li><a href="/faq.html" class="hover:text-secondary transition">FAQ</a></li>
+          <li><a href="/student-resources.html" class="hover:text-secondary transition">Student Resources</a></li>
+          <li><a href="/certificate-verification.html" class="hover:text-secondary transition">Verify Certificate</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-secondary">Contact</h4>
+        <ul class="space-y-2 text-sm text-white/70">
+          <li>WhatsApp: +8801773266555</li>
+          <li>Email: info@alarabiyahlearningcenter.com</li>
+          <li>Rajshahi, Bangladesh</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 pt-6 text-center text-sm text-white/50"><p>2026 Al-Arabiyah Learning Center. All rights reserved.</p></div>
+  </div>
+</footer>
+
+<a href="https://wa.me/8801773266555" target="_blank" class="whatsapp-float" aria-label="WhatsApp">
+  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+</a>
+
+<script>
+document.getElementById('menuBtn').addEventListener('click', () => {
+  document.getElementById('mobileMenu').classList.toggle('hidden');
+});
+</script>
+
+</body>
+</html>

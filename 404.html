@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Not Found | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' },
+  fontFamily: { heading: ['Playfair Display', 'serif'], body: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] }
+}}}
+</script>
+<style>
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2 { font-family: 'Playfair Display', serif; }
+.islamic-pattern { background-image: radial-gradient(circle at 20% 30%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(10,54,34,0.05) 0%, transparent 50%); }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s ease; box-shadow: 0 4px 14px rgba(10,54,34,0.25); }
+.btn-primary:hover { background: #062218; transform: translateY(-2px); }
+.btn-outline { background: transparent; color: #0A3622; border: 2px solid #0A3622; transition: all 0.3s ease; }
+.btn-outline:hover { background: #0A3622; color: white; }
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen flex flex-col">
+
+<header class="bg-cream border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-2 border-secondary"><span class="text-secondary text-2xl font-arabic">ق</span></div>
+      <div class="hidden sm:block"><div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div><div class="text-xs text-primary/70">Learning Center</div></div>
+    </a>
+    <a href="/" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Back to Home</a>
+  </div>
+</header>
+
+<main class="islamic-pattern flex-1 flex items-center justify-center py-16">
+  <div class="max-w-2xl mx-auto px-4 text-center">
+    <div class="text-9xl font-bold text-primary mb-4" style="font-family: 'Playfair Display', serif;">404</div>
+    <div class="w-20 h-1 bg-secondary mx-auto rounded-full mb-6"></div>
+    <h1 class="text-3xl md:text-4xl font-bold text-primary mb-4">Page Not Found</h1>
+    <p class="text-charcoal/60 mb-8 max-w-md mx-auto">Sorry, the page you are looking for does not exist or has been moved. Let's get you back on track.</p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="/" class="btn-primary px-8 py-3.5 rounded-full font-semibold">Go to Home</a>
+      <a href="/courses.html" class="btn-outline px-8 py-3.5 rounded-full font-semibold">Browse Courses</a>
+    </div>
+    <div class="mt-12 text-sm text-charcoal/50">
+      <p>Need help? <a href="https://wa.me/8801773266555" target="_blank" class="text-secondary font-semibold hover:underline">Chat on WhatsApp</a></p>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-primary-dark text-white py-6">
+  <div class="max-w-7xl mx-auto px-4 text-center text-sm text-white/50">
+    <p>2026 Al-Arabiyah Learning Center. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>
