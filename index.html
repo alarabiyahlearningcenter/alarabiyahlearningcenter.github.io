@@ -3,81 +3,130 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Al-Arabiyah Learning Center | Online Quran Classes for Kids & Adults</title>
-<meta name="description" content="Learn Quran online with qualified teachers. Noorani Qaida, Tajweed, Hifz, and Islamic Studies for kids and adults worldwide.">
-<meta name="keywords" content="online quran classes, learn quran, tajweed, hifz, noorani qaida">
-<meta property="og:title" content="Al-Arabiyah Learning Center">
-<meta property="og:description" content="Learn Quran online with qualified teachers.">
-<meta property="og:type" content="website">
-<link rel="manifest" href="/manifest.json">
+<title>Al-Arabiyah Learning Center | Online Quran Classes</title>
+<meta name="description" content="Learn Quran online with qualified teachers. Free trial class available.">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0A3622">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        primary: '#0A3622',
-        'primary-dark': '#062218',
-        secondary: '#D4AF37',
-        'secondary-light': '#E8C766',
-        cream: '#F9F7F2',
-        charcoal: '#1A1A1A'
-      },
-      fontFamily: {
-        heading: ['Playfair Display', 'serif'],
-        body: ['Inter', 'sans-serif'],
-        arabic: ['Amiri', 'serif']
-      }
-    }
-  }
-}
+tailwind.config = { theme: { extend: {
+  colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' },
+  fontFamily: { heading: ['Playfair Display', 'serif'], body: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] }
+}}}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
 h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
-.islamic-pattern {
-  background-image: radial-gradient(circle at 20% 30%, rgba(212,175,55,0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 70%, rgba(10,54,34,0.05) 0%, transparent 50%);
-}
-.btn-primary {
-  background: #0A3622; color: white; transition: all 0.3s ease;
-  box-shadow: 0 4px 14px rgba(10,54,34,0.25);
-}
-.btn-primary:hover {
-  background: #062218; transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(10,54,34,0.35);
-}
-.btn-outline {
-  background: transparent; color: #0A3622;
-  border: 2px solid #0A3622; transition: all 0.3s ease;
-}
+.islamic-pattern { background-image: radial-gradient(circle at 20% 30%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(10,54,34,0.05) 0%, transparent 50%); }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s; box-shadow: 0 4px 14px rgba(10,54,34,0.25); }
+.btn-primary:hover { background: #062218; transform: translateY(-2px); }
+.btn-outline { background: transparent; color: #0A3622; border: 2px solid #0A3622; transition: all 0.3s; }
 .btn-outline:hover { background: #0A3622; color: white; }
-.card-hover { transition: all 0.4s ease; }
-.card-hover:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(10,54,34,0.12);
-}
-.gold-divider {
-  height: 3px; width: 60px;
-  background: linear-gradient(90deg, #D4AF37, #E8C766);
-  border-radius: 2px;
-}
-.whatsapp-float {
-  position: fixed; bottom: 24px; right: 24px; z-index: 999;
-  width: 56px; height: 56px; background: #25D366; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(37,211,102,0.4); transition: transform 0.3s;
-}
-.whatsapp-float:hover { transform: scale(1.1); }
+.card-hover { transition: all 0.4s; }
+.card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(10,54,34,0.12); }
+.gold-divider { height: 3px; width: 60px; background: linear-gradient(90deg, #D4AF37, #E8C766); border-radius: 2px; }
+.whatsapp-float { position: fixed; bottom: 24px; right: 24px; z-index: 999; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(37,211,102,0.4); }
 </style>
 </head>
+<body class="bg-cream text-charcoal">
 
-<!-- COURSES -->
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-2 border-secondary">
+        <span class="text-secondary text-2xl font-arabic">ق</span>
+      </div>
+      <div class="hidden sm:block">
+        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
+        <div class="text-xs text-primary/70">Learning Center</div>
+      </div>
+    </a>
+    <nav class="hidden lg:flex items-center gap-8">
+      <a href="index.html" class="text-primary font-medium">Home</a>
+      <a href="courses.html" class="text-primary/80 hover:text-secondary">Courses</a>
+      <a href="teachers.html" class="text-primary/80 hover:text-secondary">Teachers</a>
+      <a href="about.html" class="text-primary/80 hover:text-secondary">About</a>
+      <a href="reviews.html" class="text-primary/80 hover:text-secondary">Reviews</a>
+      <a href="contact.html" class="text-primary/80 hover:text-secondary">Contact</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <a href="auth/login.html" class="hidden sm:inline-block px-5 py-2 text-primary font-medium">Login</a>
+      <a href="auth/signup.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Start Learning</a>
+      <button id="menuBtn" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="mobileMenu" class="hidden lg:hidden border-t border-primary/10 bg-cream">
+    <nav class="px-4 py-4 flex flex-col gap-3">
+      <a href="index.html" class="text-primary font-medium py-2">Home</a>
+      <a href="courses.html" class="text-primary/80 py-2">Courses</a>
+      <a href="teachers.html" class="text-primary/80 py-2">Teachers</a>
+      <a href="about.html" class="text-primary/80 py-2">About</a>
+      <a href="reviews.html" class="text-primary/80 py-2">Reviews</a>
+      <a href="contact.html" class="text-primary/80 py-2">Contact</a>
+      <a href="auth/login.html" class="text-primary/80 py-2">Login</a>
+    </nav>
+  </div>
+</header>
+
+<section class="islamic-pattern py-12 md:py-20">
+  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-10 items-center">
+    <div>
+      <div class="inline-block px-4 py-1.5 bg-secondary/15 text-primary text-sm font-medium rounded-full mb-5 border border-secondary/30">
+        Online Qur'an Learning for Kids & Adults
+      </div>
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight mb-4">
+        Al-Arabiyah
+        <span class="block text-secondary">Learning Center</span>
+      </h1>
+      <p class="text-xl text-primary/70 font-medium mb-2">Learn - Practice - Grow</p>
+      <p class="text-lg text-charcoal/70 mb-8 max-w-lg">
+        Better Qur'an Readers, A Stronger Ummah. Join students from around the world learning with qualified teachers.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3 mb-8">
+        <a href="auth/signup.html" class="btn-primary px-8 py-3.5 rounded-full font-semibold text-center">Start Learning</a>
+        <a href="free-assessment.html" class="btn-outline px-8 py-3.5 rounded-full font-semibold text-center">Free Assessment</a>
+      </div>
+      <a href="https://wa.me/8801773266555" target="_blank" class="inline-flex items-center gap-2 text-primary font-medium hover:text-secondary">
+        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+        Chat on WhatsApp
+      </a>
+    </div>
+    <div class="relative">
+      <div class="absolute -top-4 -right-4 w-40 h-40 bg-secondary/15 rounded-full blur-3xl"></div>
+      <div class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-primary">
+        <img src="https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=800&q=80" alt="Child reading Quran" class="w-full h-[400px] md:h-[500px] object-cover">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-4 pb-12">
+  <div class="grid grid-cols-3 gap-4 md:gap-6">
+    <div class="text-center p-4 bg-white rounded-2xl shadow-sm card-hover">
+      <div class="w-12 h-12 mx-auto mb-2 bg-primary/10 rounded-xl flex items-center justify-center">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <p class="text-primary font-semibold text-sm md:text-base">Online Classes</p>
+    </div>
+    <div class="text-center p-4 bg-white rounded-2xl shadow-sm card-hover">
+      <div class="w-12 h-12 mx-auto mb-2 bg-primary/10 rounded-xl flex items-center justify-center">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <p class="text-primary font-semibold text-sm md:text-base">Qualified Teachers</p>
+    </div>
+    <div class="text-center p-4 bg-white rounded-2xl shadow-sm card-hover">
+      <div class="w-12 h-12 mx-auto mb-2 bg-primary/10 rounded-xl flex items-center justify-center">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-primary font-semibold text-sm md:text-base">Global Students</p>
+    </div>
+  </div>
+</section>
+
 <section class="py-16 md:py-24 bg-white">
   <div class="max-w-7xl mx-auto px-4">
     <div class="text-center mb-12">
@@ -92,14 +141,11 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
       <div class="animate-pulse bg-cream rounded-2xl h-64"></div>
     </div>
     <div class="text-center mt-10">
-      <a href="/courses.html" class="btn-primary inline-block px-8 py-3.5 rounded-full font-semibold">
-        View All Courses
-      </a>
+      <a href="courses.html" class="btn-primary inline-block px-8 py-3.5 rounded-full font-semibold">View All Courses</a>
     </div>
   </div>
 </section>
 
-<!-- WHY CHOOSE US -->
 <section class="py-16 md:py-24 islamic-pattern">
   <div class="max-w-7xl mx-auto px-4">
     <div class="text-center mb-12">
@@ -110,98 +156,29 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
     <div class="grid md:grid-cols-3 gap-6">
       <div class="bg-white p-8 rounded-2xl shadow-sm card-hover">
         <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-5">
-          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-          </svg>
+          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         </div>
         <h3 class="text-xl font-bold text-primary mb-3">Qualified Teachers</h3>
-        <p class="text-charcoal/70 leading-relaxed">Learn from certified Alim and Hafiz teachers with years of experience in teaching the Qur'an.</p>
+        <p class="text-charcoal/70 leading-relaxed">Learn from certified Alim and Hafiz teachers with years of experience.</p>
       </div>
       <div class="bg-white p-8 rounded-2xl shadow-sm card-hover">
         <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-5">
-          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
+          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
         <h3 class="text-xl font-bold text-primary mb-3">Flexible Timing</h3>
-        <p class="text-charcoal/70 leading-relaxed">Choose your own class time - morning, evening, or night. We fit your schedule.</p>
+        <p class="text-charcoal/70 leading-relaxed">Choose your own class time - morning, evening, or night.</p>
       </div>
       <div class="bg-white p-8 rounded-2xl shadow-sm card-hover">
         <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-5">
-          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-          </svg>
+          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
         </div>
         <h3 class="text-xl font-bold text-primary mb-3">1-to-1 Attention</h3>
-        <p class="text-charcoal/70 leading-relaxed">Personal one-on-one classes tailored to each student's pace and learning style.</p>
+        <p class="text-charcoal/70 leading-relaxed">Personal one-on-one classes tailored to each student's pace.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- COURSES -->
-<section class="py-16 md:py-24 bg-white">
-  <div class="max-w-7xl mx-auto px-4">
-    <div class="text-center mb-12">
-      <p class="text-secondary font-semibold mb-2 tracking-wider">OUR COURSES</p>
-      <h2 class="text-3xl md:text-4xl font-bold text-primary mb-4">Comprehensive Qur'an Learning Programs</h2>
-      <div class="gold-divider mx-auto mb-4"></div>
-      <p class="text-charcoal/60 max-w-2xl mx-auto">From the basics to advanced - we guide every step of your journey.</p>
-    </div>
-    <div id="coursesGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="animate-pulse bg-cream rounded-2xl h-64"></div>
-      <div class="animate-pulse bg-cream rounded-2xl h-64"></div>
-      <div class="animate-pulse bg-cream rounded-2xl h-64"></div>
-    </div>
-    <div class="text-center mt-10">
-      <a href="/courses.html" class="btn-primary inline-block px-8 py-3.5 rounded-full font-semibold">
-        View All Courses
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- WHY CHOOSE US -->
-<section class="py-16 md:py-24 islamic-pattern">
-  <div class="max-w-7xl mx-auto px-4">
-    <div class="text-center mb-12">
-      <p class="text-secondary font-semibold mb-2 tracking-wider">WHY CHOOSE US</p>
-      <h2 class="text-3xl md:text-4xl font-bold text-primary mb-4">Learn with Confidence</h2>
-      <div class="gold-divider mx-auto"></div>
-    </div>
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="bg-white p-8 rounded-2xl shadow-sm card-hover">
-        <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-5">
-          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-primary mb-3">Qualified Teachers</h3>
-        <p class="text-charcoal/70 leading-relaxed">Learn from certified Alim and Hafiz teachers with years of experience in teaching the Qur'an.</p>
-      </div>
-      <div class="bg-white p-8 rounded-2xl shadow-sm card-hover">
-        <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-5">
-          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-primary mb-3">Flexible Timing</h3>
-        <p class="text-charcoal/70 leading-relaxed">Choose your own class time - morning, evening, or night. We fit your schedule.</p>
-      </div>
-      <div class="bg-white p-8 rounded-2xl shadow-sm card-hover">
-        <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-5">
-          <svg class="w-7 h-7 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-primary mb-3">1-to-1 Attention</h3>
-        <p class="text-charcoal/70 leading-relaxed">Personal one-on-one classes tailored to each student's pace and learning style.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- REVIEWS -->
 <section class="py-16 md:py-24 bg-white">
   <div class="max-w-7xl mx-auto px-4">
     <div class="text-center mb-12">
@@ -218,27 +195,17 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
   </div>
 </section>
 
-<!-- CTA -->
 <section class="py-16 md:py-20 bg-primary relative overflow-hidden">
-  <div class="absolute inset-0 opacity-5">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-secondary rounded-full blur-3xl"></div>
-    <div class="absolute bottom-0 left-0 w-96 h-96 bg-secondary rounded-full blur-3xl"></div>
-  </div>
   <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
     <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Start Your Qur'an Journey Today</h2>
     <p class="text-white/80 mb-8 max-w-2xl mx-auto">Book a free assessment class and let us find the perfect learning plan for you or your child.</p>
     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-      <a href="/free-assessment.html" class="bg-secondary text-primary px-8 py-3.5 rounded-full font-semibold hover:bg-secondary-light transition">
-        Book Free Assessment
-      </a>
-      <a href="https://wa.me/8801773266555" target="_blank" class="border-2 border-white text-white px-8 py-3.5 rounded-full font-semibold hover:bg-white hover:text-primary transition">
-        Chat on WhatsApp
-      </a>
+      <a href="free-assessment.html" class="bg-secondary text-primary px-8 py-3.5 rounded-full font-semibold hover:bg-secondary-light">Book Free Assessment</a>
+      <a href="https://wa.me/8801773266555" target="_blank" class="border-2 border-white text-white px-8 py-3.5 rounded-full font-semibold hover:bg-white hover:text-primary">Chat on WhatsApp</a>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer class="bg-primary-dark text-white pt-16 pb-6">
   <div class="max-w-7xl mx-auto px-4">
     <div class="grid md:grid-cols-4 gap-8 mb-12">
@@ -258,57 +225,46 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
       <div>
         <h4 class="font-semibold mb-4 text-secondary">Quick Links</h4>
         <ul class="space-y-2 text-sm text-white/70">
-          <li><a href="/" class="hover:text-secondary transition">Home</a></li>
-          <li><a href="/courses.html" class="hover:text-secondary transition">Courses</a></li>
-          <li><a href="/teachers.html" class="hover:text-secondary transition">Teachers</a></li>
-          <li><a href="/about.html" class="hover:text-secondary transition">About Us</a></li>
-          <li><a href="/contact.html" class="hover:text-secondary transition">Contact</a></li>
+          <li><a href="index.html" class="hover:text-secondary">Home</a></li>
+          <li><a href="courses.html" class="hover:text-secondary">Courses</a></li>
+          <li><a href="teachers.html" class="hover:text-secondary">Teachers</a></li>
+          <li><a href="about.html" class="hover:text-secondary">About Us</a></li>
+          <li><a href="contact.html" class="hover:text-secondary">Contact</a></li>
         </ul>
       </div>
       <div>
         <h4 class="font-semibold mb-4 text-secondary">Resources</h4>
         <ul class="space-y-2 text-sm text-white/70">
-          <li><a href="/reviews.html" class="hover:text-secondary transition">Reviews</a></li>
-          <li><a href="/faq.html" class="hover:text-secondary transition">FAQ</a></li>
-          <li><a href="/student-resources.html" class="hover:text-secondary transition">Student Resources</a></li>
-          <li><a href="/certificate-verification.html" class="hover:text-secondary transition">Verify Certificate</a></li>
-          <li><a href="/free-assessment.html" class="hover:text-secondary transition">Free Assessment</a></li>
+          <li><a href="reviews.html" class="hover:text-secondary">Reviews</a></li>
+          <li><a href="faq.html" class="hover:text-secondary">FAQ</a></li>
+          <li><a href="student-resources.html" class="hover:text-secondary">Student Resources</a></li>
+          <li><a href="certificate-verification.html" class="hover:text-secondary">Verify Certificate</a></li>
+          <li><a href="free-assessment.html" class="hover:text-secondary">Free Assessment</a></li>
         </ul>
       </div>
       <div>
-        <h4 class="font-semibold mb-4 text-secondary">Follow Us</h4>
-        <div class="flex gap-3 mb-4">
-          <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-secondary hover:text-primary transition">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          </a>
-          <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-secondary hover:text-primary transition">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-          </a>
-          <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-secondary hover:text-primary transition">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-          </a>
-        </div>
-        <p class="text-sm text-white/60">2026 Al-Arabiyah Learning Center. All rights reserved.</p>
+        <h4 class="font-semibold mb-4 text-secondary">Contact</h4>
+        <ul class="space-y-2 text-sm text-white/70">
+          <li>WhatsApp: +8801773266555</li>
+          <li>Email: info@alarabiyahlearningcenter.com</li>
+          <li>Rajshahi, Bangladesh (Online Only)</li>
+        </ul>
       </div>
     </div>
     <div class="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-white/50">
       <p>Privacy Policy | Terms & Conditions</p>
-      <p>Made with love for the Ummah</p>
+      <p>2026 Al-Arabiyah Learning Center. All rights reserved.</p>
     </div>
   </div>
 </footer>
 
-<!-- WhatsApp Float -->
 <a href="https://wa.me/8801773266555" target="_blank" class="whatsapp-float" aria-label="WhatsApp">
-  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-  </svg>
+  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
 </a>
 
 <script>
 const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
-
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -316,83 +272,50 @@ document.getElementById('menuBtn').addEventListener('click', () => {
   document.getElementById('mobileMenu').classList.toggle('hidden');
 });
 
-const courseIcons = {
-  'noorani-qaida': '01',
-  'quran-reading': '02',
-  'tajweed': '03',
-  'hifz': '04',
-  'islamic-learning': '05'
-};
-
 async function loadCourses() {
-  const { data, error } = await db
-    .from('courses')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-    .limit(6);
-
+  const { data } = await db.from('courses').select('*').eq('is_active', true).order('sort_order').limit(6);
   const grid = document.getElementById('coursesGrid');
-
-  if (error || !data || data.length === 0) {
+  if (!data || !data.length) {
     grid.innerHTML = '<div class="col-span-full text-center py-10 text-charcoal/60">Courses will appear here soon.</div>';
     return;
   }
-
-  grid.innerHTML = data.map(course => `
+  grid.innerHTML = data.map(c => `
     <div class="bg-cream rounded-2xl p-6 card-hover border border-primary/5 relative">
-      ${course.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
+      ${c.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
       <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-        <span class="text-2xl font-bold text-primary">${courseIcons[course.slug] || 'Q'}</span>
+        <span class="text-2xl font-bold text-primary">${c.title.charAt(0)}</span>
       </div>
-      <h3 class="text-xl font-bold text-primary mb-2">${course.title}</h3>
-      <p class="text-charcoal/60 text-sm mb-4">${course.description || ''}</p>
+      <h3 class="text-xl font-bold text-primary mb-2">${c.title}</h3>
+      <p class="text-charcoal/60 text-sm mb-4">${c.description || ''}</p>
       <div class="flex items-center justify-between pt-4 border-t border-primary/10">
-        <div>
-          <p class="text-xs text-charcoal/50">Starting from</p>
-          <p class="text-primary font-bold">BDT ${course.price_bdt || 0}</p>
-        </div>
-        <a href="/course-details.html?slug=${course.slug}" class="text-secondary font-semibold text-sm hover:underline">
-          Learn More
-        </a>
+        <div><p class="text-xs text-charcoal/50">Starting from</p><p class="text-primary font-bold">BDT ${c.price_bdt || 0}</p></div>
+        <a href="course-details.html?slug=${c.slug}" class="text-secondary font-semibold text-sm">Learn More</a>
       </div>
     </div>
   `).join('');
 }
 
 async function loadReviews() {
-  const { data, error } = await db
-    .from('reviews')
-    .select('*')
-    .eq('is_approved', true)
-    .order('sort_order', { ascending: true })
-    .limit(3);
-
+  const { data } = await db.from('reviews').select('*').eq('is_approved', true).limit(3);
   const grid = document.getElementById('reviewsGrid');
-
-  if (error || !data || data.length === 0) {
-    grid.innerHTML = `
+  if (!data || !data.length) {
+    const fallback = [
+      { name: 'Sarah Ahmed', country: 'UK', text: "My daughter's recitation has improved so much. The teachers are very patient." },
+      { name: 'Mohammad Rahman', country: 'USA', text: 'Excellent learning environment for kids. My son looks forward to classes.' },
+      { name: 'Ayesha Sultana', country: 'Canada', text: 'Highly recommended for anyone who wants proper Quran education.' }
+    ];
+    grid.innerHTML = fallback.map(r => `
       <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"My daughter's recitation has improved so much. The teachers are very patient and caring."</p>
-        <p class="text-primary font-semibold">- Sarah Ahmed, UK</p>
+        <div class="text-secondary mb-3">*****</div>
+        <p class="text-charcoal/80 italic mb-4">"${r.text}"</p>
+        <p class="text-primary font-semibold">- ${r.name}, ${r.country}</p>
       </div>
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"Excellent learning environment for kids. My son looks forward to his classes every day."</p>
-        <p class="text-primary font-semibold">- Mohammad Rahman, USA</p>
-      </div>
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"Highly recommended for anyone who wants proper Qur'an education."</p>
-        <p class="text-primary font-semibold">- Ayesha Sultana, Canada</p>
-      </div>`;
+    `).join('');
     return;
   }
-
   grid.innerHTML = data.map(r => `
-    <div class="bg-cream p-6 rounded-2xl border border-primary/5 card-hover">
-      <div class="flex text-secondary mb-3">${'*'.repeat(r.rating || 5)}</div>
+    <div class="bg-cream p-6 rounded-2xl border border-primary/5">
+      <div class="text-secondary mb-3">${'*'.repeat(r.rating || 5)}</div>
       <p class="text-charcoal/80 italic mb-4">"${r.review_text || ''}"</p>
       <p class="text-primary font-semibold">- ${r.student_name}${r.student_country ? ', ' + r.student_country : ''}</p>
     </div>
@@ -403,217 +326,7 @@ loadCourses();
 loadReviews();
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
-</script>
-
-</body>
-</html>
-
-<script>
-const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
-
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-document.getElementById('menuBtn').addEventListener('click', () => {
-  document.getElementById('mobileMenu').classList.toggle('hidden');
-});
-
-const courseIcons = {
-  'noorani-qaida': '01',
-  'quran-reading': '02',
-  'tajweed': '03',
-  'hifz': '04',
-  'islamic-learning': '05'
-};
-
-async function loadCourses() {
-  const { data, error } = await db
-    .from('courses')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-    .limit(6);
-
-  const grid = document.getElementById('coursesGrid');
-
-  if (error || !data || data.length === 0) {
-    grid.innerHTML = '<div class="col-span-full text-center py-10 text-charcoal/60">Courses will appear here soon.</div>';
-    return;
-  }
-
-  grid.innerHTML = data.map(course => `
-    <div class="bg-cream rounded-2xl p-6 card-hover border border-primary/5 relative">
-      ${course.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
-      <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-        <span class="text-2xl font-bold text-primary">${courseIcons[course.slug] || 'Q'}</span>
-      </div>
-      <h3 class="text-xl font-bold text-primary mb-2">${course.title}</h3>
-      <p class="text-charcoal/60 text-sm mb-4">${course.description || ''}</p>
-      <div class="flex items-center justify-between pt-4 border-t border-primary/10">
-        <div>
-          <p class="text-xs text-charcoal/50">Starting from</p>
-          <p class="text-primary font-bold">BDT ${course.price_bdt || 0}</p>
-        </div>
-        <a href="/course-details.html?slug=${course.slug}" class="text-secondary font-semibold text-sm hover:underline">
-          Learn More
-        </a>
-      </div>
-    </div>
-  `).join('');
-}
-
-async function loadReviews() {
-  const { data, error } = await db
-    .from('reviews')
-    .select('*')
-    .eq('is_approved', true)
-    .order('sort_order', { ascending: true })
-    .limit(3);
-
-  const grid = document.getElementById('reviewsGrid');
-
-  if (error || !data || data.length === 0) {
-    grid.innerHTML = `
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"My daughter's recitation has improved so much. The teachers are very patient and caring."</p>
-        <p class="text-primary font-semibold">- Sarah Ahmed, UK</p>
-      </div>
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"Excellent learning environment for kids. My son looks forward to his classes every day."</p>
-        <p class="text-primary font-semibold">- Mohammad Rahman, USA</p>
-      </div>
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"Highly recommended for anyone who wants proper Qur'an education."</p>
-        <p class="text-primary font-semibold">- Ayesha Sultana, Canada</p>
-      </div>`;
-    return;
-  }
-
-  grid.innerHTML = data.map(r => `
-    <div class="bg-cream p-6 rounded-2xl border border-primary/5 card-hover">
-      <div class="flex text-secondary mb-3">${'*'.repeat(r.rating || 5)}</div>
-      <p class="text-charcoal/80 italic mb-4">"${r.review_text || ''}"</p>
-      <p class="text-primary font-semibold">- ${r.student_name}${r.student_country ? ', ' + r.student_country : ''}</p>
-    </div>
-  `).join('');
-}
-
-loadCourses();
-loadReviews();
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
-</script>
-
-</body>
-</html>
-
-<script>
-const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
-
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-document.getElementById('menuBtn').addEventListener('click', () => {
-  document.getElementById('mobileMenu').classList.toggle('hidden');
-});
-
-const courseIcons = {
-  'noorani-qaida': '01',
-  'quran-reading': '02',
-  'tajweed': '03',
-  'hifz': '04',
-  'islamic-learning': '05'
-};
-
-async function loadCourses() {
-  const { data, error } = await db
-    .from('courses')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-    .limit(6);
-
-  const grid = document.getElementById('coursesGrid');
-
-  if (error || !data || data.length === 0) {
-    grid.innerHTML = '<div class="col-span-full text-center py-10 text-charcoal/60">Courses will appear here soon.</div>';
-    return;
-  }
-
-  grid.innerHTML = data.map(course => `
-    <div class="bg-cream rounded-2xl p-6 card-hover border border-primary/5 relative">
-      ${course.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
-      <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-        <span class="text-2xl font-bold text-primary">${courseIcons[course.slug] || 'Q'}</span>
-      </div>
-      <h3 class="text-xl font-bold text-primary mb-2">${course.title}</h3>
-      <p class="text-charcoal/60 text-sm mb-4">${course.description || ''}</p>
-      <div class="flex items-center justify-between pt-4 border-t border-primary/10">
-        <div>
-          <p class="text-xs text-charcoal/50">Starting from</p>
-          <p class="text-primary font-bold">BDT ${course.price_bdt || 0}</p>
-        </div>
-        <a href="/course-details.html?slug=${course.slug}" class="text-secondary font-semibold text-sm hover:underline">
-          Learn More
-        </a>
-      </div>
-    </div>
-  `).join('');
-}
-
-async function loadReviews() {
-  const { data, error } = await db
-    .from('reviews')
-    .select('*')
-    .eq('is_approved', true)
-    .order('sort_order', { ascending: true })
-    .limit(3);
-
-  const grid = document.getElementById('reviewsGrid');
-
-  if (error || !data || data.length === 0) {
-    grid.innerHTML = `
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"My daughter's recitation has improved so much. The teachers are very patient and caring."</p>
-        <p class="text-primary font-semibold">- Sarah Ahmed, UK</p>
-      </div>
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"Excellent learning environment for kids. My son looks forward to his classes every day."</p>
-        <p class="text-primary font-semibold">- Mohammad Rahman, USA</p>
-      </div>
-      <div class="bg-cream p-6 rounded-2xl border border-primary/5">
-        <div class="flex text-secondary mb-3">*****</div>
-        <p class="text-charcoal/80 italic mb-4">"Highly recommended for anyone who wants proper Qur'an education."</p>
-        <p class="text-primary font-semibold">- Ayesha Sultana, Canada</p>
-      </div>`;
-    return;
-  }
-
-  grid.innerHTML = data.map(r => `
-    <div class="bg-cream p-6 rounded-2xl border border-primary/5 card-hover">
-      <div class="flex text-secondary mb-3">${'*'.repeat(r.rating || 5)}</div>
-      <p class="text-charcoal/80 italic mb-4">"${r.review_text || ''}"</p>
-      <p class="text-primary font-semibold">- ${r.student_name}${r.student_country ? ', ' + r.student_country : ''}</p>
-    </div>
-  `).join('');
-}
-
-loadCourses();
-loadReviews();
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
 
