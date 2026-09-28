@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notices | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Notices</h1>
+      <p class="text-charcoal/60 text-sm">Post announcements for students</p>
+    </div>
+    <button onclick="openNoticeModal()" class="btn-primary px-5 py-2.5 rounded-full font-semibold text-sm">+ New Notice</button>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="noticesList" class="space-y-4"></div>
+</div>
+
+<div id="noticeModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 id="modalTitle" class="font-bold text-lg">New Notice</h3>
+      <button onclick="closeNoticeModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="noticeForm" class="p-6 space-y-4">
+      <input type="hidden" id="noticeId">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Title *</label>
+        <input type="text" id="title" required placeholder="e.g. Ramadan Schedule Update" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Body *</label>
+        <textarea id="body" rows="6" required placeholder="Write the notice details here..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+      </div>
+      <div>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="isPublished" checked> Published (visible to students)</label>
+      </div>
+      <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Save Notice</button>
+      <p id="formStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allNotices = [];
+
+  window.openNoticeModal = (notice = null) => {
+    document.getElementById('noticeModal').classList.remove('hidden');
+    document.getElementById('formStatus').classList.add('hidden');
+    if (notice) {
+      document.getElementById('modalTitle').textContent = 'Edit Notice';
+      document.getElementById('noticeId').value = notice.id;
+      document.getElementById('title').value = notice.title || '';
+      document.getElementById('body').value = notice.body || '';
+      document.getElementById('isPublished').checked = !!notice.is_published;
+    } else {
+      document.getElementById('modalTitle').textContent = 'New Notice';
+      document.getElementById('noticeForm').reset();
+      document.getElementById('noticeId').value = '';
+      document.getElementById('isPublished').checked = true;
+    }
+  };
+
+  window.closeNoticeModal = () => {
+    document.getElementById('noticeModal').classList.add('hidden');
+  };
+
+  async function loadNotices() {
+    document.getElementById('loading').classList.remove('hidden');
+    const { data } = await db.from('notices').select('*').order('created_at', { ascending: false });
+    allNotices = data || [];
+    renderNotices();
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderNotices() {
+    const box = document.getElementById('noticesList');
+    if (!allNotices.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No notices yet</div>';
+      return;
+    }
+    box.innerHTML = allNotices.map(n => {
+      const date = new Date(n.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-primary mb-1">${n.title}</h3>
+              <p class="text-xs text-charcoal/50">${date}</p>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${n.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${n.is_published ? 'Published' : 'Draft'}</span>
+          </div>
+          <p class="text-sm text-charcoal/70 whitespace-pre-line mb-4">${n.body || ''}</p>
+          <div class="flex gap-2 pt-3 border-t border-primary/10">
+            <button onclick='openNoticeModal(${JSON.stringify(n).replace(/'/g, "\\'")})' class="flex-1 text-xs bg-primary/10 text-primary px-3 py-2 rounded-full font-semibold">Edit</button>
+            <button onclick="togglePublish('${n.id}', ${n.is_published})" class="text-xs bg-secondary/15 text-primary px-3 py-2 rounded-full font-semibold">${n.is_published ? 'Unpublish' : 'Publish'}</button>
+            <button onclick="deleteNotice('${n.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.togglePublish = async (id, current) => {
+    const { error } = await db.from('notices').update({ is_published: !current }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadNotices();
+  };
+
+  window.deleteNotice = async (id) => {
+    if (!confirm('Delete this notice?')) return;
+    const { error } = await db.from('notices').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadNotices();
+  };
+
+  document.getElementById('noticeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const status = document.getElementById('formStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const id = document.getElementById('noticeId').value;
+    const payload = {
+      title: document.getElementById('title').value.trim(),
+      body: document.getElementById('body').value.trim(),
+      is_published: document.getElementById('isPublished').checked
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await db.from('notices').update(payload).eq('id', id));
+    } else {
+      ({ error } = await db.from('notices').insert(payload));
+    }
+
+    if (error) {
+      status.textContent = 'Error: ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Save Notice';
+      return;
+    }
+    status.textContent = '✓ Saved!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    setTimeout(() => {
+      closeNoticeModal();
+      btn.disabled = false;
+      btn.textContent = 'Save Notice';
+      loadNotices();
+    }, 800);
+  });
+
+  loadNotices();
+})();
+</script>
+
+</body>
+</html>
