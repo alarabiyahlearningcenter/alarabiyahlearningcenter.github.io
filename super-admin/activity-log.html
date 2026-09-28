@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activity Log | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.timeline-item{position:relative;padding-left:44px}
+.timeline-item:before{content:'';position:absolute;left:15px;top:36px;bottom:-16px;width:2px;background:rgba(10,54,34,.1)}
+.timeline-item:last-child:before{display:none}
+.timeline-icon{position:absolute;left:0;top:6px;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Activity Log</h1>
+    <p class="text-charcoal/60 text-sm">Track all admin actions across the platform</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-2xl p-4 border border-primary/5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <input type="text" id="searchInput" placeholder="Search action, user, details..." class="px-4 py-2.5 border border-primary/20 rounded-full bg-cream text-sm">
+      <select id="actionFilter" class="px-4 py-2.5 border border-primary/20 rounded-full bg-cream text-sm">
+        <option value="">All Actions</option>
+        <option value="created">Created</option>
+        <option value="updated">Updated</option>
+        <option value="deleted">Deleted</option>
+        <option value="verified">Verified</option>
+        <option value="approved">Approved</option>
+        <option value="login">Login</option>
+      </select>
+      <select id="dateFilter" class="px-4 py-2.5 border border-primary/20 rounded-full bg-cream text-sm">
+        <option value="">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">Last 7 Days</option>
+        <option value="month">Last 30 Days</option>
+      </select>
+    </div>
+    <div class="mt-3 flex items-center justify-between">
+      <p id="countDisplay" class="text-xs text-charcoal/60">Loading...</p>
+      <button id="refreshBtn" class="text-xs text-primary font-semibold hover:text-secondary flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Info Box -->
+  <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+    <div class="flex items-start gap-3">
+      <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div>
+        <p class="text-sm font-semibold text-blue-900">Activity Log Information</p>
+        <p class="text-xs text-blue-800 mt-1">This log automatically tracks user role changes and certificate issuance. For full audit logging, additional triggers can be added in Supabase.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="logContainer" class="bg-white rounded-2xl p-6 border border-primary/5"></div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allLogs = [];
+  let profilesMap = {};
+
+  const ACTION_STYLES = {
+    created:  { bg: '#dcfce7', color: '#16a34a', icon: 'M12 4v16m8-8H4' },
+    updated:  { bg: '#dbeafe', color: '#2563eb', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+    deleted:  { bg: '#fee2e2', color: '#dc2626', icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' },
+    verified: { bg: '#dcfce7', color: '#16a34a', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+    approved: { bg: '#dcfce7', color: '#16a34a', icon: 'M5 13l4 4L19 7' },
+    login:    { bg: '#fef3c7', color: '#d97706', icon: 'M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1' },
+    default:  { bg: '#f1f5f9', color: '#475569', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
+  };
+
+  function timeAgo(date) {
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' hr ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function renderLogs(list) {
+    const box = document.getElementById('logContainer');
+    document.getElementById('countDisplay').innerHTML = `Showing <strong>${list.length}</strong> of <strong>${allLogs.length}</strong> events`;
+
+    if (!list.length) {
+      box.innerHTML = `
+        <div class="text-center py-12">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-primary mb-2">No Activity Yet</h3>
+          <p class="text-sm text-charcoal/60 max-w-sm mx-auto">Activity will appear here as admins perform actions on the platform. Currently no logged events.</p>
+          <div class="mt-4 bg-cream rounded-xl p-4 max-w-md mx-auto text-left">
+            <p class="text-xs font-semibold text-primary mb-2">💡 Currently tracking:</p>
+            <ul class="text-xs text-charcoal/70 space-y-1 pl-4 list-disc">
+              <li>User role changes</li>
+              <li>Certificate issuance</li>
+              <li>Payment verifications</li>
+              <li>Manual admin actions</li>
+            </ul>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = list.map(log => {
+      const action = (log.action || 'other').toLowerCase();
+      const style = ACTION_STYLES[action] || ACTION_STYLES.default;
+      const profile = profilesMap[log.user_id] || {};
+      const userName = profile.full_name || profile.email?.split('@')[0] || 'System';
+      const date = new Date(log.created_at);
+      const ago = timeAgo(date);
+      const fullDate = date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      return `
+        <div class="timeline-item pb-6">
+          <div class="timeline-icon" style="background:${style.bg};color:${style.color}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${style.icon}"/></svg>
+          </div>
+          <div class="bg-cream rounded-xl p-4 border border-primary/5">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm">
+                  <span class="font-semibold text-primary">${userName}</span>
+                  <span class="text-charcoal/70"> ${log.action || 'performed action'}</span>
+                  ${log.table_name ? `<span class="text-charcoal/50"> on </span><span class="font-medium text-primary">${log.table_name}</span>` : ''}
+                </p>
+                ${log.details ? `<p class="text-xs text-charcoal/60 mt-1">${typeof log.details === 'object' ? JSON.stringify(log.details) : log.details}</p>` : ''}
+              </div>
+              <span class="text-xs text-charcoal/50 flex-shrink-0">${ago}</span>
+            </div>
+            <p class="text-xs text-charcoal/40">${fullDate}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function loadLogs() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('logContainer').innerHTML = '';
+
+    const { data: logs } = await db.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(200);
+    allLogs = logs || [];
+
+    // Load profiles for user names
+    const userIds = [...new Set(allLogs.map(l => l.user_id).filter(Boolean))];
+    if (userIds.length) {
+      const { data: profiles } = await db.from('profiles').select('id, full_name, email').in('id', userIds);
+      (profiles || []).forEach(p => profilesMap[p.id] = p);
+    }
+
+    document.getElementById('loading').classList.add('hidden');
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const action = document.getElementById('actionFilter').value;
+    const dateRange = document.getElementById('dateFilter').value;
+
+    let filtered = allLogs;
+
+    if (action) filtered = filtered.filter(l => (l.action || '').toLowerCase().includes(action));
+    if (q) filtered = filtered.filter(l => {
+      const p = profilesMap[l.user_id] || {};
+      return (l.action || '').toLowerCase().includes(q) ||
+             (l.table_name || '').toLowerCase().includes(q) ||
+             (p.full_name || '').toLowerCase().includes(q) ||
+             (p.email || '').toLowerCase().includes(q);
+    });
+
+    if (dateRange) {
+      const now = new Date();
+      const cutoff = new Date();
+      if (dateRange === 'today') cutoff.setHours(0, 0, 0, 0);
+      else if (dateRange === 'week') cutoff.setDate(now.getDate() - 7);
+      else if (dateRange === 'month') cutoff.setDate(now.getDate() - 30);
+      filtered = filtered.filter(l => new Date(l.created_at) >= cutoff);
+    }
+
+    renderLogs(filtered);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('actionFilter').addEventListener('change', applyFilters);
+  document.getElementById('dateFilter').addEventListener('change', applyFilters);
+  document.getElementById('refreshBtn').addEventListener('click', loadLogs);
+
+  loadLogs();
+})();
+</script>
+
+</body>
+</html>
