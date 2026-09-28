@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classes | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white}
+.btn-red{background:#dc2626;color:white}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">All Classes</h1>
+      <p class="text-charcoal/60 text-sm">Manage all scheduled classes</p>
+    </div>
+    <select id="filterStatus" class="px-4 py-2.5 border border-primary/20 rounded-full bg-white text-sm">
+      <option value="">All Status</option>
+      <option value="scheduled">Scheduled</option>
+      <option value="live">Live</option>
+      <option value="completed">Completed</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="classesList"></div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allClasses = [];
+  let profilesMap = {};
+  let teachersMap = {};
+
+  async function loadClasses() {
+    document.getElementById('loading').classList.remove('hidden');
+
+    const { data: classes } = await db.from('classes').select('*').order('scheduled_at', { ascending: false });
+    allClasses = classes || [];
+
+    // Load profiles (students)
+    const studentIds = [...new Set(allClasses.map(c => c.student_id).filter(Boolean))];
+    const teacherIds = [...new Set(allClasses.map(c => c.teacher_id).filter(Boolean))];
+
+    if (studentIds.length) {
+      const { data: profiles } = await db.from('profiles').select('id, full_name, email').in('id', studentIds);
+      (profiles || []).forEach(p => profilesMap[p.id] = p);
+    }
+    if (teacherIds.length) {
+      const { data: teachers } = await db.from('teachers').select('id, name').in('id', teacherIds);
+      (teachers || []).forEach(t => teachersMap[t.id] = t);
+    }
+
+    renderClasses(allClasses);
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderClasses(list) {
+    const box = document.getElementById('classesList');
+    if (!list.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No classes found</div>';
+      return;
+    }
+    box.innerHTML = list.map(c => {
+      const student = profilesMap[c.student_id] || {};
+      const teacher = teachersMap[c.teacher_id] || {};
+      const sName = student.full_name || student.email?.split('@')[0] || 'Unknown Student';
+      const tName = teacher.name || 'N/A';
+      const date = new Date(c.scheduled_at);
+      const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const statusColor = c.status === 'completed' ? 'bg-green-100 text-green-700' : c.status === 'live' ? 'bg-red-100 text-red-700' : c.status === 'cancelled' ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-700';
+      const room = c.jitsi_room || ('ALC-Class-' + c.id.slice(0, 8));
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 mb-3 card-hover">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-14 h-14 bg-primary rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0">
+                <span class="text-xs">${date.toLocaleDateString('en-US', { month: 'short' })}</span>
+                <span class="text-lg font-bold leading-none">${date.getDate()}</span>
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-primary text-sm truncate">${c.title || 'Class'}</p>
+                <p class="text-xs text-charcoal/60 truncate">Student: ${sName} • Teacher: ${tName}</p>
+                <p class="text-xs text-charcoal/50 mt-0.5">${dateStr} at ${timeStr} • ${c.duration_min || 30} min</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs px-3 py-1 rounded-full font-semibold ${statusColor}">${c.status}</span>
+              ${c.status !== 'completed' && c.status !== 'cancelled' ? `
+                <a href="https://meet.jit.si/${room}" target="_blank" class="text-xs bg-primary text-white px-3 py-2 rounded-full font-semibold">Join</a>
+                <button onclick="cancelClass('${c.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold">Cancel</button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.cancelClass = async (id) => {
+    if (!confirm('Cancel this class?')) return;
+    const { error } = await db.from('classes').update({ status: 'cancelled' }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadClasses();
+  };
+
+  document.getElementById('filterStatus').addEventListener('change', (e) => {
+    const v = e.target.value;
+    renderClasses(v ? allClasses.filter(c => c.status === v) : allClasses);
+  });
+
+  loadClasses();
+})();
+</script>
+
+</body>
+</html>
