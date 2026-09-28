@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign Up | Al-Arabiyah Learning Center</title>
-<meta name="description" content="Create your free Al-Arabiyah Learning Center account.">
+<meta name="description" content="Create your free account as a Student or Teacher.">
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#0A3622">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
@@ -23,7 +23,10 @@ h1, h2, h3 { font-family: 'Playfair Display', serif; }
 .btn-primary { background: #0A3622; color: white; transition: all 0.3s; }
 .btn-primary:hover { background: #062218; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-input:focus, select:focus { outline: none; border-color: #0A3622; box-shadow: 0 0 0 3px rgba(10,54,34,0.1); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #0A3622; box-shadow: 0 0 0 3px rgba(10,54,34,0.1); }
+.role-card { transition: all 0.2s; cursor: pointer; }
+.role-card.selected { border-color: #0A3622; background: rgba(10,54,34,0.05); }
+.role-card.selected .role-icon { background: #0A3622; color: #D4AF37; }
 </style>
 </head>
 <body class="bg-cream min-h-screen flex flex-col islamic-pattern">
@@ -46,7 +49,25 @@ input:focus, select:focus { outline: none; border-color: #0A3622; box-shadow: 0 
     <div class="bg-white rounded-3xl shadow-xl border border-primary/5 p-8">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-primary mb-2">Create Account</h1>
-        <p class="text-charcoal/60 text-sm">Start your Qur'an journey today</p>
+        <p class="text-charcoal/60 text-sm">Join as a student or teacher</p>
+      </div>
+
+      <!-- Role Selection -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div id="roleStudent" class="role-card selected border-2 border-primary/20 rounded-2xl p-4 text-center" data-role="student">
+          <div class="role-icon w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-2">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z M12 14v7"/></svg>
+          </div>
+          <p class="font-bold text-primary text-sm">Student</p>
+          <p class="text-xs text-charcoal/60 mt-1">Learn Qur'an</p>
+        </div>
+        <div id="roleTeacher" class="role-card border-2 border-primary/20 rounded-2xl p-4 text-center" data-role="teacher">
+          <div class="role-icon w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-2">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <p class="font-bold text-primary text-sm">Teacher</p>
+          <p class="text-xs text-charcoal/60 mt-1">Teach Qur'an</p>
+        </div>
       </div>
 
       <form id="signupForm" class="space-y-5">
@@ -61,13 +82,37 @@ input:focus, select:focus { outline: none; border-color: #0A3622; box-shadow: 0 
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-primary mb-2">Phone / WhatsApp</label>
-          <input type="tel" id="phone" placeholder="+880 1XXX XXXXXX" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <label class="block text-sm font-semibold text-primary mb-2">Phone / WhatsApp *</label>
+          <input type="tel" id="phone" required placeholder="+880 1XXX XXXXXX" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
         </div>
 
         <div>
           <label class="block text-sm font-semibold text-primary mb-2">Country</label>
           <input type="text" id="country" placeholder="e.g. Bangladesh" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+
+        <!-- Teacher Only Fields -->
+        <div id="teacherFields" class="hidden space-y-4 pt-3 border-t border-primary/10">
+          <p class="text-xs font-semibold text-secondary uppercase">Teacher Information</p>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Experience (years) *</label>
+            <input type="number" id="experience" placeholder="e.g. 5" min="0" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Bio / About You *</label>
+            <textarea id="bio" rows="3" placeholder="Brief introduction about yourself" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Specialities (comma separated)</label>
+            <input type="text" id="specialities" placeholder="Quran Reading, Tajweed, Hifz" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Qualifications (comma separated)</label>
+            <input type="text" id="qualifications" placeholder="Alim, B.A. Islamic Studies" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div class="bg-secondary/10 border border-secondary/30 rounded-xl p-3">
+            <p class="text-xs text-primary">⚠️ Teacher accounts need admin approval before going live.</p>
+          </div>
         </div>
 
         <div>
@@ -105,11 +150,34 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let selectedRole = 'student';
+
+// Toggle password
 document.getElementById('togglePw').addEventListener('click', () => {
   const pw = document.getElementById('password');
   pw.type = pw.type === 'password' ? 'text' : 'password';
 });
 
+// Role selection
+document.querySelectorAll('.role-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedRole = card.dataset.role;
+    
+    if (selectedRole === 'teacher') {
+      document.getElementById('teacherFields').classList.remove('hidden');
+      document.getElementById('experience').required = true;
+      document.getElementById('bio').required = true;
+    } else {
+      document.getElementById('teacherFields').classList.add('hidden');
+      document.getElementById('experience').required = false;
+      document.getElementById('bio').required = false;
+    }
+  });
+});
+
+// Signup
 document.getElementById('signupForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
@@ -128,9 +196,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   const { data, error } = await db.auth.signUp({
     email,
     password,
-    options: {
-      data: { full_name: fullName }
-    }
+    options: { data: { full_name: fullName } }
   });
 
   if (error) {
@@ -142,18 +208,52 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     return;
   }
 
-  // Update profile with phone/country
-  if (data.user) {
-    await db.from('profiles').update({ phone, country, full_name: fullName }).eq('id', data.user.id);
+  if (!data.user) {
+    status.textContent = 'Check your email to confirm your account!';
+    status.className = 'text-sm text-center text-blue-600';
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
+    return;
   }
 
-  status.textContent = 'Account created! Redirecting...';
+  // Update profile
+  await db.from('profiles').update({ 
+    phone, 
+    country, 
+    full_name: fullName,
+    role: selectedRole === 'teacher' ? 'teacher' : 'student'
+  }).eq('id', data.user.id);
+
+  // If teacher, create teacher record
+  if (selectedRole === 'teacher') {
+    const exp = document.getElementById('experience').value;
+    const bio = document.getElementById('bio').value.trim();
+    const specialities = document.getElementById('specialities').value.split(',').map(s => s.trim()).filter(Boolean);
+    const qualifications = document.getElementById('qualifications').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    await db.from('teachers').insert({
+      profile_id: data.user.id,
+      name: fullName,
+      bio: bio,
+      experience_years: Number(exp) || 0,
+      specialities: specialities.length ? specialities : null,
+      qualifications: qualifications.length ? qualifications : null,
+      is_active: true
+    });
+  }
+
+  status.textContent = selectedRole === 'teacher' 
+    ? '✓ Teacher account created! Waiting for admin approval.' 
+    : '✓ Account created! Redirecting...';
   status.className = 'text-sm text-center text-green-600';
   status.classList.remove('hidden');
 
   setTimeout(() => {
-    window.location.href = '../student/dashboard.html';
-  }, 1200);
+    window.location.href = selectedRole === 'teacher' 
+      ? '../teacher/dashboard.html' 
+      : '../student/dashboard.html';
+  }, 1500);
 });
 </script>
 
