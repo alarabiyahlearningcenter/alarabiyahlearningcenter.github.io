@@ -31,9 +31,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #0A3622
 <header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
     <a href="index.html" class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-2 border-secondary">
-        <span class="text-secondary text-2xl font-arabic">ق</span>
-      </div>
+      <img src="assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
       <div class="hidden sm:block">
         <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
         <div class="text-xs text-primary/70">Learning Center</div>
@@ -136,9 +134,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #0A3622
     <div class="grid md:grid-cols-4 gap-8 mb-12">
       <div>
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-2 border-secondary">
-            <span class="text-secondary text-2xl font-arabic">ق</span>
-          </div>
+          <img src="assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
           <div>
             <div class="font-heading font-bold text-white">Al-Arabiyah</div>
             <div class="text-xs text-white/60">Learning Center</div>
@@ -168,7 +164,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #0A3622
       <div>
         <h4 class="font-semibold mb-4 text-secondary">Contact</h4>
         <ul class="space-y-2 text-sm text-white/70">
-          <li>WhatsApp: +8801773266555</li>
+          <li>WhatsApp: +8801737326555</li>
           <li>Email: info@alarabiyahlearningcenter.com</li>
           <li>Rajshahi, Bangladesh</li>
         </ul>
@@ -180,7 +176,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #0A3622
   </div>
 </footer>
 
-<a href="https://wa.me/8801773266555" target="_blank" class="whatsapp-float">
+<a href="https://wa.me/8801737326555" target="_blank" class="whatsapp-float">
   <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
 </a>
 
@@ -218,7 +214,7 @@ document.getElementById('assessmentForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const f = e.target;
   const text = `Assalamu Alaikum! Free Assessment Request%0A%0AParent: ${f.parent_name.value}%0AStudent: ${f.student_name.value}%0AAge: ${f.age.value}%0ACourse: ${f.course.value}%0ATime: ${f.preferred_time.value}%0APhone: ${f.phone.value}${f.message.value ? '%0AMessage: ' + f.message.value : ''}`;
-  window.open(`https://wa.me/8801773266555?text=${text}`, '_blank');
+  window.open(`https://wa.me/8801737326555?text=${text}`, '_blank');
 });
 
 loadCourses();
