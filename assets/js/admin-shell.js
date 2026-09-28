@@ -32,6 +32,7 @@ function buildAdminHeader() {
       </div>
       <div class="flex items-center gap-3">
         <span class="hidden md:inline-block text-xs font-semibold px-3 py-1 rounded-full" style="background:#0A3622;color:#D4AF37;">ADMIN</span>
+        <div id="notifBellContainer"></div>
         <div class="relative">
           <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
             <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">A</div>
@@ -142,6 +143,12 @@ async function initAdminShell() {
   document.getElementById('userName').textContent = fullName;
   document.getElementById('userEmail').textContent = session.user.email;
   document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+
+  // Mount notification bell
+  if (window.NotifBell && document.getElementById('notifBellContainer')) {
+    document.getElementById('notifBellContainer').innerHTML = window.NotifBell.html();
+    window.NotifBell.mount(session.user.id);
+  }
 
   // Fire event for page scripts
   window.dispatchEvent(new CustomEvent('adminReady', {
