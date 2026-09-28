@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Courses | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' },
+  fontFamily: { heading: ['Playfair Display', 'serif'], body: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] }
+}}}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s; }
+.btn-primary:hover { background: #062218; }
+.card-hover { transition: all 0.3s; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(10,54,34,0.1); }
+.sidebar-link { transition: all 0.2s; }
+.sidebar-link:hover, .sidebar-link.active { background: rgba(212,175,55,0.15); color: #0A3622; border-left: 3px solid #D4AF37; }
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Learning Center</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-sm text-primary font-medium hover:text-secondary">← Dashboard</a>
+      <div class="relative">
+        <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
+          <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">S</div>
+        </button>
+        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary/10 py-2">
+          <div class="px-4 py-2 border-b border-primary/10">
+            <p id="userName" class="text-sm font-semibold text-primary">Student</p>
+            <p id="userEmail" class="text-xs text-charcoal/60 truncate">student@email.com</p>
+          </div>
+          <a href="profile.html" class="block px-4 py-2 text-sm text-charcoal/70 hover:bg-cream">My Profile</a>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="my-courses.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          My Courses
+        </a>
+        <a href="live-class.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Live Class
+        </a>
+        <a href="payment.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Payments
+        </a>
+        <a href="certificate.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+          Certificates
+        </a>
+        <a href="profile.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          My Profile
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">My Courses</h1>
+      <p class="text-charcoal/60 text-sm">Track your enrolled courses and progress</p>
+    </div>
+
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+      <p class="text-charcoal/60 mt-4 text-sm">Loading courses...</p>
+    </div>
+
+    <div id="coursesContainer" class="hidden grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Sidebar toggle
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.remove('hidden');
+});
+document.getElementById('sidebarClose').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+
+document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('userMenu').classList.toggle('hidden');
+});
+document.addEventListener('click', () => {
+  document.getElementById('userMenu').classList.add('hidden');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await db.auth.signOut();
+  window.location.href = '../auth/login.html';
+});
+
+// ===== MAIN LOGIC =====
+const courseIcons = { 'noorani-qaida': '01', 'quran-reading': '02', 'tajweed': '03', 'hifz': '04', 'islamic-learning': '05' };
+
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  const user = session.user;
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single();
+  const fullName = profile?.full_name || user.email.split('@')[0];
+  document.getElementById('userName').textContent = fullName;
+  document.getElementById('userEmail').textContent = user.email;
+  document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+
+  // Load enrollments with courses
+  const { data: enrollments } = await db.from('enrollments').select('*').eq('student_id', user.id).order('started_at', { ascending: false });
+  
+  const loading = document.getElementById('loading');
+  const container = document.getElementById('coursesContainer');
+
+  if (!enrollments || enrollments.length === 0) {
+    loading.classList.add('hidden');
+    container.classList.remove('hidden');
+    container.className = 'block';
+    container.innerHTML = `
+      <div class="bg-white rounded-3xl p-12 text-center border border-primary/5">
+        <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <h3 class="text-xl font-bold text-primary mb-2">No Courses Yet</h3>
+        <p class="text-charcoal/60 text-sm mb-6">You haven't enrolled in any course. Start your Qur'an journey today!</p>
+        <a href="../courses.html" class="btn-primary inline-block px-6 py-3 rounded-full font-semibold">Browse Courses</a>
+      </div>
+    `;
+    return;
+  }
+
+  // Load course details
+  const courseIds = enrollments.map(e => e.course_id).filter(Boolean);
+  const { data: courses } = await db.from('courses').select('*').in('id', courseIds);
+  const courseMap = {};
+  (courses || []).forEach(c => courseMap[c.id] = c);
+
+  container.innerHTML = enrollments.map(e => {
+    const c = courseMap[e.course_id] || {};
+    const percent = 0;
+    return `
+      <div class="bg-white rounded-2xl overflow-hidden card-hover border border-primary/5">
+        <div class="h-32 bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center relative">
+          <span class="text-5xl font-bold text-secondary">${courseIcons[c.slug] || 'Q'}</span>
+          <span class="absolute top-3 right-3 text-xs px-2 py-1 rounded-full ${e.status === 'active' ? 'bg-green-500' : e.status === 'completed' ? 'bg-secondary text-primary' : 'bg-yellow-500'} text-white font-semibold">${e.status}</span>
+        </div>
+        <div class="p-5">
+          <h3 class="font-bold text-primary text-lg mb-1">${c.title || 'Course'}</h3>
+          <p class="text-charcoal/60 text-xs mb-4 line-clamp-2">${c.description || ''}</p>
+          <div class="mb-4">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="text-charcoal/60">Progress</span>
+              <span class="font-semibold text-primary">${percent}%</span>
+            </div>
+            <div class="w-full bg-cream rounded-full h-2">
+              <div class="bg-secondary h-2 rounded-full" style="width: ${percent}%"></div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-primary/10">
+            <div>
+              <p class="text-xs text-charcoal/50">Started</p>
+              <p class="text-xs font-medium text-primary">${e.started_at ? new Date(e.started_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
+            </div>
+            <a href="live-class.html" class="btn-primary px-4 py-2 rounded-full text-xs font-semibold">Continue</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  loading.classList.add('hidden');
+  container.classList.remove('hidden');
+})();
+</script>
+
+</body>
+</html>
