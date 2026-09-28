@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white}
+.btn-red{background:#dc2626;color:white}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Student Resources</h1>
+      <p class="text-charcoal/60 text-sm">Upload guides, PDFs, and checklists</p>
+    </div>
+    <button onclick="openResourceModal()" class="btn-primary px-5 py-2.5 rounded-full font-semibold text-sm">+ Add Resource</button>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="resourcesGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</div>
+
+<div id="resourceModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 id="modalTitle" class="font-bold text-lg">Add Resource</h3>
+      <button onclick="closeResourceModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="resourceForm" class="p-6 space-y-4">
+      <input type="hidden" id="resourceId">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Title *</label>
+        <input type="text" id="title" required placeholder="How to Help Your Child Learn Quran" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Description</label>
+        <textarea id="description" rows="3" placeholder="Short description..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">File URL (Google Drive / PDF link)</label>
+        <input type="url" id="fileUrl" placeholder="https://drive.google.com/..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Category</label>
+        <select id="category" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <option value="guide">Guide</option>
+          <option value="checklist">Checklist</option>
+          <option value="pdf">PDF / Workbook</option>
+          <option value="video">Video</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="isActive" checked> Active (show on website)</label>
+      </div>
+      <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Save Resource</button>
+      <p id="formStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allResources = [];
+
+  const categoryIcons = {
+    guide: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+    checklist: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+    pdf: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+    video: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
+    other: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z'
+  };
+
+  window.openResourceModal = (res = null) => {
+    document.getElementById('resourceModal').classList.remove('hidden');
+    document.getElementById('formStatus').classList.add('hidden');
+    if (res) {
+      document.getElementById('modalTitle').textContent = 'Edit Resource';
+      document.getElementById('resourceId').value = res.id;
+      document.getElementById('title').value = res.title || '';
+      document.getElementById('description').value = res.description || '';
+      document.getElementById('fileUrl').value = res.file_url || '';
+      document.getElementById('category').value = res.category || 'guide';
+      document.getElementById('isActive').checked = !!res.is_active;
+    } else {
+      document.getElementById('modalTitle').textContent = 'Add Resource';
+      document.getElementById('resourceForm').reset();
+      document.getElementById('resourceId').value = '';
+      document.getElementById('isActive').checked = true;
+    }
+  };
+
+  window.closeResourceModal = () => {
+    document.getElementById('resourceModal').classList.add('hidden');
+  };
+
+  async function loadResources() {
+    document.getElementById('loading').classList.remove('hidden');
+    const { data } = await db.from('resources').select('*').order('sort_order', { ascending: true });
+    allResources = data || [];
+    renderResources();
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderResources() {
+    const grid = document.getElementById('resourcesGrid');
+    if (!allResources.length) {
+      grid.innerHTML = '<div class="col-span-full bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No resources yet. Add your first guide!</div>';
+      return;
+    }
+    grid.innerHTML = allResources.map(r => {
+      const icon = categoryIcons[r.category] || categoryIcons.other;
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"/></svg>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded-full font-semibold ${r.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${r.is_active ? 'Active' : 'Off'}</span>
+          </div>
+          <h3 class="font-bold text-primary mb-1 line-clamp-2">${r.title}</h3>
+          <p class="text-xs text-charcoal/60 mb-3 line-clamp-2">${r.description || 'No description'}</p>
+          <p class="text-xs text-secondary font-semibold uppercase mb-3">${r.category || 'other'}</p>
+          <div class="flex gap-2 pt-3 border-t border-primary/10">
+            <button onclick='openResourceModal(${JSON.stringify(r).replace(/'/g, "\\'")})' class="flex-1 text-xs bg-primary/10 text-primary px-3 py-2 rounded-full font-semibold">Edit</button>
+            <button onclick="deleteResource('${r.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.deleteResource = async (id) => {
+    if (!confirm('Delete this resource?')) return;
+    const { error } = await db.from('resources').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadResources();
+  };
+
+  document.getElementById('resourceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const status = document.getElementById('formStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const id = document.getElementById('resourceId').value;
+    const payload = {
+      title: document.getElementById('title').value.trim(),
+      description: document.getElementById('description').value.trim(),
+      file_url: document.getElementById('fileUrl').value.trim() || null,
+      category: document.getElementById('category').value,
+      is_active: document.getElementById('isActive').checked
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await db.from('resources').update(payload).eq('id', id));
+    } else {
+      ({ error } = await db.from('resources').insert(payload));
+    }
+
+    if (error) {
+      status.textContent = 'Error: ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Save Resource';
+      return;
+    }
+    status.textContent = '✓ Saved!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    setTimeout(() => {
+      closeResourceModal();
+      btn.disabled = false;
+      btn.textContent = 'Save Resource';
+      loadResources();
+    }, 800);
+  });
+
+  loadResources();
+})();
+</script>
+
+</body>
+</html>
