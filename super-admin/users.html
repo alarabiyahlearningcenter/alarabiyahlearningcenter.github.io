@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Users | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.role-badge{padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">All Users</h1>
+    <p class="text-charcoal/60 text-sm">Manage every user on the platform</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-2xl p-4 border border-primary/5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <input type="text" id="searchInput" placeholder="Search name, email, phone..." class="px-4 py-2.5 border border-primary/20 rounded-full bg-cream text-sm">
+      <select id="roleFilter" class="px-4 py-2.5 border border-primary/20 rounded-full bg-cream text-sm">
+        <option value="">All Roles</option>
+        <option value="super_admin">👑 Super Admin</option>
+        <option value="admin">Admin</option>
+        <option value="teacher">Teacher</option>
+        <option value="student">Student</option>
+      </select>
+      <div class="text-xs text-charcoal/60 flex items-center px-4" id="countDisplay">Loading...</div>
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="usersTableWrap" class="hidden bg-white rounded-2xl border border-primary/5 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-cream border-b border-primary/10">
+          <tr>
+            <th class="text-left px-4 py-3 font-semibold text-primary">User</th>
+            <th class="text-left px-4 py-3 font-semibold text-primary hidden md:table-cell">Contact</th>
+            <th class="text-left px-4 py-3 font-semibold text-primary hidden lg:table-cell">Country</th>
+            <th class="text-left px-4 py-3 font-semibold text-primary">Role</th>
+            <th class="text-right px-4 py-3 font-semibold text-primary">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Role Change Modal -->
+<div id="roleModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full">
+    <div class="bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="font-bold text-lg">Change User Role</h3>
+      <button onclick="closeRoleModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6">
+      <p class="text-sm text-charcoal/70 mb-3">User: <span id="modalUserName" class="font-semibold text-primary"></span></p>
+      <label class="block text-sm font-semibold text-primary mb-2">New Role</label>
+      <select id="newRole" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream mb-4">
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+        <option value="admin">Admin</option>
+        <option value="super_admin">👑 Super Admin</option>
+      </select>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+        <p class="text-xs text-yellow-800">⚠️ Changing role will affect user's access immediately.</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="closeRoleModal()" class="flex-1 py-3 border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary hover:text-white transition">Cancel</button>
+        <button id="confirmRoleBtn" class="flex-1 btn-primary py-3 rounded-xl font-semibold">Confirm</button>
+      </div>
+      <p id="modalStatus" class="text-sm text-center mt-3 hidden"></p>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allUsers = [];
+  let editingUserId = null;
+
+  window.closeRoleModal = () => {
+    document.getElementById('roleModal').classList.add('hidden');
+    editingUserId = null;
+  };
+
+  window.openRoleModal = (id, name, currentRole) => {
+    editingUserId = id;
+    document.getElementById('modalUserName').textContent = name;
+    document.getElementById('newRole').value = currentRole || 'student';
+    document.getElementById('modalStatus').classList.add('hidden');
+    document.getElementById('roleModal').classList.remove('hidden');
+  };
+
+  function roleBadge(role) {
+    const styles = {
+      super_admin: 'background:#D4AF37;color:#0A3622',
+      admin: 'background:rgba(10,54,34,.15);color:#0A3622',
+      teacher: 'background:rgba(212,175,55,.25);color:#0A3622',
+      student: 'background:#dbeafe;color:#1e40af'
+    };
+    const labels = {
+      super_admin: '👑 Super',
+      admin: 'Admin',
+      teacher: 'Teacher',
+      student: 'Student'
+    };
+    return `<span class="role-badge" style="${styles[role] || styles.student}">${labels[role] || 'Student'}</span>`;
+  }
+
+  function renderUsers(list) {
+    const tbody = document.getElementById('usersTable');
+    document.getElementById('countDisplay').innerHTML = `Showing <strong>${list.length}</strong> of <strong>${allUsers.length}</strong> users`;
+
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-charcoal/60">No users found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(u => {
+      const name = u.full_name || u.email?.split('@')[0] || 'User';
+      const isSelf = u.id === ctx.session.user.id;
+      return `
+        <tr class="border-b border-primary/5 hover:bg-cream/50">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-sm flex-shrink-0">${name.charAt(0).toUpperCase()}</div>
+              <div class="min-w-0">
+                <p class="font-semibold text-primary truncate">${name}${isSelf ? ' <span class="text-xs text-secondary">(You)</span>' : ''}</p>
+                <p class="text-xs text-charcoal/60 truncate">${u.email || ''}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3 hidden md:table-cell text-charcoal/70 text-xs">${u.phone || 'N/A'}</td>
+          <td class="px-4 py-3 hidden lg:table-cell text-charcoal/70 text-xs">${u.country || 'N/A'}</td>
+          <td class="px-4 py-3">${roleBadge(u.role)}</td>
+          <td class="px-4 py-3 text-right">
+            <button onclick="openRoleModal('${u.id}', '${name.replace(/'/g, "\\'")}', '${u.role}')" class="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-semibold hover:bg-primary/20">Change Role</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Load users
+  document.getElementById('loading').classList.remove('hidden');
+  const { data } = await db.from('profiles').select('*').order('created_at', { ascending: false });
+  allUsers = data || [];
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('usersTableWrap').classList.remove('hidden');
+  renderUsers(allUsers);
+
+  // Filters
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const role = document.getElementById('roleFilter').value;
+    let filtered = allUsers;
+    if (role) filtered = filtered.filter(u => u.role === role);
+    if (q) filtered = filtered.filter(u =>
+      (u.full_name || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q) ||
+      (u.phone || '').includes(q) ||
+      (u.country || '').toLowerCase().includes(q)
+    );
+    renderUsers(filtered);
+  }
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('roleFilter').addEventListener('change', applyFilters);
+
+  // Confirm role change
+  document.getElementById('confirmRoleBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('confirmRoleBtn');
+    const status = document.getElementById('modalStatus');
+    const newRole = document.getElementById('newRole').value;
+
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    status.classList.add('hidden');
+
+    const { error } = await db.from('profiles').update({ role: newRole }).eq('id', editingUserId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Confirm';
+      return;
+    }
+
+    status.textContent = '✓ Role updated!';
+    status.className = 'text-sm text-center text-green-600 mt-3';
+    status.classList.remove('hidden');
+
+    setTimeout(() => {
+      closeRoleModal();
+      btn.disabled = false;
+      btn.textContent = 'Confirm';
+      // Reload users
+      db.from('profiles').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+        allUsers = data || [];
+        applyFilters();
+      });
+    }, 1000);
+  });
+})();
+</script>
+
+</body>
+</html>
