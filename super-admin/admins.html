@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admins | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.admin-card{position:relative;overflow:hidden}
+.admin-card.super{border:2px solid #D4AF37}
+.super-crown{position:absolute;top:-8px;right:-8px;background:#D4AF37;color:#0A3622;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transform:rotate(15deg)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Admins</h1>
+      <p class="text-charcoal/60 text-sm">Manage admin & super admin accounts</p>
+    </div>
+    <button onclick="openInviteModal()" class="btn-primary px-5 py-2.5 rounded-full font-semibold text-sm">+ Invite Admin</button>
+  </div>
+
+  <div class="bg-secondary/10 border border-secondary/30 rounded-2xl p-4 mb-6">
+    <div class="flex items-start gap-3">
+      <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div>
+        <p class="text-sm font-semibold text-primary">Secret Code: <code class="bg-white px-2 py-0.5 rounded font-mono text-xs">ALC-ADMIN-2026</code></p>
+        <p class="text-xs text-charcoal/70 mt-1">Share this code with trusted people — they can self-register as Admin at <a href="../admin/signup.html" target="_blank" class="underline font-semibold">/admin/signup.html</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <h2 class="text-lg font-bold text-primary mb-3 flex items-center gap-2">
+      👑 Super Admins
+    </h2>
+    <div id="superAdminsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+  </div>
+
+  <div class="mb-4">
+    <h2 class="text-lg font-bold text-primary mb-3 flex items-center gap-2">
+      🛠️ Admins
+    </h2>
+    <div id="adminsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+</div>
+
+<!-- Invite Modal -->
+<div id="inviteModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full">
+    <div class="bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="font-bold text-lg">Invite New Admin</h3>
+      <button onclick="closeInviteModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6">
+      <p class="text-sm text-charcoal/70 mb-4">নতুন Admin তৈরি করতে তাকে শুধু <strong>Secret Code</strong> টা পাঠান। সে নিজেই <a href="../admin/signup.html" target="_blank" class="text-primary underline font-semibold">Admin Signup</a> থেকে অ্যাকাউন্ট খুলবে।</p>
+
+      <div class="bg-cream rounded-xl p-4 mb-4">
+        <p class="text-xs text-charcoal/60 mb-1">Secret Code:</p>
+        <div class="flex items-center gap-2">
+          <code id="secretCodeText" class="flex-1 bg-white px-3 py-2 rounded-lg font-mono text-sm text-primary">ALC-ADMIN-2026</code>
+          <button onclick="copySecret()" class="bg-primary text-white px-3 py-2 rounded-lg text-xs font-semibold">Copy</button>
+        </div>
+      </div>
+
+      <div class="space-y-2 text-sm">
+        <p class="font-semibold text-primary mb-2">কীভাবে কাজ করবে:</p>
+        <div class="flex items-start gap-2 text-xs text-charcoal/70">
+          <span class="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs">1</span>
+          <span>Secret Code কপি করে নতুন Admin কে WhatsApp এ পাঠান</span>
+        </div>
+        <div class="flex items-start gap-2 text-xs text-charcoal/70">
+          <span class="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs">2</span>
+          <span>সে <a href="../admin/signup.html" target="_blank" class="text-primary underline">Admin Signup</a> পেজে গিয়ে কোড দিয়ে অ্যাকাউন্ট খুলবে</span>
+        </div>
+        <div class="flex items-start gap-2 text-xs text-charcoal/70">
+          <span class="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs">3</span>
+          <span>সে সাথে সাথেই Admin Panel ব্যবহার করতে পারবে</span>
+        </div>
+      </div>
+
+      <button onclick="closeInviteModal()" class="btn-primary w-full py-3 rounded-xl font-semibold mt-5">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  window.closeInviteModal = () => document.getElementById('inviteModal').classList.add('hidden');
+  window.openInviteModal = () => document.getElementById('inviteModal').classList.remove('hidden');
+
+  window.copySecret = () => {
+    const text = document.getElementById('secretCodeText').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('✓ Secret code copied!');
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('✓ Secret code copied!');
+    });
+  };
+
+  function adminCard(u, isSuper) {
+    const name = u.full_name || u.email?.split('@')[0] || 'Admin';
+    const isSelf = u.id === ctx.session.user.id;
+    const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+    return `
+      <div class="admin-card ${isSuper ? 'super' : ''} bg-white rounded-2xl p-5 card-hover border border-primary/5">
+        ${isSuper ? '<div class="super-crown">👑</div>' : ''}
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0" style="${isSuper ? 'background:#D4AF37;color:#0A3622' : 'background:#0A3622;color:#D4AF37'}">${name.charAt(0).toUpperCase()}</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-bold text-primary text-sm truncate">${name}${isSelf ? ' <span class="text-xs text-secondary">(You)</span>' : ''}</p>
+            <p class="text-xs text-charcoal/60 truncate">${u.email || ''}</p>
+          </div>
+        </div>
+        <div class="space-y-1.5 text-xs text-charcoal/70 mb-3">
+          <p><span class="font-semibold text-primary">Phone:</span> ${u.phone || 'N/A'}</p>
+          <p><span class="font-semibold text-primary">Country:</span> ${u.country || 'N/A'}</p>
+          <p><span class="font-semibold text-primary">Joined:</span> ${joined}</p>
+        </div>
+        ${!isSelf ? `
+          <div class="flex gap-2 pt-3 border-t border-primary/10">
+            ${!isSuper ? `<button onclick="demoteAdmin('${u.id}', '${name.replace(/'/g, "\\'")}')" class="flex-1 text-xs bg-yellow-50 text-yellow-700 px-3 py-2 rounded-full font-semibold hover:bg-yellow-100">Demote to Student</button>` : ''}
+            ${!isSuper ? `<button onclick="deleteAdmin('${u.id}', '${name.replace(/'/g, "\\'")}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold hover:bg-red-100">Remove</button>` : ''}
+            ${isSuper ? `<span class="text-xs text-charcoal/50 text-center w-full">Protected Account</span>` : ''}
+          </div>
+        ` : `
+          <div class="pt-3 border-t border-primary/10 text-center">
+            <span class="text-xs text-charcoal/50">This is your account</span>
+          </div>
+        `}
+      </div>
+    `;
+  }
+
+  async function loadAdmins() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('superAdminsGrid').innerHTML = '';
+    document.getElementById('adminsGrid').innerHTML = '';
+
+    const { data } = await db.from('profiles').select('*').in('role', ['super_admin', 'admin']).order('created_at', { ascending: true });
+
+    const supers = (data || []).filter(u => u.role === 'super_admin');
+    const admins = (data || []).filter(u => u.role === 'admin');
+
+    document.getElementById('superAdminsGrid').innerHTML = supers.length
+      ? supers.map(u => adminCard(u, true)).join('')
+      : '<div class="col-span-full bg-white rounded-2xl p-6 text-center text-charcoal/60 text-sm border border-primary/5">No super admins</div>';
+
+    document.getElementById('adminsGrid').innerHTML = admins.length
+      ? admins.map(u => adminCard(u, false)).join('')
+      : '<div class="col-span-full bg-white rounded-2xl p-6 text-center text-charcoal/60 text-sm border border-primary/5">No admins yet. Click "Invite Admin" to add.</div>';
+
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  window.demoteAdmin = async (id, name) => {
+    if (!confirm(`Demote "${name}" to Student? They will lose admin access.`)) return;
+    const { error } = await db.from('profiles').update({ role: 'student' }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    alert('✓ Admin demoted to Student');
+    loadAdmins();
+  };
+
+  window.deleteAdmin = async (id, name) => {
+    if (!confirm(`⚠️ Permanently DELETE "${name}"?\n\nThis will remove their account. This cannot be undone.`)) return;
+    if (!confirm('Are you absolutely sure? Last warning!')) return;
+
+    // Delete profile (cascade will handle rest)
+    const { error } = await db.from('profiles').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    alert('✓ Admin deleted');
+    loadAdmins();
+  };
+
+  loadAdmins();
+})();
+</script>
+
+</body>
+</html>
