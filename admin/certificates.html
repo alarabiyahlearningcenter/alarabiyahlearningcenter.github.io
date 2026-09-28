@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificates | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white}
+.btn-red{background:#dc2626;color:white}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Certificates</h1>
+      <p class="text-charcoal/60 text-sm">Issue and manage student certificates</p>
+    </div>
+    <button onclick="openCertModal()" class="btn-primary px-5 py-2.5 rounded-full font-semibold text-sm">+ Issue Certificate</button>
+  </div>
+
+  <div class="bg-white rounded-2xl p-4 border border-primary/5 mb-6">
+    <div class="flex items-center gap-3">
+      <input type="text" id="searchInput" placeholder="Search by ID, student, or course..." class="flex-1 px-4 py-2.5 border border-primary/20 rounded-full bg-cream text-sm">
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="certsList"></div>
+</div>
+
+<div id="certModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="font-bold text-lg">Issue New Certificate</h3>
+      <button onclick="closeCertModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="certForm" class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Select Student *</label>
+        <select id="studentSelect" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <option value="">-- Select Student --</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Select Course *</label>
+        <select id="courseSelect" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <option value="">-- Select Course --</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Certificate ID *</label>
+        <input type="text" id="certId" required readonly class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-gray-50 font-mono">
+      </div>
+      <div class="bg-secondary/10 border border-secondary/30 rounded-xl p-3">
+        <p class="text-xs text-primary">💡 Certificate ID অটো তৈরি হবে। Student এই ID দিয়ে <a href="../certificate-verification.html" target="_blank" class="underline font-semibold">Verify</a> করতে পারবে।</p>
+      </div>
+      <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Issue Certificate</button>
+      <p id="formStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allCerts = [];
+  let allStudents = [];
+  let allCourses = [];
+
+  function generateCertId() {
+    const year = new Date().getFullYear();
+    const rand = Math.floor(Math.random() * 9000 + 1000);
+    return `ALC-${year}-${rand}`;
+  }
+
+  window.openCertModal = () => {
+    document.getElementById('certModal').classList.remove('hidden');
+    document.getElementById('formStatus').classList.add('hidden');
+    document.getElementById('certForm').reset();
+    document.getElementById('certId').value = generateCertId();
+  };
+
+  window.closeCertModal = () => {
+    document.getElementById('certModal').classList.add('hidden');
+  };
+
+  async function loadData() {
+    document.getElementById('loading').classList.remove('hidden');
+
+    const { data: certs } = await db.from('certificates').select('*').order('issued_at', { ascending: false });
+    allCerts = certs || [];
+
+    const { data: students } = await db.from('profiles').select('id, full_name, email').eq('role', 'student').order('full_name');
+    allStudents = students || [];
+
+    const { data: courses } = await db.from('courses').select('id, title').eq('is_active', true);
+    allCourses = courses || [];
+
+    // Fill student dropdown
+    const sSel = document.getElementById('studentSelect');
+    sSel.innerHTML = '<option value="">-- Select Student --</option>' + allStudents.map(s => {
+      const name = s.full_name || s.email?.split('@')[0] || 'Student';
+      return `<option value="${s.id}" data-name="${name}">${name} (${s.email || ''})</option>`;
+    }).join('');
+
+    // Fill course dropdown
+    const cSel = document.getElementById('courseSelect');
+    cSel.innerHTML = '<option value="">-- Select Course --</option>' + allCourses.map(c => `<option value="${c.id}" data-title="${c.title}">${c.title}</option>`).join('');
+
+    renderCerts(allCerts);
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderCerts(list) {
+    const box = document.getElementById('certsList');
+    if (!list.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No certificates issued yet</div>';
+      return;
+    }
+    box.innerHTML = list.map(c => {
+      const date = new Date(c.issued_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 mb-3 card-hover">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-primary text-sm truncate">${c.student_name}</p>
+                <p class="text-xs text-charcoal/60 truncate">${c.course_name}</p>
+                <p class="text-xs text-charcoal/50 mt-0.5 font-mono">${c.certificate_id} • ${date}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="../certificate-verification.html?id=${c.certificate_id}" target="_blank" class="text-xs bg-primary/10 text-primary px-3 py-2 rounded-full font-semibold">View</a>
+              <button onclick="deleteCert('${c.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold">Delete</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.deleteCert = async (id) => {
+    if (!confirm('Delete this certificate? Student will not be able to verify it anymore.')) return;
+    const { error } = await db.from('certificates').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadData();
+  };
+
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    if (!q) { renderCerts(allCerts); return; }
+    renderCerts(allCerts.filter(c => 
+      (c.certificate_id || '').toLowerCase().includes(q) ||
+      (c.student_name || '').toLowerCase().includes(q) ||
+      (c.course_name || '').toLowerCase().includes(q)
+    ));
+  });
+
+  document.getElementById('certForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const status = document.getElementById('formStatus');
+    btn.disabled = true;
+    btn.textContent = 'Issuing...';
+
+    const sSel = document.getElementById('studentSelect');
+    const cSel = document.getElementById('courseSelect');
+    const studentName = sSel.selectedOptions[0]?.dataset.name || '';
+    const courseTitle = cSel.selectedOptions[0]?.dataset.title || '';
+
+    const payload = {
+      certificate_id: document.getElementById('certId').value,
+      student_id: sSel.value,
+      course_id: cSel.value,
+      student_name: studentName,
+      course_name: courseTitle,
+      issued_by: ctx.session.user.id
+    };
+
+    const { error } = await db.from('certificates').insert(payload);
+
+    if (error) {
+      status.textContent = 'Error: ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Issue Certificate';
+      return;
+    }
+    status.textContent = '✓ Certificate issued!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    setTimeout(() => {
+      closeCertModal();
+      btn.disabled = false;
+      btn.textContent = 'Issue Certificate';
+      loadData();
+    }, 1200);
+  });
+
+  loadData();
+})();
+</script>
+
+</body>
+</html>
