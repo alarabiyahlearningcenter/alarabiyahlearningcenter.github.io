@@ -284,7 +284,7 @@ async function loadCourses() {
       <h3 class="text-xl font-bold text-primary mb-2">${c.title}</h3>
       <p class="text-charcoal/60 text-sm mb-4">${c.description || ''}</p>
       <div class="flex items-center justify-between pt-4 border-t border-primary/10">
-        <div><p class="text-xs text-charcoal/50">Starting from</p><p class="text-primary font-bold">BDT ${c.price_bdt || 0}</p></div>
+        <div><p class="text-xs text-charcoal/50">Starting from</p><p class="text-primary font-bold">${(c.price_bdt && c.price_usd) ? "৳" + c.price_bdt + " / $" + c.price_usd : (c.price_bdt ? "৳" + c.price_bdt : (c.price_usd ? "$" + c.price_usd : "Free"))}</p></div>
         <a href="course-details.html?slug=${c.slug}" class="text-secondary font-semibold text-sm">Learn More</a>
       </div>
     </div>
