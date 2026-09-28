@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payments | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white;transition:.2s}
+.btn-green:hover{background:#15803d}
+.btn-red{background:#dc2626;color:white;transition:.2s}
+.btn-red:hover{background:#b91c1c}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Payments</h1>
+      <p class="text-charcoal/60 text-sm">Verify student payments</p>
+    </div>
+    <div class="flex gap-2">
+      <select id="filterStatus" class="px-4 py-2.5 border border-primary/20 rounded-full bg-white text-sm">
+        <option value="">All Payments</option>
+        <option value="pending">Pending</option>
+        <option value="verified">Verified</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Pending</p>
+      <p id="statPending" class="text-2xl font-bold text-yellow-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Verified</p>
+      <p id="statVerified" class="text-2xl font-bold text-green-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Total Revenue</p>
+      <p id="statRevenue" class="text-2xl font-bold text-primary">৳0</p>
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="paymentsList"></div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  let allPayments = [];
+  let profilesMap = {};
+  let coursesMap = {};
+
+  async function loadPayments() {
+    document.getElementById('loading').classList.remove('hidden');
+
+    const { data: payments } = await db.from('payments').select('*').order('created_at', { ascending: false });
+    allPayments = payments || [];
+
+    const studentIds = [...new Set(allPayments.map(p => p.student_id).filter(Boolean))];
+    const courseIds = [...new Set(allPayments.map(p => p.course_id).filter(Boolean))];
+
+    if (studentIds.length) {
+      const { data: profiles } = await db.from('profiles').select('id, full_name, email, phone').in('id', studentIds);
+      (profiles || []).forEach(p => profilesMap[p.id] = p);
+    }
+    if (courseIds.length) {
+      const { data: courses } = await db.from('courses').select('id, title').in('id', courseIds);
+      (courses || []).forEach(c => coursesMap[c.id] = c);
+    }
+
+    const pending = allPayments.filter(p => p.status === 'pending').length;
+    const verified = allPayments.filter(p => p.status === 'verified').length;
+    const revenue = allPayments.filter(p => p.status === 'verified').reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statVerified').textContent = verified;
+    document.getElementById('statRevenue').textContent = '৳' + revenue;
+
+    renderList(allPayments);
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderList(list) {
+    const box = document.getElementById('paymentsList');
+    if (!list.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No payments found</div>';
+      return;
+    }
+    box.innerHTML = list.map(p => {
+      const student = profilesMap[p.student_id] || {};
+      const course = coursesMap[p.course_id] || {};
+      const sName = student.full_name || student.email?.split('@')[0] || 'Unknown';
+      const date = new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const statusColor = p.status === 'verified' ? 'bg-green-100 text-green-700' : p.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 mb-3">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${sName.charAt(0).toUpperCase()}</div>
+              <div class="min-w-0">
+                <p class="font-bold text-primary text-sm truncate">${sName}</p>
+                <p class="text-xs text-charcoal/60 truncate">${course.title || 'N/A'} • ${p.method?.toUpperCase() || 'N/A'}</p>
+                <p class="text-xs text-charcoal/50 mt-0.5">TXN: ${p.transaction_id || 'N/A'} • ${date}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <p class="font-bold text-primary">৳${p.amount}</p>
+                <span class="text-xs px-2 py-0.5 rounded-full font-semibold ${statusColor}">${p.status}</span>
+              </div>
+              ${p.status === 'pending' ? `
+                <button onclick="verifyPayment('${p.id}')" class="btn-green text-xs px-3 py-2 rounded-full font-semibold">✓ Verify</button>
+                <button onclick="rejectPayment('${p.id}')" class="btn-red text-xs px-3 py-2 rounded-full font-semibold">✕ Reject</button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.verifyPayment = async (id) => {
+    if (!confirm('Verify this payment?')) return;
+    const { error } = await db.from('payments').update({ 
+      status: 'verified', 
+      verified_by: ctx.session.user.id, 
+      verified_at: new Date().toISOString() 
+    }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadPayments();
+  };
+
+  window.rejectPayment = async (id) => {
+    if (!confirm('Reject this payment?')) return;
+    const { error } = await db.from('payments').update({ 
+      status: 'rejected',
+      verified_by: ctx.session.user.id,
+      verified_at: new Date().toISOString()
+    }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadPayments();
+  };
+
+  document.getElementById('filterStatus').addEventListener('change', (e) => {
+    const v = e.target.value;
+    renderList(v ? allPayments.filter(p => p.status === v) : allPayments);
+  });
+
+  loadPayments();
+})();
+</script>
+
+</body>
+</html>
