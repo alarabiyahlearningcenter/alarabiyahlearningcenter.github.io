@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin Login | Al-Arabiyah</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3{font-family:'Playfair Display',serif}
+.islamic-pattern{background-image:radial-gradient(circle at 20% 30%,rgba(212,175,55,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(10,54,34,0.05) 0%,transparent 50%)}
+.btn-primary{background:#0A3622;color:white;transition:.3s}
+.btn-primary:hover{background:#062218}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+input:focus{outline:none;border-color:#D4AF37;box-shadow:0 0 0 3px rgba(212,175,55,.2)}
+.super-badge{background:linear-gradient(135deg,#0A3622,#062218);color:#D4AF37;border:2px solid #D4AF37}
+</style>
+</head>
+<body class="bg-cream min-h-screen flex flex-col islamic-pattern">
+
+<header class="bg-cream border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="../index.html" class="flex items-center gap-3">
+      <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+      <div class="hidden sm:block">
+        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
+        <div class="text-xs text-secondary font-semibold">Super Admin</div>
+      </div>
+    </a>
+    <a href="../index.html" class="text-primary font-medium text-sm hover:text-secondary">Back to Home</a>
+  </div>
+</header>
+
+<main class="flex-1 flex items-center justify-center py-12 px-4">
+  <div class="w-full max-w-md">
+    <div class="bg-white rounded-3xl shadow-xl border-2 overflow-hidden" style="border-color:#D4AF37;">
+      <div class="super-badge px-8 py-6 text-center">
+        <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-secondary/40">
+          <span class="text-3xl">👑</span>
+        </div>
+        <h1 class="text-2xl font-bold" style="color:#D4AF37">Super Admin</h1>
+        <p class="text-xs mt-1" style="color:rgba(212,175,55,.7)">God Mode — Full System Control</p>
+      </div>
+
+      <div class="p-8">
+        <form id="loginForm" class="space-y-5">
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Super Admin Email</label>
+            <input type="email" id="email" required placeholder="alcadmin@gmail.com" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Password</label>
+            <div class="relative">
+              <input type="password" id="password" required placeholder="Your password" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream pr-12">
+              <button type="button" id="togglePw" class="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" id="submitBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Login as Super Admin</button>
+          <p id="status" class="text-sm text-center hidden"></p>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-primary/10 text-center">
+          <a href="../admin/login.html" class="text-xs text-charcoal/50 hover:text-primary">Regular Admin Login →</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-charcoal/50 mt-6">🔒 Authorized personnel only</p>
+  </div>
+</main>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script>
+document.getElementById('togglePw').addEventListener('click', () => {
+  const pw = document.getElementById('password');
+  pw.type = pw.type === 'password' ? 'text' : 'password';
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+  status.classList.add('hidden');
+
+  const { data, error } = await window.db.auth.signInWithPassword({
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value
+  });
+
+  if (error) {
+    status.textContent = error.message;
+    status.className = 'text-sm text-center text-red-600';
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Login as Super Admin';
+    return;
+  }
+
+  const { data: profile } = await window.db.from('profiles').select('role, full_name').eq('id', data.user.id).single();
+
+  if (!profile || profile.role !== 'super_admin') {
+    await window.db.auth.signOut();
+    status.textContent = '❌ Access Denied. Super Admin account required.';
+    status.className = 'text-sm text-center text-red-600';
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Login as Super Admin';
+    return;
+  }
+
+  status.textContent = '✓ Welcome, ' + profile.full_name + '!';
+  status.className = 'text-sm text-center text-green-600';
+  status.classList.remove('hidden');
+
+  setTimeout(() => {
+    window.location.href = 'dashboard.html';
+  }, 800);
+});
+
+(async () => {
+  const { data: { session } } = await window.db.auth.getSession();
+  if (session) {
+    const { data: profile } = await window.db.from('profiles').select('role').eq('id', session.user.id).single();
+    if (profile && profile.role === 'super_admin') {
+      window.location.href = 'dashboard.html';
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
