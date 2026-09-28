@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Students | Teacher Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' },
+  fontFamily: { heading: ['Playfair Display', 'serif'], body: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] }
+}}}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s; }
+.btn-primary:hover { background: #062218; }
+.card-hover { transition: all 0.3s; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(10,54,34,0.1); }
+.sidebar-link { transition: all 0.2s; }
+.sidebar-link:hover, .sidebar-link.active { background: rgba(212,175,55,0.15); color: #0A3622; border-left: 3px solid #D4AF37; }
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Teacher Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="hidden md:inline-block bg-secondary/20 text-primary text-xs font-semibold px-3 py-1 rounded-full">TEACHER</span>
+      <div class="relative">
+        <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
+          <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">T</div>
+        </button>
+        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary/10 py-2">
+          <div class="px-4 py-2 border-b border-primary/10">
+            <p id="userName" class="text-sm font-semibold text-primary">Teacher</p>
+            <p id="userEmail" class="text-xs text-charcoal/60 truncate">teacher@email.com</p>
+          </div>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="my-classes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          My Classes
+        </a>
+        <a href="my-students.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          My Students
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">My Students</h1>
+      <p class="text-charcoal/60 text-sm">Students assigned to your classes</p>
+    </div>
+
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="studentsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.remove('hidden');
+});
+document.getElementById('sidebarClose').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('userMenu').classList.toggle('hidden');
+});
+document.addEventListener('click', () => document.getElementById('userMenu').classList.add('hidden'));
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await db.auth.signOut();
+  window.location.href = '../auth/login.html';
+});
+
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  const user = session.user;
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    alert('Access Denied');
+    window.location.href = '../auth/login.html';
+    return;
+  }
+
+  const fullName = profile.full_name || user.email.split('@')[0];
+  document.getElementById('userName').textContent = fullName;
+  document.getElementById('userEmail').textContent = user.email;
+  document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+
+  const { data: teacherRecord } = await db.from('teachers').select('*').eq('profile_id', user.id).maybeSingle();
+  const teacherId = teacherRecord?.id;
+
+  const grid = document.getElementById('studentsGrid');
+  document.getElementById('loading').classList.add('hidden');
+
+  if (!teacherId) {
+    grid.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center border border-primary/5"><h3 class="text-xl font-bold text-primary mb-2">Teacher Profile Not Set Up</h3><p class="text-charcoal/60 text-sm">Ask admin to create your teacher profile.</p></div>';
+    return;
+  }
+
+  // Get unique student ids from classes and enrollments
+  const { data: classes } = await db.from('classes').select('student_id').eq('teacher_id', teacherId);
+  const { data: enrollments } = await db.from('enrollments').select('student_id, course_id').eq('teacher_id', teacherId);
+
+  const studentIds = [...new Set([
+    ...(classes || []).map(c => c.student_id),
+    ...(enrollments || []).map(e => e.student_id)
+  ].filter(Boolean))];
+
+  if (studentIds.length === 0) {
+    grid.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center border border-primary/5"><h3 class="text-xl font-bold text-primary mb-2">No Students Yet</h3><p class="text-charcoal/60 text-sm mb-4">You don\'t have students assigned. Schedule a class to add students.</p><a href="my-classes.html" class="btn-primary inline-block px-6 py-3 rounded-full font-semibold">Schedule Class</a></div>';
+    return;
+  }
+
+  const { data: profiles } = await db.from('profiles').select('*').in('id', studentIds);
+  const { data: courses } = await db.from('courses').select('id, title');
+
+  grid.innerHTML = (profiles || []).map(s => {
+    const sName = s.full_name || s.email?.split('@')[0] || 'Student';
+    const sClasses = (classes || []).filter(c => c.student_id === s.id).length;
+    const sEnrollments = (enrollments || []).filter(e => e.student_id === s.id);
+    const courseTitles = sEnrollments.map(e => (courses || []).find(c => c.id === e.course_id)?.title).filter(Boolean);
+
+    return `
+      <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-lg">${sName.charAt(0).toUpperCase()}</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-bold text-primary text-sm truncate">${sName}</p>
+            <p class="text-xs text-charcoal/60 truncate">${s.email || 'No email'}</p>
+          </div>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-charcoal/60">Classes Taken</span>
+            <span class="font-semibold text-primary">${sClasses}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-charcoal/60">Phone</span>
+            <span class="font-semibold text-primary">${s.phone || 'N/A'}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-charcoal/60">Country</span>
+            <span class="font-semibold text-primary">${s.country || 'N/A'}</span>
+          </div>
+        </div>
+        ${courseTitles.length ? `<div class="mt-3 pt-3 border-t border-primary/10"><p class="text-xs text-charcoal/60 mb-1">Courses:</p><div class="flex flex-wrap gap-1">${courseTitles.map(t => `<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">${t}</span>`).join('')}</div></div>` : ''}
+        <div class="mt-4 flex gap-2">
+          <a href="https://wa.me/${(s.phone || '').replace(/[^0-9]/g, '') || '8801737326555'}" target="_blank" class="flex-1 text-center text-xs bg-green-600 text-white px-3 py-2 rounded-full font-semibold hover:bg-green-700">WhatsApp</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+})();
+</script>
+
+</body>
+</html>
+EOcat >> teacher/my-students.html << 'EOF'
+
+<script>
+const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.remove('hidden');
+});
+document.getElementById('sidebarClose').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('userMenu').classList.toggle('hidden');
+});
+document.addEventListener('click', () => document.getElementById('userMenu').classList.add('hidden'));
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await db.auth.signOut();
+  window.location.href = '../auth/login.html';
+});
+
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  const user = session.user;
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    alert('Access Denied');
+    window.location.href = '../auth/login.html';
+    return;
+  }
+
+  const fullName = profile.full_name || user.email.split('@')[0];
+  document.getElementById('userName').textContent = fullName;
+  document.getElementById('userEmail').textContent = user.email;
+  document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+
+  const { data: teacherRecord } = await db.from('teachers').select('*').eq('profile_id', user.id).maybeSingle();
+  const teacherId = teacherRecord?.id;
+
+  const grid = document.getElementById('studentsGrid');
+  document.getElementById('loading').classList.add('hidden');
+
+  if (!teacherId) {
+    grid.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center border border-primary/5"><h3 class="text-xl font-bold text-primary mb-2">Teacher Profile Not Set Up</h3><p class="text-charcoal/60 text-sm">Ask admin to create your teacher profile.</p></div>';
+    return;
+  }
+
+  // Get unique student ids from classes and enrollments
+  const { data: classes } = await db.from('classes').select('student_id').eq('teacher_id', teacherId);
+  const { data: enrollments } = await db.from('enrollments').select('student_id, course_id').eq('teacher_id', teacherId);
+
+  const studentIds = [...new Set([
+    ...(classes || []).map(c => c.student_id),
+    ...(enrollments || []).map(e => e.student_id)
+  ].filter(Boolean))];
+
+  if (studentIds.length === 0) {
+    grid.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center border border-primary/5"><h3 class="text-xl font-bold text-primary mb-2">No Students Yet</h3><p class="text-charcoal/60 text-sm mb-4">You don\'t have students assigned. Schedule a class to add students.</p><a href="my-classes.html" class="btn-primary inline-block px-6 py-3 rounded-full font-semibold">Schedule Class</a></div>';
+    return;
+  }
+
+  const { data: profiles } = await db.from('profiles').select('*').in('id', studentIds);
+  const { data: courses } = await db.from('courses').select('id, title');
+
+  grid.innerHTML = (profiles || []).map(s => {
+    const sName = s.full_name || s.email?.split('@')[0] || 'Student';
+    const sClasses = (classes || []).filter(c => c.student_id === s.id).length;
+    const sEnrollments = (enrollments || []).filter(e => e.student_id === s.id);
+    const courseTitles = sEnrollments.map(e => (courses || []).find(c => c.id === e.course_id)?.title).filter(Boolean);
+
+    return `
+      <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-lg">${sName.charAt(0).toUpperCase()}</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-bold text-primary text-sm truncate">${sName}</p>
+            <p class="text-xs text-charcoal/60 truncate">${s.email || 'No email'}</p>
+          </div>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-charcoal/60">Classes Taken</span>
+            <span class="font-semibold text-primary">${sClasses}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-charcoal/60">Phone</span>
+            <span class="font-semibold text-primary">${s.phone || 'N/A'}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-charcoal/60">Country</span>
+            <span class="font-semibold text-primary">${s.country || 'N/A'}</span>
+          </div>
+        </div>
+        ${courseTitles.length ? `<div class="mt-3 pt-3 border-t border-primary/10"><p class="text-xs text-charcoal/60 mb-1">Courses:</p><div class="flex flex-wrap gap-1">${courseTitles.map(t => `<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">${t}</span>`).join('')}</div></div>` : ''}
+        <div class="mt-4 flex gap-2">
+          <a href="https://wa.me/${(s.phone || '').replace(/[^0-9]/g, '') || '8801737326555'}" target="_blank" class="flex-1 text-center text-xs bg-green-600 text-white px-3 py-2 rounded-full font-semibold hover:bg-green-700">WhatsApp</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+})();
+</script>
+
+</body>
+</html>

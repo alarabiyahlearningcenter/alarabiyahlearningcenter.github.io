@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Classes | Teacher Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' },
+  fontFamily: { heading: ['Playfair Display', 'serif'], body: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] }
+}}}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s; }
+.btn-primary:hover { background: #062218; }
+.card-hover { transition: all 0.3s; }
+.card-hover:hover { transform: translateY(-3px); }
+.sidebar-link { transition: all 0.2s; }
+.sidebar-link:hover, .sidebar-link.active { background: rgba(212,175,55,0.15); color: #0A3622; border-left: 3px solid #D4AF37; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #0A3622; box-shadow: 0 0 0 3px rgba(10,54,34,0.1); }
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Teacher Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="hidden md:inline-block bg-secondary/20 text-primary text-xs font-semibold px-3 py-1 rounded-full">TEACHER</span>
+      <div class="relative">
+        <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
+          <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">T</div>
+        </button>
+        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary/10 py-2">
+          <div class="px-4 py-2 border-b border-primary/10">
+            <p id="userName" class="text-sm font-semibold text-primary">Teacher</p>
+            <p id="userEmail" class="text-xs text-charcoal/60 truncate">teacher@email.com</p>
+          </div>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="my-classes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          My Classes
+        </a>
+        <a href="my-students.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          My Students
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">My Classes</h1>
+        <p class="text-charcoal/60 text-sm">Manage your scheduled classes</p>
+      </div>
+      <button id="newClassBtn" class="btn-primary px-5 py-2.5 rounded-full font-semibold text-sm">+ New Class</button>
+    </div>
+
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="classesList"></div>
+  </main>
+</div>
+
+<!-- New Class Modal -->
+<div id="classModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="font-bold text-lg">Schedule New Class</h3>
+      <button id="closeModal" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="classForm" class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Title *</label>
+        <input type="text" id="title" required placeholder="e.g. Quran Reading Session" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Date & Time *</label>
+        <input type="datetime-local" id="scheduledAt" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Duration (minutes) *</label>
+        <select id="duration" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <option value="30">30 minutes</option>
+          <option value="45">45 minutes</option>
+          <option value="60">60 minutes</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Notes (optional)</label>
+        <textarea id="notes" rows="3" placeholder="Class topic, homework, etc." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+      </div>
+      <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Create Class</button>
+      <p id="formStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let teacherId = null;
+
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.remove('hidden');
+});
+document.getElementById('sidebarClose').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarOverlay').classList.add('hidden');
+});
+document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('userMenu').classList.toggle('hidden');
+});
+document.addEventListener('click', () => document.getElementById('userMenu').classList.add('hidden'));
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await db.auth.signOut();
+  window.location.href = '../auth/login.html';
+});
+
+// Modal controls
+document.getElementById('newClassBtn').addEventListener('click', () => {
+  document.getElementById('classModal').classList.remove('hidden');
+});
+document.getElementById('closeModal').addEventListener('click', () => {
+  document.getElementById('classModal').classList.add('hidden');
+});
+
+async function loadClasses() {
+  const loading = document.getElementById('loading');
+  const list = document.getElementById('classesList');
+  loading.classList.remove('hidden');
+
+  const { data: classes } = await db.from('classes').select('*').eq('teacher_id', teacherId).order('scheduled_at', { ascending: false });
+
+  loading.classList.add('hidden');
+
+  if (!classes || classes.length === 0) {
+    list.innerHTML = `
+      <div class="bg-white rounded-3xl p-12 text-center border border-primary/5">
+        <h3 class="text-xl font-bold text-primary mb-2">No Classes Yet</h3>
+        <p class="text-charcoal/60 text-sm mb-6">Create your first class to get started.</p>
+        <button onclick="document.getElementById('classModal').classList.remove('hidden')" class="btn-primary px-6 py-3 rounded-full font-semibold">+ Schedule First Class</button>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = classes.map(c => {
+    const date = new Date(c.scheduled_at);
+    const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const statusColor = c.status === 'completed' ? 'bg-green-100 text-green-700' : c.status === 'live' ? 'bg-red-100 text-red-700' : c.status === 'cancelled' ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-700';
+    const room = c.jitsi_room || ('ALC-Class-' + c.id.slice(0, 8));
+    return `
+      <div class="bg-white rounded-2xl p-5 border border-primary/5 mb-4 card-hover">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-primary rounded-2xl flex flex-col items-center justify-center flex-shrink-0 text-white">
+              <span class="text-xs">${date.toLocaleDateString('en-US', { month: 'short' })}</span>
+              <span class="text-lg font-bold leading-none">${date.getDate()}</span>
+            </div>
+            <div>
+              <h3 class="font-bold text-primary">${c.title || 'Class'}</h3>
+              <p class="text-sm text-charcoal/60">${timeStr} • ${c.duration_min || 30} min</p>
+              ${c.notes ? `<p class="text-xs text-charcoal/50 mt-1">${c.notes}</p>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs px-3 py-1 rounded-full font-semibold ${statusColor}">${c.status}</span>
+            <a href="https://meet.jit.si/${room}" target="_blank" class="text-xs bg-primary text-white px-4 py-2 rounded-full font-semibold hover:bg-primary-dark">Start</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Create class
+document.getElementById('classForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  const status = document.getElementById('formStatus');
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+
+  const jitsiRoom = 'ALC-Class-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000);
+
+  const { error } = await db.from('classes').insert({
+    teacher_id: teacherId,
+    title: document.getElementById('title').value,
+    scheduled_at: new Date(document.getElementById('scheduledAt').value).toISOString(),
+    duration_min: Number(document.getElementById('duration').value),
+    notes: document.getElementById('notes').value,
+    jitsi_room: jitsiRoom,
+    status: 'scheduled'
+  });
+
+  if (error) {
+    status.textContent = 'Error: ' + error.message;
+    status.className = 'text-sm text-center text-red-600';
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Create Class';
+    return;
+  }
+
+  status.textContent = '✓ Class created!';
+  status.className = 'text-sm text-center text-green-600';
+  status.classList.remove('hidden');
+  document.getElementById('classForm').reset();
+  setTimeout(() => {
+    document.getElementById('classModal').classList.add('hidden');
+    status.classList.add('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Create Class';
+    loadClasses();
+  }, 1500);
+});
+
+// Init
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  currentUser = session.user;
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    alert('Access Denied');
+    window.location.href = '../auth/login.html';
+    return;
+  }
+
+  const fullName = profile.full_name || currentUser.email.split('@')[0];
+  document.getElementById('userName').textContent = fullName;
+  document.getElementById('userEmail').textContent = currentUser.email;
+  document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+
+  const { data: teacherRecord } = await db.from('teachers').select('*').eq('profile_id', currentUser.id).maybeSingle();
+  teacherId = teacherRecord?.id;
+
+  if (!teacherId) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('classesList').innerHTML = `
+      <div class="bg-white rounded-3xl p-12 text-center border border-primary/5">
+        <h3 class="text-xl font-bold text-primary mb-2">Teacher Profile Not Set Up</h3>
+        <p class="text-charcoal/60 text-sm">Ask admin to create your teacher profile first.</p>
+      </div>
+    `;
+    return;
+  }
+
+  loadClasses();
+})();
+</script>
+
+</body>
+</html>
