@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Branding | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.upload-box{border:2px dashed rgba(10,54,34,.2);transition:.2s;cursor:pointer}
+.upload-box:hover{border-color:#0A3622;background:rgba(10,54,34,.02)}
+input[type="color"]{height:48px;cursor:pointer;border-radius:12px;border:1px solid rgba(10,54,34,.2);padding:4px}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Branding</h1>
+    <p class="text-charcoal/60 text-sm">Logo, banner, colors & site identity</p>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="brandingContent" class="hidden grid lg:grid-cols-2 gap-6">
+
+    <!-- Logo Upload -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-2">Site Logo</h3>
+      <p class="text-xs text-charcoal/60 mb-4">Shown in header, footer, and PWA icon</p>
+      <div class="mb-4 flex items-center gap-4">
+        <img id="currentLogo" src="../assets/images/logo.png" alt="Logo" class="w-20 h-20 rounded-full border-2 border-secondary object-cover bg-white">
+        <div>
+          <p class="text-xs text-charcoal/60">Current Logo</p>
+          <p class="text-sm font-semibold text-primary">logo.png</p>
+        </div>
+      </div>
+      <label for="logoInput" class="upload-box rounded-xl p-6 block text-center">
+        <svg class="w-8 h-8 text-primary/40 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <p class="text-sm font-semibold text-primary">Click to upload new logo</p>
+        <p class="text-xs text-charcoal/50 mt-1">PNG or SVG, max 2MB</p>
+      </label>
+      <input type="file" id="logoInput" accept="image/*" class="hidden">
+      <p id="logoStatus" class="text-sm text-center mt-3 hidden"></p>
+    </div>
+
+    <!-- Favicon Upload -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-2">Favicon</h3>
+      <p class="text-xs text-charcoal/60 mb-4">Browser tab icon (16x16 or 32x32)</p>
+      <div class="mb-4 flex items-center gap-4">
+        <div class="w-12 h-12 bg-cream rounded-lg border border-primary/20 flex items-center justify-center">
+          <img id="currentFavicon" src="../assets/images/logo.png" alt="Favicon" class="w-8 h-8 object-contain">
+        </div>
+        <div>
+          <p class="text-xs text-charcoal/60">Current Favicon</p>
+          <p class="text-sm font-semibold text-primary">favicon.png</p>
+        </div>
+      </div>
+      <label for="faviconInput" class="upload-box rounded-xl p-6 block text-center">
+        <svg class="w-8 h-8 text-primary/40 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <p class="text-sm font-semibold text-primary">Click to upload favicon</p>
+        <p class="text-xs text-charcoal/50 mt-1">PNG, ICO, or SVG</p>
+      </label>
+      <input type="file" id="faviconInput" accept="image/*" class="hidden">
+      <p id="faviconStatus" class="text-sm text-center mt-3 hidden"></p>
+    </div>
+
+    <!-- Hero Banner -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover lg:col-span-2">
+      <h3 class="text-lg font-bold text-primary mb-2">Hero Banner</h3>
+      <p class="text-xs text-charcoal/60 mb-4">Main image on homepage hero section</p>
+      <div class="mb-4 rounded-xl overflow-hidden border border-primary/20">
+        <img id="currentBanner" src="https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=800&q=80" alt="Banner" class="w-full h-48 object-cover">
+      </div>
+      <label for="bannerInput" class="upload-box rounded-xl p-5 block text-center">
+        <svg class="w-7 h-7 text-primary/40 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <p class="text-sm font-semibold text-primary">Upload hero banner</p>
+        <p class="text-xs text-charcoal/50 mt-1">Recommended: 1200x800px, max 3MB</p>
+      </label>
+      <input type="file" id="bannerInput" accept="image/*" class="hidden">
+      <p id="bannerStatus" class="text-sm text-center mt-3 hidden"></p>
+    </div>
+
+    <!-- Colors -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4">Brand Colors</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Primary Color</label>
+          <div class="flex items-center gap-3">
+            <input type="color" id="primaryColor" value="#0A3622" class="w-20">
+            <input type="text" id="primaryColorHex" value="#0A3622" class="flex-1 px-4 py-3 border border-primary/20 rounded-xl bg-cream font-mono uppercase">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Secondary Color (Accent)</label>
+          <div class="flex items-center gap-3">
+            <input type="color" id="secondaryColor" value="#D4AF37" class="w-20">
+            <input type="text" id="secondaryColorHex" value="#D4AF37" class="flex-1 px-4 py-3 border border-primary/20 rounded-xl bg-cream font-mono uppercase">
+          </div>
+        </div>
+        <button id="saveColorsBtn" class="btn-primary w-full py-3 rounded-xl font-semibold">Save Colors</button>
+        <p id="colorStatus" class="text-sm text-center hidden"></p>
+      </div>
+    </div>
+
+    <!-- Site Identity -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4">Site Identity</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Site Name</label>
+          <input type="text" id="siteName" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Tagline</label>
+          <input type="text" id="tagline" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Footer Text</label>
+          <textarea id="footerText" rows="2" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+        <button id="saveIdentityBtn" class="btn-primary w-full py-3 rounded-xl font-semibold">Save Identity</button>
+        <p id="identityStatus" class="text-sm text-center hidden"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  // Helper: load setting
+  async function getSetting(key) {
+    const { data } = await db.from('site_settings').select('value').eq('key', key).maybeSingle();
+    if (!data) return null;
+    try { return JSON.parse(data.value); } catch { return data.value; }
+  }
+
+  // Helper: save setting
+  async function saveSetting(key, value) {
+    const jsonValue = JSON.stringify(value);
+    const { error } = await db.from('site_settings').upsert({ key, value: jsonValue }, { onConflict: 'key' });
+    return error;
+  }
+
+  // Load current settings
+  const [logo, favicon, banner, siteName, tagline, footer, primary, secondary] = await Promise.all([
+    getSetting('logo_url'),
+    getSetting('favicon_url'),
+    getSetting('hero_banner_url'),
+    getSetting('site_name'),
+    getSetting('tagline'),
+    getSetting('footer_text'),
+    getSetting('primary_color'),
+    getSetting('secondary_color')
+  ]);
+
+  if (logo) document.getElementById('currentLogo').src = logo;
+  if (favicon) document.getElementById('currentFavicon').src = favicon;
+  if (banner) document.getElementById('currentBanner').src = banner;
+  document.getElementById('siteName').value = siteName || 'Al-Arabiyah Learning Center';
+  document.getElementById('tagline').value = tagline || 'Learn • Practice • Grow';
+  document.getElementById('footerText').value = footer || 'Better Qur\'an Readers, A Stronger Ummah.';
+  document.getElementById('primaryColor').value = primary || '#0A3622';
+  document.getElementById('primaryColorHex').value = primary || '#0A3622';
+  document.getElementById('secondaryColor').value = secondary || '#D4AF37';
+  document.getElementById('secondaryColorHex').value = secondary || '#D4AF37';
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('brandingContent').classList.remove('hidden');
+
+  // ============ UPLOAD FUNCTION ============
+  async function uploadImage(file, folder, maxSizeMB = 2) {
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      throw new Error(`File too large. Max ${maxSizeMB}MB.`);
+    }
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${ext}`;
+    const { error: upError } = await db.storage.from('banners').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+    if (upError) throw upError;
+    const { data: urlData } = db.storage.from('banners').getPublicUrl(fileName);
+    return urlData.publicUrl;
+  }
+
+  // Logo upload
+  document.getElementById('logoInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('logoStatus');
+    status.textContent = 'Uploading...';
+    status.className = 'text-sm text-center text-primary mt-3';
+    status.classList.remove('hidden');
+    try {
+      const url = await uploadImage(file, 'logos', 2);
+      await saveSetting('logo_url', url);
+      document.getElementById('currentLogo').src = url;
+      status.textContent = '✓ Logo updated!';
+      status.className = 'text-sm text-center text-green-600 mt-3';
+    } catch (err) {
+      status.textContent = '❌ ' + err.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+    }
+  });
+
+  // Favicon upload
+  document.getElementById('faviconInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('faviconStatus');
+    status.textContent = 'Uploading...';
+    status.className = 'text-sm text-center text-primary mt-3';
+    status.classList.remove('hidden');
+    try {
+      const url = await uploadImage(file, 'favicons', 1);
+      await saveSetting('favicon_url', url);
+      document.getElementById('currentFavicon').src = url;
+      status.textContent = '✓ Favicon updated!';
+      status.className = 'text-sm text-center text-green-600 mt-3';
+    } catch (err) {
+      status.textContent = '❌ ' + err.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+    }
+  });
+
+  // Banner upload
+  document.getElementById('bannerInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('bannerStatus');
+    status.textContent = 'Uploading...';
+    status.className = 'text-sm text-center text-primary mt-3';
+    status.classList.remove('hidden');
+    try {
+      const url = await uploadImage(file, 'banners', 3);
+      await saveSetting('hero_banner_url', url);
+      document.getElementById('currentBanner').src = url;
+      status.textContent = '✓ Banner updated!';
+      status.className = 'text-sm text-center text-green-600 mt-3';
+    } catch (err) {
+      status.textContent = '❌ ' + err.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+    }
+  });
+
+  // Color picker sync
+  document.getElementById('primaryColor').addEventListener('input', (e) => {
+    document.getElementById('primaryColorHex').value = e.target.value.toUpperCase();
+  });
+  document.getElementById('primaryColorHex').addEventListener('input', (e) => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) document.getElementById('primaryColor').value = e.target.value;
+  });
+  document.getElementById('secondaryColor').addEventListener('input', (e) => {
+    document.getElementById('secondaryColorHex').value = e.target.value.toUpperCase();
+  });
+  document.getElementById('secondaryColorHex').addEventListener('input', (e) => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) document.getElementById('secondaryColor').value = e.target.value;
+  });
+
+  // Save Colors
+  document.getElementById('saveColorsBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveColorsBtn');
+    const status = document.getElementById('colorStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    const p = document.getElementById('primaryColorHex').value.toUpperCase();
+    const s = document.getElementById('secondaryColorHex').value.toUpperCase();
+    const e1 = await saveSetting('primary_color', p);
+    const e2 = await saveSetting('secondary_color', s);
+    if (e1 || e2) {
+      status.textContent = '❌ Error saving colors';
+      status.className = 'text-sm text-center text-red-600 mt-2';
+    } else {
+      status.textContent = '✓ Colors saved!';
+      status.className = 'text-sm text-center text-green-600 mt-2';
+    }
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Save Colors';
+    setTimeout(() => status.classList.add('hidden'), 2000);
+  });
+
+  // Save Identity
+  document.getElementById('saveIdentityBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveIdentityBtn');
+    const status = document.getElementById('identityStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    const e1 = await saveSetting('site_name', document.getElementById('siteName').value.trim());
+    const e2 = await saveSetting('tagline', document.getElementById('tagline').value.trim());
+    const e3 = await saveSetting('footer_text', document.getElementById('footerText').value.trim());
+    if (e1 || e2 || e3) {
+      status.textContent = '❌ Error saving';
+      status.className = 'text-sm text-center text-red-600 mt-2';
+    } else {
+      status.textContent = '✓ Identity saved!';
+      status.className = 'text-sm text-center text-green-600 mt-2';
+    }
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Save Identity';
+    setTimeout(() => status.classList.add('hidden'), 2000);
+  });
+})();
+</script>
+
+</body>
+</html>
