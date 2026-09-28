@@ -26,6 +26,7 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
 .sidebar-link:hover, .sidebar-link.active { background: rgba(212,175,55,0.15); color: #0A3622; border-left: 3px solid #D4AF37; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: #0A3622; box-shadow: 0 0 0 3px rgba(10,54,34,0.1); }
 </style>
+<script src="../assets/js/notifications.js"></script>
 </head>
 <body class="bg-cream text-charcoal min-h-screen">
 
@@ -279,6 +280,15 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     };
 
     const { error } = await db.from('payments').insert(payload);
+
+    if (window.Notif) {
+      window.Notif.toAdmins(
+        'New Payment Submitted',
+        fullName + ' submitted ' + payload.amount + ' via ' + payload.method.toUpperCase(),
+        'payment',
+        '/admin/payments.html'
+      ).catch(() => {});
+    }
 
     if (error) {
       status.textContent = 'Error: ' + error.message;

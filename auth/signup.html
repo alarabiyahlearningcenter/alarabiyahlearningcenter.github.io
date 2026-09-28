@@ -28,6 +28,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #0A3622
 .role-card.selected { border-color: #0A3622; background: rgba(10,54,34,0.05); }
 .role-card.selected .role-icon { background: #0A3622; color: #D4AF37; }
 </style>
+<script src="../assets/js/notifications.js"></script>
 </head>
 <body class="bg-cream min-h-screen flex flex-col islamic-pattern">
 
@@ -149,6 +150,7 @@ const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.db = db;
 
 let selectedRole = 'student';
 
@@ -241,6 +243,15 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       qualifications: qualifications.length ? qualifications : null,
       is_active: true
     });
+  }
+
+  if (window.Notif) {
+    window.Notif.toAdmins(
+      selectedRole === 'teacher' ? 'New Teacher Signup 👨‍🏫' : 'New Student Signup 👤',
+      fullName + ' (' + email + ') just signed up.',
+      'signup',
+      '/admin/students.html'
+    ).catch(() => {});
   }
 
   status.textContent = selectedRole === 'teacher' 

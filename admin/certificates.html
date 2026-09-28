@@ -216,6 +216,9 @@ input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px 
       btn.textContent = 'Issue Certificate';
       return;
     }
+    if (window.Notif && sSel.value) {
+      await Notif.send(sSel.value, 'Certificate Issued', 'Your certificate for course is ready! View and download it now.', 'certificate', '/student/certificate.html').catch(() => {});
+    }
     status.textContent = '✓ Certificate issued!';
     status.className = 'text-sm text-center text-green-600';
     status.classList.remove('hidden');

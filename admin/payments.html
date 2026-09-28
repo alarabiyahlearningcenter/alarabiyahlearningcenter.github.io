@@ -153,6 +153,12 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       verified_by: ctx.session.user.id, 
       verified_at: new Date().toISOString() 
     }).eq('id', id);
+    if (window.Notif) {
+      const { data: payInfo } = await db.from('payments').select('student_id, amount').eq('id', id).single();
+      if (payInfo?.student_id) {
+        await Notif.send(payInfo.student_id, 'Payment Verified', 'Your payment of ' + payInfo.amount + ' BDT has been verified. Thank you!', 'success', '/student/payment.html').catch(() => {});
+      }
+    }
     if (error) { alert('Error: ' + error.message); return; }
     loadPayments();
   };
