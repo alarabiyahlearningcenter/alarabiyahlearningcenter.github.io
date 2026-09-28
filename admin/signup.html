@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Login | Al-Arabiyah Learning Center</title>
+<title>Admin Signup | Al-Arabiyah Learning Center</title>
 <meta name="theme-color" content="#0A3622">
 <link rel="manifest" href="../manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -40,44 +40,52 @@ input:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34
     <div class="bg-white rounded-3xl shadow-xl border border-primary/5 overflow-hidden">
       <div class="admin-badge px-8 py-6 text-center">
         <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-secondary/40">
-          <svg class="w-8 h-8" style="color:#D4AF37" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <svg class="w-8 h-8" style="color:#D4AF37" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
         </div>
-        <h1 class="text-2xl font-bold" style="color:#D4AF37">Admin Login</h1>
-        <p class="text-xs mt-1" style="color:rgba(212,175,55,.7)">Restricted Access</p>
+        <h1 class="text-2xl font-bold" style="color:#D4AF37">Admin Registration</h1>
+        <p class="text-xs mt-1" style="color:rgba(212,175,55,.7)">Secret Code Required</p>
       </div>
 
       <div class="p-8">
-        <form id="adminLoginForm" class="space-y-5">
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-5">
+          <p class="text-xs text-yellow-800">🔐 You need a valid secret code from the Super Admin to register as an admin.</p>
+        </div>
+
+        <form id="adminSignupForm" class="space-y-4">
           <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Admin Email</label>
+            <label class="block text-sm font-semibold text-primary mb-2">Secret Code *</label>
+            <input type="text" id="secretCode" required placeholder="ALC-ADMIN-XXXX" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream uppercase font-mono">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Full Name *</label>
+            <input type="text" id="fullName" required placeholder="Your full name" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Email *</label>
             <input type="email" id="email" required placeholder="admin@email.com" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
           </div>
           <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Password</label>
+            <label class="block text-sm font-semibold text-primary mb-2">Phone</label>
+            <input type="tel" id="phone" placeholder="+880 1XXX XXXXXX" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Password *</label>
             <div class="relative">
-              <input type="password" id="password" required placeholder="Your password" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream pr-12">
+              <input type="password" id="password" required minlength="6" placeholder="Minimum 6 characters" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream pr-12">
               <button type="button" id="togglePw" class="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/50">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
               </button>
             </div>
           </div>
-          <button type="submit" id="submitBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Login as Admin</button>
+          <button type="submit" id="submitBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Create Admin Account</button>
           <p id="status" class="text-sm text-center hidden"></p>
         </form>
 
         <div class="mt-6 text-center text-sm text-charcoal/60">
-          Need admin access? <a href="signup.html" class="text-primary font-semibold hover:text-secondary">Request via Secret Code</a>
-        </div>
-
-        <div class="mt-6 pt-6 border-t border-primary/10 text-center">
-          <a href="../auth/login.html" class="text-xs text-charcoal/50 hover:text-primary">Student / Teacher Login →</a>
+          Already an admin? <a href="login.html" class="text-primary font-semibold hover:text-secondary">Login</a>
         </div>
       </div>
     </div>
-
-    <p class="text-center text-xs text-charcoal/50 mt-6">
-      🔒 This area is monitored. Unauthorized access is prohibited.
-    </p>
   </div>
 </main>
 
@@ -87,65 +95,87 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// 🔑 SECRET CODE — পরে Supabase site_settings থেকেও পরিবর্তন করা যাবে
+const ADMIN_SECRET = 'ALC-ADMIN-2026';
+
 document.getElementById('togglePw').addEventListener('click', () => {
   const pw = document.getElementById('password');
   pw.type = pw.type === 'password' ? 'text' : 'password';
 });
 
-document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+document.getElementById('adminSignupForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
   const status = document.getElementById('status');
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-
   btn.disabled = true;
   btn.textContent = 'Verifying...';
   status.classList.add('hidden');
 
-  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  const code = document.getElementById('secretCode').value.trim().toUpperCase();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const fullName = document.getElementById('fullName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+
+  // Step 1: Check secret code
+  if (code !== ADMIN_SECRET) {
+    status.textContent = '❌ Invalid secret code.';
+    status.className = 'text-sm text-center text-red-600';
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Create Admin Account';
+    return;
+  }
+
+  // Step 2: Create auth account
+  const { data, error } = await db.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName } }
+  });
 
   if (error) {
-    status.textContent = error.message;
+    status.textContent = 'Error: ' + error.message;
     status.className = 'text-sm text-center text-red-600';
     status.classList.remove('hidden');
     btn.disabled = false;
-    btn.textContent = 'Login as Admin';
+    btn.textContent = 'Create Admin Account';
     return;
   }
 
-  // Check role
-  const { data: profile } = await db.from('profiles').select('role, full_name').eq('id', data.user.id).single();
+  if (!data.user) {
+    status.textContent = 'Check your email to confirm your account.';
+    status.className = 'text-sm text-center text-blue-600';
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Create Admin Account';
+    return;
+  }
 
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
-    await db.auth.signOut();
-    status.textContent = '❌ Access Denied. This account is not an admin.';
+  // Step 3: Update profile with admin role
+  const { error: profileError } = await db.from('profiles').update({
+    role: 'admin',
+    full_name: fullName,
+    phone: phone
+  }).eq('id', data.user.id);
+
+  if (profileError) {
+    status.textContent = 'Profile error: ' + profileError.message;
     status.className = 'text-sm text-center text-red-600';
     status.classList.remove('hidden');
     btn.disabled = false;
-    btn.textContent = 'Login as Admin';
+    btn.textContent = 'Create Admin Account';
     return;
   }
 
-  status.textContent = '✓ Welcome, ' + (profile.full_name || 'Admin') + '! Redirecting...';
+  status.textContent = '✓ Admin account created! Redirecting...';
   status.className = 'text-sm text-center text-green-600';
   status.classList.remove('hidden');
 
   setTimeout(() => {
     window.location.href = 'dashboard.html';
-  }, 800);
+  }, 1500);
 });
-
-// Auto redirect if already logged in
-(async () => {
-  const { data: { session } } = await db.auth.getSession();
-  if (session) {
-    const { data: profile } = await db.from('profiles').select('role').eq('id', session.user.id).single();
-    if (profile && (profile.role === 'admin' || profile.role === 'super_admin')) {
-      window.location.href = 'dashboard.html';
-    }
-  }
-})();
 </script>
 
 </body>
