@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Settings | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.char-count{font-size:11px;color:#94a3b8}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">SEO Settings</h1>
+    <p class="text-charcoal/60 text-sm">Search engine optimization & meta tags</p>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="seoContent" class="hidden max-w-3xl space-y-6">
+
+    <!-- Basic Meta -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </span>
+        Basic Meta
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Meta Title <span class="char-count">(50-60 chars recommended)</span></label>
+          <input type="text" id="metaTitle" maxlength="70" placeholder="Al-Arabiyah Learning Center | Online Quran Classes" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <p id="titleCount" class="char-count mt-1">0 / 70</p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Meta Description <span class="char-count">(150-160 chars recommended)</span></label>
+          <textarea id="metaDescription" rows="3" maxlength="180" placeholder="Learn Quran online with qualified teachers..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+          <p id="descCount" class="char-count mt-1">0 / 180</p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Keywords <span class="char-count">(comma separated)</span></label>
+          <input type="text" id="metaKeywords" placeholder="online quran classes, tajweed, hifz, noorani qaida" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+    </div>
+
+    <!-- Open Graph -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        </span>
+        Open Graph (Facebook/WhatsApp preview)
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">OG Title</label>
+          <input type="text" id="ogTitle" placeholder="Al-Arabiyah Learning Center" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">OG Description</label>
+          <textarea id="ogDescription" rows="2" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">OG Image URL <span class="char-count">(1200x630 recommended)</span></label>
+          <input type="url" id="ogImage" placeholder="https://yoursite.com/og-image.jpg" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </span>
+        Analytics & Tracking
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Google Analytics ID</label>
+          <input type="text" id="gaId" placeholder="G-XXXXXXXXXX" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream font-mono">
+          <p class="text-xs text-charcoal/50 mt-1">From google.com/analytics — Measurement ID</p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Google Search Console Verification</label>
+          <input type="text" id="gscCode" placeholder="google-site-verification=..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream font-mono text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Facebook Pixel ID</label>
+          <input type="text" id="fbPixel" placeholder="1234567890" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream font-mono">
+        </div>
+      </div>
+    </div>
+
+    <!-- Robots -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </span>
+        Robots.txt Editor
+      </h3>
+      <div>
+        <p class="text-xs text-charcoal/60 mb-3">Control how search engines crawl your site</p>
+        <textarea id="robotsTxt" rows="8" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream font-mono text-sm">User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /super-admin/
+Disallow: /student/
+Disallow: /teacher/
+Disallow: /auth/
+
+Sitemap: https://alarabiyahlearningcenter.github.io/sitemap.xml</textarea>
+      </div>
+    </div>
+
+    <!-- Save -->
+    <div class="sticky bottom-4">
+      <button id="saveBtn" class="btn-primary w-full py-4 rounded-xl font-semibold text-lg shadow-lg">Save All SEO Settings</button>
+      <p id="saveStatus" class="text-sm text-center mt-2 hidden"></p>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  async function getSetting(key) {
+    const { data } = await db.from('site_settings').select('value').eq('key', key).maybeSingle();
+    if (!data) return null;
+    try { return JSON.parse(data.value); } catch { return data.value; }
+  }
+
+  async function saveSetting(key, value) {
+    const jsonValue = JSON.stringify(value);
+    const { error } = await db.from('site_settings').upsert({ key, value: jsonValue }, { onConflict: 'key' });
+    return error;
+  }
+
+  const keys = ['meta_title', 'meta_description', 'meta_keywords', 'og_title', 'og_description', 'og_image', 'ga_id', 'gsc_code', 'fb_pixel', 'robots_txt'];
+  const loaded = await Promise.all(keys.map(k => getSetting(k)));
+  const map = {};
+  keys.forEach((k, i) => map[k] = loaded[i]);
+
+  document.getElementById('metaTitle').value = map.meta_title || 'Al-Arabiyah Learning Center | Online Quran Classes';
+  document.getElementById('metaDescription').value = map.meta_description || 'Learn Quran online with qualified teachers. Noorani Qaida, Tajweed, Hifz for kids and adults. Free trial class available.';
+  document.getElementById('metaKeywords').value = map.meta_keywords || 'online quran classes, tajweed, hifz, noorani qaida, islamic learning';
+  document.getElementById('ogTitle').value = map.og_title || 'Al-Arabiyah Learning Center';
+  document.getElementById('ogDescription').value = map.og_description || 'Learn Quran online with qualified teachers. Free trial available.';
+  document.getElementById('ogImage').value = map.og_image || '';
+  document.getElementById('gaId').value = map.ga_id || '';
+  document.getElementById('gscCode').value = map.gsc_code || '';
+  document.getElementById('fbPixel').value = map.fb_pixel || '';
+  if (map.robots_txt) document.getElementById('robotsTxt').value = map.robots_txt;
+
+  // Char count handlers
+  function updateCount(inputId, countId, max) {
+    const el = document.getElementById(inputId);
+    const counter = document.getElementById(countId);
+    const update = () => { counter.textContent = el.value.length + ' / ' + max; };
+    el.addEventListener('input', update);
+    update();
+  }
+  updateCount('metaTitle', 'titleCount', 70);
+  updateCount('metaDescription', 'descCount', 180);
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('seoContent').classList.remove('hidden');
+
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveBtn');
+    const status = document.getElementById('saveStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const values = {
+      meta_title: document.getElementById('metaTitle').value.trim(),
+      meta_description: document.getElementById('metaDescription').value.trim(),
+      meta_keywords: document.getElementById('metaKeywords').value.trim(),
+      og_title: document.getElementById('ogTitle').value.trim(),
+      og_description: document.getElementById('ogDescription').value.trim(),
+      og_image: document.getElementById('ogImage').value.trim(),
+      ga_id: document.getElementById('gaId').value.trim(),
+      gsc_code: document.getElementById('gscCode').value.trim(),
+      fb_pixel: document.getElementById('fbPixel').value.trim(),
+      robots_txt: document.getElementById('robotsTxt').value
+    };
+
+    const errors = await Promise.all(
+      Object.entries(values).map(([k, v]) => saveSetting(k, v))
+    );
+
+    const hasError = errors.some(e => e);
+    if (hasError) {
+      status.textContent = '❌ Error: ' + (errors.find(e => e)?.message || 'Unknown');
+      status.className = 'text-sm text-center text-red-600 mt-2';
+    } else {
+      status.textContent = '✓ SEO settings saved!';
+      status.className = 'text-sm text-center text-green-600 mt-2';
+    }
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Save All SEO Settings';
+    setTimeout(() => status.classList.add('hidden'), 2500);
+  });
+})();
+</script>
+
+</body>
+</html>
