@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Settings | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.toggle{position:relative;display:inline-block;width:52px;height:28px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:28px;transition:.3s}
+.toggle-slider:before{position:absolute;content:"";height:20px;width:20px;left:4px;bottom:4px;background:white;border-radius:50%;transition:.3s}
+.toggle input:checked+.toggle-slider{background:#0A3622}
+.toggle input:checked+.toggle-slider:before{transform:translateX(24px)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Site Settings</h1>
+    <p class="text-charcoal/60 text-sm">Global configuration for your platform</p>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="settingsContent" class="hidden space-y-6 max-w-4xl">
+
+    <!-- General -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+        General
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Site Description (Meta)</label>
+          <textarea id="siteDescription" rows="2" placeholder="Learn Quran online with qualified teachers..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Timezone</label>
+            <select id="timezone" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+              <option value="Asia/Dhaka">Asia/Dhaka (GMT+6)</option>
+              <option value="Asia/Kolkata">Asia/Kolkata (GMT+5:30)</option>
+              <option value="Asia/Dubai">Asia/Dubai (GMT+4)</option>
+              <option value="Asia/Riyadh">Asia/Riyadh (GMT+3)</option>
+              <option value="Europe/London">Europe/London (GMT+0)</option>
+              <option value="America/New_York">America/New_York (GMT-5)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Default Currency</label>
+            <select id="defaultCurrency" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+              <option value="BDT">BDT (৳) — Bangladeshi Taka</option>
+              <option value="USD">USD ($) — US Dollar</option>
+              <option value="both">Both (৳ + $)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcement -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-secondary/15 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+        </span>
+        Announcement Bar
+      </h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-semibold text-primary">Show announcement bar</p>
+            <p class="text-xs text-charcoal/60">Displayed at top of every public page</p>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="announcementEnabled">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Announcement Text</label>
+          <input type="text" id="announcementText" placeholder="🎉 Ramadan special discount — 20% off all courses!" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+    </div>
+
+    <!-- Maintenance Mode -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <h3 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </span>
+        Maintenance Mode
+      </h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-semibold text-primary">Enable maintenance mode</p>
+            <p class="text-xs text-charcoal/60">Only Super Admin can access site when enabled</p>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="maintenanceMode">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Maintenance Message</label>
+          <textarea id="maintenanceMessage" rows="2" placeholder="We are updating our system. Please check back soon." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="sticky bottom-4">
+      <button id="saveBtn" class="btn-primary w-full py-4 rounded-xl font-semibold text-lg shadow-lg">Save All Settings</button>
+      <p id="saveStatus" class="text-sm text-center mt-2 hidden"></p>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  async function getSetting(key) {
+    const { data } = await db.from('site_settings').select('value').eq('key', key).maybeSingle();
+    if (!data) return null;
+    try { return JSON.parse(data.value); } catch { return data.value; }
+  }
+
+  async function saveSetting(key, value) {
+    const jsonValue = JSON.stringify(value);
+    const { error } = await db.from('site_settings').upsert({ key, value: jsonValue }, { onConflict: 'key' });
+    return error;
+  }
+
+  // Load all settings
+  const [desc, tz, curr, annOn, annText, maintOn, maintMsg] = await Promise.all([
+    getSetting('site_description'),
+    getSetting('timezone'),
+    getSetting('default_currency'),
+    getSetting('announcement_enabled'),
+    getSetting('announcement_text'),
+    getSetting('maintenance_mode'),
+    getSetting('maintenance_message')
+  ]);
+
+  document.getElementById('siteDescription').value = desc || 'Learn Quran online with qualified teachers. Free trial class available.';
+  document.getElementById('timezone').value = tz || 'Asia/Dhaka';
+  document.getElementById('defaultCurrency').value = curr || 'both';
+  document.getElementById('announcementEnabled').checked = !!annOn;
+  document.getElementById('announcementText').value = annText || '';
+  document.getElementById('maintenanceMode').checked = !!maintOn;
+  document.getElementById('maintenanceMessage').value = maintMsg || 'We are updating our system. Please check back soon.';
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('settingsContent').classList.remove('hidden');
+
+  // Save all
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveBtn');
+    const status = document.getElementById('saveStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const errors = await Promise.all([
+      saveSetting('site_description', document.getElementById('siteDescription').value.trim()),
+      saveSetting('timezone', document.getElementById('timezone').value),
+      saveSetting('default_currency', document.getElementById('defaultCurrency').value),
+      saveSetting('announcement_enabled', document.getElementById('announcementEnabled').checked),
+      saveSetting('announcement_text', document.getElementById('announcementText').value.trim()),
+      saveSetting('maintenance_mode', document.getElementById('maintenanceMode').checked),
+      saveSetting('maintenance_message', document.getElementById('maintenanceMessage').value.trim())
+    ]);
+
+    const hasError = errors.some(e => e);
+    if (hasError) {
+      status.textContent = '❌ Error: ' + (errors.find(e => e)?.message || 'Unknown');
+      status.className = 'text-sm text-center text-red-600 mt-2';
+    } else {
+      status.textContent = '✓ All settings saved!';
+      status.className = 'text-sm text-center text-green-600 mt-2';
+    }
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Save All Settings';
+    setTimeout(() => status.classList.add('hidden'), 2500);
+  });
+})();
+</script>
+
+</body>
+</html>
