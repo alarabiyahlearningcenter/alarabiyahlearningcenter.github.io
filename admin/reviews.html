@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reviews | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white}
+.btn-red{background:#dc2626;color:white}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Reviews</h1>
+      <p class="text-charcoal/60 text-sm">Approve and manage student reviews</p>
+    </div>
+    <button onclick="openReviewModal()" class="btn-primary px-5 py-2.5 rounded-full font-semibold text-sm">+ Add Review</button>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Pending</p>
+      <p id="statPending" class="text-2xl font-bold text-yellow-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Approved</p>
+      <p id="statApproved" class="text-2xl font-bold text-green-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Average Rating</p>
+      <p id="statAvg" class="text-2xl font-bold text-primary">0.0</p>
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="reviewsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</div>
+
+<div id="reviewModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 id="modalTitle" class="font-bold text-lg">Add Review</h3>
+      <button onclick="closeReviewModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="reviewForm" class="p-6 space-y-4">
+      <input type="hidden" id="reviewId">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Student Name *</label>
+        <input type="text" id="studentName" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Country</label>
+        <input type="text" id="country" placeholder="UK, USA, Canada..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Rating *</label>
+        <select id="rating" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <option value="5">★★★★★ (5)</option>
+          <option value="4">★★★★ (4)</option>
+          <option value="3">★★★ (3)</option>
+          <option value="2">★★ (2)</option>
+          <option value="1">★ (1)</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Review Text *</label>
+        <textarea id="reviewText" rows="4" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+      </div>
+      <div>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="isApproved" checked> Approved (show on website)</label>
+      </div>
+      <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Save Review</button>
+      <p id="formStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allReviews = [];
+
+  window.openReviewModal = (review = null) => {
+    document.getElementById('reviewModal').classList.remove('hidden');
+    document.getElementById('formStatus').classList.add('hidden');
+    if (review) {
+      document.getElementById('modalTitle').textContent = 'Edit Review';
+      document.getElementById('reviewId').value = review.id;
+      document.getElementById('studentName').value = review.student_name || '';
+      document.getElementById('country').value = review.student_country || '';
+      document.getElementById('rating').value = review.rating || 5;
+      document.getElementById('reviewText').value = review.review_text || '';
+      document.getElementById('isApproved').checked = !!review.is_approved;
+    } else {
+      document.getElementById('modalTitle').textContent = 'Add Review';
+      document.getElementById('reviewForm').reset();
+      document.getElementById('reviewId').value = '';
+      document.getElementById('isApproved').checked = true;
+    }
+  };
+
+  window.closeReviewModal = () => {
+    document.getElementById('reviewModal').classList.add('hidden');
+  };
+
+  async function loadReviews() {
+    document.getElementById('loading').classList.remove('hidden');
+    const { data } = await db.from('reviews').select('*').order('created_at', { ascending: false });
+    allReviews = data || [];
+
+    const pending = allReviews.filter(r => !r.is_approved).length;
+    const approved = allReviews.filter(r => r.is_approved).length;
+    const avg = allReviews.length ? (allReviews.reduce((s, r) => s + (r.rating || 0), 0) / allReviews.length).toFixed(1) : '0.0';
+
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statApproved').textContent = approved;
+    document.getElementById('statAvg').textContent = avg;
+
+    renderReviews();
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderReviews() {
+    const grid = document.getElementById('reviewsGrid');
+    if (!allReviews.length) {
+      grid.innerHTML = '<div class="col-span-full bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No reviews yet</div>';
+      return;
+    }
+    grid.innerHTML = allReviews.map(r => `
+      <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${(r.student_name || 'U').charAt(0).toUpperCase()}</div>
+            <div class="min-w-0">
+              <p class="font-bold text-primary text-sm truncate">${r.student_name}</p>
+              <p class="text-xs text-charcoal/60">${r.student_country || 'N/A'}</p>
+            </div>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded-full font-semibold ${r.is_approved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${r.is_approved ? 'Approved' : 'Pending'}</span>
+        </div>
+        <div class="text-secondary mb-2">${'★'.repeat(r.rating || 5)}${'☆'.repeat(5 - (r.rating || 5))}</div>
+        <p class="text-xs text-charcoal/70 mb-3 line-clamp-3">${r.review_text || ''}</p>
+        <div class="flex gap-2 pt-3 border-t border-primary/10">
+          ${!r.is_approved ? `<button onclick="approveReview('${r.id}')" class="flex-1 text-xs bg-green-50 text-green-700 px-3 py-2 rounded-full font-semibold">Approve</button>` : ''}
+          <button onclick='openReviewModal(${JSON.stringify(r).replace(/'/g, "\\'")})' class="flex-1 text-xs bg-primary/10 text-primary px-3 py-2 rounded-full font-semibold">Edit</button>
+          <button onclick="deleteReview('${r.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.approveReview = async (id) => {
+    const { error } = await db.from('reviews').update({ is_approved: true }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadReviews();
+  };
+
+  window.deleteReview = async (id) => {
+    if (!confirm('Delete this review?')) return;
+    const { error } = await db.from('reviews').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadReviews();
+  };
+
+  document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const status = document.getElementById('formStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const id = document.getElementById('reviewId').value;
+    const payload = {
+      student_name: document.getElementById('studentName').value.trim(),
+      student_country: document.getElementById('country').value.trim(),
+      rating: Number(document.getElementById('rating').value) || 5,
+      review_text: document.getElementById('reviewText').value.trim(),
+      is_approved: document.getElementById('isApproved').checked
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await db.from('reviews').update(payload).eq('id', id));
+    } else {
+      ({ error } = await db.from('reviews').insert(payload));
+    }
+
+    if (error) {
+      status.textContent = 'Error: ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Save Review';
+      return;
+    }
+    status.textContent = '✓ Saved!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    setTimeout(() => {
+      closeReviewModal();
+      btn.disabled = false;
+      btn.textContent = 'Save Review';
+      loadReviews();
+    }, 800);
+  });
+
+  loadReviews();
+})();
+</script>
+
+</body>
+</html>
