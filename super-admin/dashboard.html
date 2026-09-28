@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin Dashboard | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.super-stat{border-left:4px solid #D4AF37}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Super Admin Dashboard 👑</h1>
+    <p class="text-charcoal/60 text-sm">Complete overview of your platform</p>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5 super-stat">
+      <p class="text-xs text-charcoal/60 mb-1">Total Users</p>
+      <p id="statUsers" class="text-2xl font-bold text-primary">0</p>
+      <p class="text-xs text-charcoal/40 mt-1">All roles</p>
+    </div>
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5 super-stat">
+      <p class="text-xs text-charcoal/60 mb-1">Revenue (BDT)</p>
+      <p id="statRevenue" class="text-2xl font-bold text-primary">৳0</p>
+      <p class="text-xs text-charcoal/40 mt-1">Verified payments</p>
+    </div>
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5 super-stat">
+      <p class="text-xs text-charcoal/60 mb-1">Active Courses</p>
+      <p id="statCourses" class="text-2xl font-bold text-primary">0</p>
+      <p class="text-xs text-charcoal/40 mt-1">Published</p>
+    </div>
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5 super-stat">
+      <p class="text-xs text-charcoal/60 mb-1">Pending Actions</p>
+      <p id="statPending" class="text-2xl font-bold text-yellow-600">0</p>
+      <p class="text-xs text-charcoal/40 mt-1">Need attention</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs text-charcoal/60">Students</p>
+        <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </span>
+      </div>
+      <p id="statStudents" class="text-xl font-bold text-primary">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs text-charcoal/60">Teachers</p>
+        <span class="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </span>
+      </div>
+      <p id="statTeachers" class="text-xl font-bold text-primary">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs text-charcoal/60">Classes</p>
+        <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </span>
+      </div>
+      <p id="statClasses" class="text-xl font-bold text-primary">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs text-charcoal/60">Certificates</p>
+        <span class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <p id="statCerts" class="text-xl font-bold text-primary">0</p>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-primary">Quick Actions</h3>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <a href="branding.html" class="p-4 bg-cream rounded-xl hover:bg-secondary/10 transition text-center">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <p class="text-xs font-semibold text-primary">Logo & Banner</p>
+        </a>
+        <a href="seo.html" class="p-4 bg-cream rounded-xl hover:bg-secondary/10 transition text-center">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <p class="text-xs font-semibold text-primary">SEO</p>
+        </a>
+        <a href="users.html" class="p-4 bg-cream rounded-xl hover:bg-secondary/10 transition text-center">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <p class="text-xs font-semibold text-primary">All Users</p>
+        </a>
+        <a href="admins.html" class="p-4 bg-cream rounded-xl hover:bg-secondary/10 transition text-center">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <p class="text-xs font-semibold text-primary">Admins</p>
+        </a>
+        <a href="../admin/dashboard.html" class="p-4 bg-cream rounded-xl hover:bg-secondary/10 transition text-center">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <p class="text-xs font-semibold text-primary">Admin Panel</p>
+        </a>
+        <a href="activity-log.html" class="p-4 bg-cream rounded-xl hover:bg-secondary/10 transition text-center">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <p class="text-xs font-semibold text-primary">Activity Log</p>
+        </a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <h3 class="text-lg font-bold text-primary mb-4">Recent Users</h3>
+      <div id="recentUsers">
+        <p class="text-charcoal/60 text-sm text-center py-6">Loading...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  // Stats
+  const { count: usersCount } = await db.from('profiles').select('*', { count: 'exact', head: true });
+  const { count: studentsCount } = await db.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student');
+  const { count: teachersCount } = await db.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+  const { count: coursesCount } = await db.from('courses').select('*', { count: 'exact', head: true }).eq('is_active', true);
+  const { count: classesCount } = await db.from('classes').select('*', { count: 'exact', head: true });
+  const { count: certsCount } = await db.from('certificates').select('*', { count: 'exact', head: true });
+
+  const { data: payments } = await db.from('payments').select('amount, status');
+  const revenue = (payments || []).filter(p => p.status === 'verified').reduce((s, p) => s + Number(p.amount || 0), 0);
+  const pendingPayments = (payments || []).filter(p => p.status === 'pending').length;
+
+  const { count: pendingTeachers } = await db.from('teachers').select('*', { count: 'exact', head: true }).eq('is_active', false);
+  const pending = pendingPayments + (pendingTeachers || 0);
+
+  document.getElementById('statUsers').textContent = usersCount || 0;
+  document.getElementById('statRevenue').textContent = '৳' + revenue;
+  document.getElementById('statCourses').textContent = coursesCount || 0;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statStudents').textContent = studentsCount || 0;
+  document.getElementById('statTeachers').textContent = teachersCount || 0;
+  document.getElementById('statClasses').textContent = classesCount || 0;
+  document.getElementById('statCerts').textContent = certsCount || 0;
+
+  // Recent Users
+  const { data: recent } = await db.from('profiles').select('*').order('created_at', { ascending: false }).limit(8);
+  const box = document.getElementById('recentUsers');
+  if (!recent || recent.length === 0) {
+    box.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No users yet</p>';
+  } else {
+    box.innerHTML = recent.map(u => {
+      const name = u.full_name || u.email?.split('@')[0] || 'User';
+      const roleColor = u.role === 'super_admin' ? 'background:#D4AF37;color:#0A3622' : u.role === 'admin' ? 'background:rgba(10,54,34,.15);color:#0A3622' : u.role === 'teacher' ? 'background:rgba(212,175,55,.2);color:#0A3622' : 'background:#dbeafe;color:#1e40af';
+      const roleLabel = u.role === 'super_admin' ? '👑 Super' : u.role === 'admin' ? 'Admin' : u.role === 'teacher' ? 'Teacher' : 'Student';
+      return `
+        <div class="flex items-center gap-3 py-3 border-b border-primary/10 last:border-0">
+          <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-sm flex-shrink-0">${name.charAt(0).toUpperCase()}</div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-primary text-sm truncate">${name}</p>
+            <p class="text-xs text-charcoal/60 truncate">${u.email || ''}</p>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="${roleColor}">${roleLabel}</span>
+        </div>
+      `;
+    }).join('');
+  }
+})();
+</script>
+
+</body>
+</html>
