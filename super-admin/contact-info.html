@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Info | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,0.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Contact Information</h1>
+    <p class="text-charcoal/60 text-sm">WhatsApp, phone, email & address shown on the website</p>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="contactContent" class="hidden max-w-3xl space-y-6">
+
+    <!-- WhatsApp -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-bold text-primary mb-1">WhatsApp Number</h3>
+          <p class="text-xs text-charcoal/60 mb-3">Used on floating button and "Chat on WhatsApp" links</p>
+          <input type="tel" id="whatsapp" placeholder="+8801737326555" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <p class="text-xs text-charcoal/50 mt-2">Format: +880XXXXXXXXXX (with country code)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-bold text-primary mb-1">Phone Number</h3>
+          <p class="text-xs text-charcoal/60 mb-3">Displayed on Contact page</p>
+          <input type="tel" id="phone" placeholder="+8801737326555" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-bold text-primary mb-1">Email Address</h3>
+          <p class="text-xs text-charcoal/60 mb-3">Contact email for inquiries</p>
+          <input type="email" id="email" placeholder="info@alarabiyahlearningcenter.com" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-bold text-primary mb-1">Address</h3>
+          <p class="text-xs text-charcoal/60 mb-3">Physical or online address</p>
+          <input type="text" id="address" placeholder="Rajshahi, Bangladesh (Online Only)" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+    </div>
+
+    <!-- Business Hours -->
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 card-hover">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-bold text-primary mb-1">Business Hours</h3>
+          <p class="text-xs text-charcoal/60 mb-3">When you're available for classes</p>
+          <input type="text" id="hours" placeholder="Sat - Thu: 6:00 AM - 11:00 PM" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+    </div>
+
+    <!-- Save -->
+    <div class="sticky bottom-4">
+      <button id="saveBtn" class="btn-primary w-full py-4 rounded-xl font-semibold text-lg shadow-lg">Save Contact Info</button>
+      <p id="saveStatus" class="text-sm text-center mt-2 hidden"></p>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  async function getSetting(key) {
+    const { data } = await db.from('site_settings').select('value').eq('key', key).maybeSingle();
+    if (!data) return null;
+    try { return JSON.parse(data.value); } catch { return data.value; }
+  }
+
+  async function saveSetting(key, value) {
+    const jsonValue = JSON.stringify(value);
+    const { error } = await db.from('site_settings').upsert({ key, value: jsonValue }, { onConflict: 'key' });
+    return error;
+  }
+
+  // Load current values
+  const [whatsapp, phone, email, address, hours] = await Promise.all([
+    getSetting('whatsapp'),
+    getSetting('phone'),
+    getSetting('email'),
+    getSetting('address'),
+    getSetting('business_hours')
+  ]);
+
+  document.getElementById('whatsapp').value = whatsapp || '+8801737326555';
+  document.getElementById('phone').value = phone || '+8801737326555';
+  document.getElementById('email').value = email || 'info@alarabiyahlearningcenter.com';
+  document.getElementById('address').value = address || 'Rajshahi, Bangladesh (Online Only)';
+  document.getElementById('hours').value = hours || 'Sat - Thu: 6:00 AM - 11:00 PM';
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('contactContent').classList.remove('hidden');
+
+  // Save all
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveBtn');
+    const status = document.getElementById('saveStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const errors = await Promise.all([
+      saveSetting('whatsapp', document.getElementById('whatsapp').value.trim()),
+      saveSetting('phone', document.getElementById('phone').value.trim()),
+      saveSetting('email', document.getElementById('email').value.trim()),
+      saveSetting('address', document.getElementById('address').value.trim()),
+      saveSetting('business_hours', document.getElementById('hours').value.trim())
+    ]);
+
+    const hasError = errors.some(e => e);
+    if (hasError) {
+      status.textContent = '❌ Error: ' + (errors.find(e => e)?.message || 'Unknown');
+      status.className = 'text-sm text-center text-red-600 mt-2';
+    } else {
+      status.textContent = '✓ Contact info saved!';
+      status.className = 'text-sm text-center text-green-600 mt-2';
+    }
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Save Contact Info';
+    setTimeout(() => status.classList.add('hidden'), 2500);
+  });
+})();
+</script>
+
+</body>
+</html>
