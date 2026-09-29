@@ -214,12 +214,23 @@ document.getElementById('assessmentForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const f = e.target;
   const text = `Assalamu Alaikum! Free Assessment Request%0A%0AParent: ${f.parent_name.value}%0AStudent: ${f.student_name.value}%0AAge: ${f.age.value}%0ACourse: ${f.course.value}%0ATime: ${f.preferred_time.value}%0APhone: ${f.phone.value}${f.message.value ? '%0AMessage: ' + f.message.value : ''}`;
+  if (window.Notif) {
+    window.Notif.toAdmins(
+      'New Free Assessment Request',
+      text.replace(/%0A/g, ' | ').substring(0, 200),
+      'signup',
+      '/admin/students.html'
+    ).catch(() => {});
+  }
+
   window.open(`https://wa.me/8801737326555?text=${text}`, '_blank');
 });
 
 loadCourses();
 </script>
 
+<script src="assets/js/site-loader.js"></script>
+<script src="assets/js/notifications.js"></script>
 <script src="assets/js/site-loader.js"></script>
 </body>
 </html>

@@ -210,10 +210,22 @@ document.getElementById('contactForm').addEventListener('submit', (e) => {
   const phone = e.target.phone.value;
   const message = e.target.message.value;
   const text = `Assalamu Alaikum! My name is ${name}. Phone: ${phone}. Message: ${message}`;
+  // Notify admins
+  if (window.Notif) {
+    window.Notif.toAdmins(
+      'New Contact Message 💬',
+      name + ' (' + phone + ') - ' + message.substring(0, 100),
+      'info',
+      '/admin/dashboard.html'
+    ).catch(() => {});
+  }
+
   window.open(`https://wa.me/8801737326555?text=${encodeURIComponent(text)}`, '_blank');
 });
 </script>
 
+<script src="assets/js/site-loader.js"></script>
+<script src="assets/js/notifications.js"></script>
 <script src="assets/js/site-loader.js"></script>
 </body>
 </html>

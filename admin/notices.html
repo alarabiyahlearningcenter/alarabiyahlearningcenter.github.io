@@ -175,6 +175,16 @@ input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3p
       btn.textContent = 'Save Notice';
       return;
     }
+    // Notify all students if published
+    if (payload.is_published && window.Notif) {
+      window.Notif.toStudents(
+        'New Notice Published 📢',
+        payload.title,
+        'info',
+        '/notifications.html'
+      ).catch(() => {});
+    }
+
     status.textContent = '✓ Saved!';
     status.className = 'text-sm text-center text-green-600';
     status.classList.remove('hidden');
