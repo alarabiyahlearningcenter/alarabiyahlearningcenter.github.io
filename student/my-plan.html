@@ -349,6 +349,12 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
         </a>
       </div>
 
+      <!-- Custom Plan Requests History -->
+      <div id="myCustomRequests" class="bg-white rounded-2xl p-6 border border-primary/5 hidden">
+        <h3 class="font-bold text-primary mb-4">My Custom Plan Requests</h3>
+        <div id="customRequestsList" class="space-y-3"></div>
+      </div>
+
       <!-- Change Plan -->
       <div class="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 text-white">
         <h3 class="font-bold mb-2">Want to change your plan?</h3>
@@ -360,6 +366,33 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       </div>
     </div>
   `;
+
+  // Load custom plan request history
+  const { data: myRequests } = await db.from('custom_plan_requests')
+    .select('*')
+    .eq('student_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (myRequests && myRequests.length > 0) {
+    document.getElementById('myCustomRequests').classList.remove('hidden');
+    document.getElementById('customRequestsList').innerHTML = myRequests.map(r => {
+      const statusColor = r.status === 'pending' ? 'background:#fef3c7;color:#92400e' :
+                        r.status === 'quoted' ? 'background:#dbeafe;color:#1e40af' :
+                        r.status === 'accepted' ? 'background:#dcfce7;color:#166534' :
+                        'background:#fee2e2;color:#991b1b';
+      const date = new Date(r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+        <div class="bg-cream rounded-xl p-4 border border-primary/5">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-semibold text-primary">${r.duration_min} min × ${r.classes_per_week}/week</p>
+            <span class="badge" style="${statusColor}">${r.status.toUpperCase()}</span>
+          </div>
+          <p class="text-xs text-charcoal/60">${r.course_interest || 'General'} • Requested ${date}</p>
+          ${r.quoted_price_bdt ? `<p class="text-sm font-bold text-primary mt-2">Quote: ৳${r.quoted_price_bdt}${r.quoted_price_usd ? ' / $' + r.quoted_price_usd : ''}</p>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
 
   // ===== Custom Quote Accept / Reject =====
   window.acceptQuote = async (quoteId, price) => {
