@@ -154,7 +154,25 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       verified_at: new Date().toISOString() 
     }).eq('id', id);
     if (window.Notif) {
-      const { data: payInfo } = await db.from('payments').select('student_id, amount').eq('id', id).single();
+      const { data: payInfo } = await db.from('payments').select('student_id, amount, course_id, plan_id').eq('id', id).single();
+      
+      // Auto-create enrollment
+      if (payInfo?.student_id && payInfo?.course_id) {
+        const { data: existing } = await db.from('enrollments')
+          .select('id')
+          .eq('student_id', payInfo.student_id)
+          .eq('course_id', payInfo.course_id)
+          .maybeSingle();
+        
+        if (!existing) {
+          await db.from('enrollments').insert({
+            student_id: payInfo.student_id,
+            course_id: payInfo.course_id,
+            plan_id: payInfo.plan_id || null,
+            status: 'active'
+          });
+        }
+      }
       if (payInfo?.student_id) {
         await Notif.send(payInfo.student_id, 'Payment Verified', 'Your payment of ' + payInfo.amount + ' BDT has been verified. Thank you!', 'success', '/student/payment.html').catch(() => {});
       }
