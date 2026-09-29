@@ -104,7 +104,7 @@ window.NotifBell = {
             </div>
           </div>
           <div id="notifList" class="overflow-y-auto max-h-[380px]"></div>
-          <a href="/notifications.html" id="notifViewAll" class="block text-center py-3 text-xs font-semibold text-primary hover:bg-cream border-t border-primary/10">View All Notifications →</a>
+          <a href="../notifications.html" id="notifViewAll" class="block text-center py-3 text-xs font-semibold text-primary hover:bg-cream border-t border-primary/10">View All Notifications →</a>
         </div>
       </div>
     `;
