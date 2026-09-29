@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book a Class | Al-Arabiyah Learning Center</title>
+<title>Submit Review | Al-Arabiyah Learning Center</title>
 <meta name="theme-color" content="#0A3622">
 <link rel="manifest" href="../manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -15,13 +15,9 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 .btn-primary{background:#0A3622;color:white;transition:.2s}
 .btn-primary:hover{background:#062218}
 .btn-primary:disabled{opacity:.6;cursor:not-allowed}
-.card-hover{transition:.3s}
-.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
-input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
-.teacher-card{border:2px solid rgba(10,54,34,.1);transition:.2s;cursor:pointer}
-.teacher-card:hover{border-color:rgba(10,54,34,.3)}
-.teacher-card.selected{border-color:#0A3622;background:rgba(10,54,34,.03)}
-.teacher-card.selected .teacher-avatar{background:#D4AF37;color:#0A3622}
+.rating-star{cursor:pointer;transition:.2s;color:#d1d5db}
+.rating-star:hover,.rating-star.active{color:#D4AF37;transform:scale(1.15)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
 </style>
 </head>
 <body class="bg-cream text-charcoal min-h-screen">
@@ -52,7 +48,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
             <p id="userName" class="text-sm font-semibold text-primary">Student</p>
             <p id="userEmail" class="text-xs text-charcoal/60 truncate">student@email.com</p>
           </div>
-          <a href="profile.html" class="block px-4 py-2 text-sm text-charcoal/70 hover:bg-cream">My Profile</a>
           <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
         </div>
       </div>
@@ -81,7 +76,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           My Plan
         </a>
-        <a href="book-class.html" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/15 text-primary font-medium border-l-3 border-secondary">
+        <a href="book-class.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           Book a Class
         </a>
@@ -89,7 +84,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
           My Live Classes
         </a>
-        <a href="submit-review.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
+        <a href="submit-review.html" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/15 text-primary font-medium border-l-3 border-secondary">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
           Submit Review
         </a>
@@ -113,86 +108,62 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
 
   <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
     <div class="mb-6">
-      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Book a Class</h1>
-      <p class="text-charcoal/60 text-sm">Select a teacher and schedule your session</p>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Submit a Review</h1>
+      <p class="text-charcoal/60 text-sm">Share your learning experience</p>
     </div>
 
-    <form id="bookingForm" class="max-w-3xl space-y-6">
-
-      <!-- Step 1: Select Teacher -->
-      <div class="bg-white rounded-2xl p-6 border border-primary/5">
-        <h3 class="font-bold text-primary mb-1 flex items-center gap-2">
-          <span class="w-7 h-7 bg-primary text-secondary text-xs font-bold rounded-full flex items-center justify-center">1</span>
-          Choose Your Teacher
-        </h3>
-        <p class="text-xs text-charcoal/60 mb-4">Select your preferred teacher for this class</p>
-        <div id="teachersList" class="grid sm:grid-cols-2 gap-3">
-          <p class="text-charcoal/60 text-sm col-span-2 text-center py-6">Loading teachers...</p>
-        </div>
+    <div class="max-w-2xl">
+      <div id="existingReview" class="hidden bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-6">
+        <p class="text-sm text-yellow-800"><strong>You already submitted a review.</strong> It's currently <span id="reviewStatusText">pending approval</span>. You can submit a new one to replace it.</p>
       </div>
 
-      <!-- Step 2: Class Details -->
-      <div class="bg-white rounded-2xl p-6 border border-primary/5">
-        <h3 class="font-bold text-primary mb-1 flex items-center gap-2">
-          <span class="w-7 h-7 bg-primary text-secondary text-xs font-bold rounded-full flex items-center justify-center">2</span>
-          Class Details
-        </h3>
-        <p class="text-xs text-charcoal/60 mb-4">When would you like to have your class?</p>
+      <form id="reviewForm" class="bg-white rounded-3xl p-6 md:p-8 border border-primary/5 space-y-6">
+
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-3">Your Rating *</label>
+          <div class="flex items-center gap-2" id="starRating">
+            <span class="rating-star text-4xl" data-rating="1">★</span>
+            <span class="rating-star text-4xl" data-rating="2">★</span>
+            <span class="rating-star text-4xl" data-rating="3">★</span>
+            <span class="rating-star text-4xl" data-rating="4">★</span>
+            <span class="rating-star text-4xl" data-rating="5">★</span>
+          </div>
+          <p id="ratingLabel" class="text-xs text-charcoal/60 mt-2">Click a star to rate</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Review Title</label>
+          <input type="text" id="reviewTitle" placeholder="e.g. Excellent learning experience!" maxlength="80" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Your Review *</label>
+          <textarea id="reviewText" rows="5" required placeholder="Tell us about your experience. What did you like? How has the teacher helped you?" maxlength="500" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+          <p class="text-xs text-charcoal/50 mt-1 text-right"><span id="charCount">0</span>/500</p>
+        </div>
 
         <div class="grid sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Date *</label>
-            <input type="date" id="classDate" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+            <label class="block text-sm font-semibold text-primary mb-2">Your Name (as shown)</label>
+            <input type="text" id="displayName" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
           </div>
           <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Time *</label>
-            <input type="time" id="classTime" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Duration *</label>
-            <select id="duration" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
-              <option value="30">30 minutes</option>
-              <option value="45">45 minutes</option>
-              <option value="60">60 minutes</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Course (optional)</label>
-            <select id="courseId" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
-              <option value="">Select course</option>
-            </select>
+            <label class="block text-sm font-semibold text-primary mb-2">Country</label>
+            <input type="text" id="displayCountry" placeholder="e.g. Bangladesh" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
           </div>
         </div>
 
-        <div class="mt-4">
-          <label class="block text-sm font-semibold text-primary mb-2">Class Topic / Notes (optional)</label>
-          <textarea id="notes" rows="3" placeholder="Any specific topic or request for this class..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p class="text-xs text-blue-800">💡 Reviews are moderated by our team. Approved reviews appear on the public website.</p>
         </div>
-      </div>
 
-      <!-- Step 3: Confirm -->
-      <div class="bg-secondary/10 border border-secondary/30 rounded-2xl p-5">
-        <div class="flex items-start gap-3">
-          <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <div class="text-xs text-charcoal/70">
-            <p class="font-semibold text-primary mb-1">Booking Information</p>
-            <ul class="space-y-1 pl-3 list-disc">
-              <li>A Jitsi Meet room will be auto-generated for this class</li>
-              <li>Your teacher and admin will be notified immediately</li>
-              <li>You'll receive a confirmation notification</li>
-              <li>Cancel at least 4 hours before the class if needed</li>
-            </ul>
-          </div>
+        <div class="flex gap-3">
+          <a href="dashboard.html" class="flex-1 py-3.5 border-2 border-primary text-primary rounded-xl font-semibold text-center hover:bg-primary hover:text-white transition">Cancel</a>
+          <button type="submit" id="submitBtn" class="flex-1 btn-primary py-3.5 rounded-xl font-semibold">Submit Review</button>
         </div>
-      </div>
-
-      <!-- Submit -->
-      <div class="flex gap-3">
-        <a href="dashboard.html" class="flex-1 py-3.5 border-2 border-primary text-primary rounded-xl font-semibold text-center hover:bg-primary hover:text-white transition">Cancel</a>
-        <button type="submit" id="submitBtn" class="flex-1 btn-primary py-3.5 rounded-xl font-semibold">Confirm Booking</button>
-      </div>
-      <p id="formStatus" class="text-sm text-center hidden"></p>
-    </form>
+        <p id="formStatus" class="text-sm text-center hidden"></p>
+      </form>
+    </div>
   </main>
 </div>
 
@@ -201,10 +172,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
 <script src="../assets/js/inject-bell.js"></script>
 <script>
 (async () => {
-  // Wait for db to be ready
   let tries = 0;
   while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
-  if (!window.db) { console.error('db not ready'); return; }
+  if (!window.db) return;
   const db = window.db;
 
   // Sidebar
@@ -239,136 +209,105 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
   document.getElementById('userName').textContent = fullName;
   document.getElementById('userEmail').textContent = session.user.email;
   document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+  document.getElementById('displayName').value = fullName;
+  document.getElementById('displayCountry').value = profile?.country || '';
 
-  // Load teachers
-  const { data: teachers } = await db.from('teachers').select('*').eq('is_active', true).order('sort_order');
-  const tList = document.getElementById('teachersList');
-
-  let selectedTeacher = null;
-
-  if (!teachers || teachers.length === 0) {
-    tList.innerHTML = '<p class="text-charcoal/60 text-sm col-span-2 text-center py-6">No teachers available yet. Please contact admin.</p>';
-  } else {
-    tList.innerHTML = teachers.map(t => {
-      const name = t.name || 'Teacher';
-      const spec = (t.specialities || []).slice(0, 2).join(', ') || 'Quran Teacher';
-      return `
-        <div class="teacher-card rounded-2xl p-4" data-id="${t.id}" data-name="${name.replace(/'/g, "\\'")}">
-          <div class="flex items-center gap-3">
-            <div class="teacher-avatar w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold transition">${name.charAt(0).toUpperCase()}</div>
-            <div class="min-w-0 flex-1">
-              <p class="font-bold text-primary text-sm truncate">${name}</p>
-              <p class="text-xs text-charcoal/60 truncate">${spec}</p>
-              <p class="text-xs text-charcoal/50 mt-0.5">${t.experience_years || 0}+ years exp</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    tList.querySelectorAll('.teacher-card').forEach(card => {
-      card.addEventListener('click', () => {
-        tList.querySelectorAll('.teacher-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        selectedTeacher = { id: card.dataset.id, name: card.dataset.name };
-      });
-    });
+  // Check existing review
+  const { data: existing } = await db.from('reviews').select('*').eq('user_id', session.user.id).maybeSingle();
+  if (existing) {
+    document.getElementById('existingReview').classList.remove('hidden');
+    document.getElementById('reviewStatusText').textContent = existing.is_approved ? 'approved and visible' : 'pending approval';
   }
 
-  // Load courses for optional select
-  const { data: courses } = await db.from('courses').select('id, title').eq('is_active', true);
-  const cSel = document.getElementById('courseId');
-  (courses || []).forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.id;
-    opt.textContent = c.title;
-    cSel.appendChild(opt);
+  // Star rating
+  let selectedRating = 0;
+  const labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+  document.querySelectorAll('.rating-star').forEach(star => {
+    star.addEventListener('click', () => {
+      selectedRating = Number(star.dataset.rating);
+      document.querySelectorAll('.rating-star').forEach(s => {
+        s.classList.toggle('active', Number(s.dataset.rating) <= selectedRating);
+      });
+      document.getElementById('ratingLabel').textContent = labels[selectedRating] + ' — ' + selectedRating + '/5';
+    });
+    star.addEventListener('mouseenter', () => {
+      const r = Number(star.dataset.rating);
+      document.querySelectorAll('.rating-star').forEach(s => {
+        s.style.color = Number(s.dataset.rating) <= r ? '#D4AF37' : '#d1d5db';
+      });
+    });
+  });
+  document.getElementById('starRating').addEventListener('mouseleave', () => {
+    document.querySelectorAll('.rating-star').forEach(s => {
+      s.style.color = '';
+    });
   });
 
-  // Preselect course from URL
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('course')) cSel.value = params.get('course');
+  // Char count
+  document.getElementById('reviewText').addEventListener('input', (e) => {
+    document.getElementById('charCount').textContent = e.target.value.length;
+  });
 
-  // Set min date to today
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('classDate').min = today;
-  document.getElementById('classDate').value = today;
-
-  // Form submit
-  document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+  // Submit
+  document.getElementById('reviewForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('formStatus');
 
-    if (!selectedTeacher) {
-      status.textContent = '❌ Please select a teacher';
+    if (selectedRating === 0) {
+      status.textContent = '❌ Please select a star rating';
       status.className = 'text-sm text-center text-red-600';
       status.classList.remove('hidden');
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Booking...';
+    btn.textContent = 'Submitting...';
     status.classList.add('hidden');
 
-    const dateStr = document.getElementById('classDate').value;
-    const timeStr = document.getElementById('classTime').value;
-    const scheduledAt = new Date(dateStr + 'T' + timeStr).toISOString();
-    const duration = Number(document.getElementById('duration').value);
-    const notes = document.getElementById('notes').value.trim();
-    const courseId = document.getElementById('courseId').value || null;
-    const jitsiRoom = 'ALC-Class-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000);
-
-    const { error } = await db.from('classes').insert({
+    const payload = {
+      user_id: session.user.id,
       student_id: session.user.id,
-      teacher_id: selectedTeacher.id,
-      course_id: courseId,
-      title: 'Class with ' + selectedTeacher.name,
-      scheduled_at: scheduledAt,
-      duration_min: duration,
-      notes: notes,
-      jitsi_room: jitsiRoom,
-      status: 'scheduled'
-    });
+      student_name: document.getElementById('displayName').value.trim(),
+      student_country: document.getElementById('displayCountry').value.trim(),
+      rating: selectedRating,
+      review_text: document.getElementById('reviewText').value.trim(),
+      is_approved: false
+    };
+
+    let error;
+    if (existing) {
+      ({ error } = await db.from('reviews').update(payload).eq('id', existing.id));
+    } else {
+      ({ error } = await db.from('reviews').insert(payload));
+    }
 
     if (error) {
       status.textContent = '❌ ' + error.message;
       status.className = 'text-sm text-center text-red-600';
       status.classList.remove('hidden');
       btn.disabled = false;
-      btn.textContent = 'Confirm Booking';
+      btn.textContent = 'Submit Review';
       return;
-    }
-
-    // Notify teacher
-    const { data: teacherData } = await db.from('teachers').select('profile_id').eq('id', selectedTeacher.id).single();
-    if (teacherData?.profile_id && window.Notif) {
-      await Notif.send(
-        teacherData.profile_id,
-        'New Class Booking 📅',
-        fullName + ' booked a ' + duration + ' min class on ' + dateStr + ' at ' + timeStr,
-        'class',
-        '/teacher/my-classes.html'
-      ).catch(() => {});
     }
 
     // Notify admins
     if (window.Notif) {
-      await Notif.toAdmins(
-        'New Class Booking',
-        fullName + ' booked a class with ' + selectedTeacher.name,
-        'class',
-        '/admin/classes.html'
+      window.Notif.toAdmins(
+        'New Review Submitted ⭐',
+        payload.student_name + ' rated ' + selectedRating + '/5 stars. Needs approval.',
+        'review',
+        '/admin/reviews.html'
       ).catch(() => {});
     }
 
-    status.textContent = '✓ Class booked! Redirecting...';
+    status.textContent = '✓ Review submitted! Awaiting admin approval.';
     status.className = 'text-sm text-center text-green-600';
     status.classList.remove('hidden');
-
+    btn.textContent = 'Submitted!';
     setTimeout(() => {
-      window.location.href = 'live-class.html';
-    }, 1500);
+      window.location.href = 'dashboard.html';
+    }, 1800);
   });
 })();
 </script>

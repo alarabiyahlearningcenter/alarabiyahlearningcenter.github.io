@@ -197,6 +197,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
       btn.textContent = 'Save Resource';
       return;
     }
+    // Notify students if new resource
+    if (!id && payload.is_active && window.Notif) {
+      window.Notif.toStudents(
+        'New Resource Available 📄',
+        payload.title + ' has been added. Check it out!',
+        'info',
+        '/student-resources.html'
+      ).catch(() => {});
+    }
+
     status.textContent = '✓ Saved!';
     status.className = 'text-sm text-center text-green-600';
     status.classList.remove('hidden');

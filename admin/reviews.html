@@ -177,8 +177,21 @@ input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3p
   }
 
   window.approveReview = async (id) => {
+    const { data: review } = await db.from('reviews').select('user_id, student_name').eq('id', id).single();
     const { error } = await db.from('reviews').update({ is_approved: true }).eq('id', id);
     if (error) { alert('Error: ' + error.message); return; }
+    
+    // Notify student
+    if (review?.user_id && window.Notif) {
+      await Notif.send(
+        review.user_id,
+        'Review Approved ✓',
+        'Your review has been approved and is now live on our website. Thank you!',
+        'success',
+        '/reviews.html'
+      ).catch(() => {});
+    }
+    
     loadReviews();
   };
 

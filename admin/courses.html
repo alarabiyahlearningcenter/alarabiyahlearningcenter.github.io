@@ -236,6 +236,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
       btn.textContent = 'Save Course';
       return;
     }
+    // Notify students if new course
+    if (!id && payload.is_active && window.Notif) {
+      window.Notif.toStudents(
+        'New Course Available 📚',
+        payload.title + ' is now available. Check it out!',
+        'info',
+        '/courses.html'
+      ).catch(() => {});
+    }
+
     status.textContent = '✓ Saved!';
     status.className = 'text-sm text-center text-green-600';
     status.classList.remove('hidden');

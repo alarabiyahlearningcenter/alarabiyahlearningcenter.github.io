@@ -129,8 +129,24 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
 
   window.cancelClass = async (id) => {
     if (!confirm('Cancel this class?')) return;
+    const cls = allClasses.find(c => c.id === id);
     const { error } = await db.from('classes').update({ status: 'cancelled' }).eq('id', id);
     if (error) { alert('Error: ' + error.message); return; }
+    
+    // Notify student and teacher
+    if (cls && window.Notif) {
+      const dateStr = new Date(cls.scheduled_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      if (cls.student_id) {
+        await Notif.send(cls.student_id, 'Class Cancelled', 'Your class on ' + dateStr + ' has been cancelled.', 'warning', '/student/live-class.html').catch(() => {});
+      }
+      if (cls.teacher_id) {
+        const { data: t } = await db.from('teachers').select('profile_id').eq('id', cls.teacher_id).single();
+        if (t?.profile_id) {
+          await Notif.send(t.profile_id, 'Class Cancelled', 'Your class on ' + dateStr + ' has been cancelled.', 'warning', '/teacher/my-classes.html').catch(() => {});
+        }
+      }
+    }
+    
     loadClasses();
   };
 
