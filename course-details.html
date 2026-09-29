@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Details | Al-Arabiyah Learning Center</title>
+<meta name="description" content="View detailed information about our Quran courses.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A3622">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' },
+  fontFamily: { heading: ['Playfair Display', 'serif'], body: ['Inter', 'sans-serif'], arabic: ['Amiri', 'serif'] }
+}}}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.islamic-pattern{background-image:radial-gradient(circle at 20% 30%,rgba(212,175,55,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(10,54,34,0.05) 0%,transparent 50%)}
+.btn-primary{background:#0A3622;color:white;transition:.3s;box-shadow:0 4px 14px rgba(10,54,34,.25)}
+.btn-primary:hover{background:#062218;transform:translateY(-2px);box-shadow:0 8px 20px rgba(10,54,34,.35)}
+.btn-outline{background:transparent;color:#0A3622;border:2px solid #0A3622;transition:.3s}
+.btn-outline:hover{background:#0A3622;color:white}
+.card-hover{transition:.4s}
+.card-hover:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(10,54,34,.12)}
+.gold-divider{height:3px;width:60px;background:linear-gradient(90deg,#D4AF37,#E8C766);border-radius:2px}
+.whatsapp-float{position:fixed;bottom:24px;right:24px;z-index:999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,211,102,.4);transition:transform .3s}
+.whatsapp-float:hover{transform:scale(1.1)}
+.loading-spinner{display:inline-block;width:40px;height:40px;border:4px solid rgba(10,54,34,.2);border-top-color:#0A3622;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <img src="assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+      <div class="hidden sm:block">
+        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
+        <div class="text-xs text-primary/70">Learning Center</div>
+      </div>
+    </a>
+    <nav class="hidden lg:flex items-center gap-8">
+      <a href="index.html" class="text-primary/80 hover:text-secondary transition">Home</a>
+      <a href="courses.html" class="text-primary font-medium">Courses</a>
+      <a href="teachers.html" class="text-primary/80 hover:text-secondary transition">Teachers</a>
+      <a href="about.html" class="text-primary/80 hover:text-secondary transition">About</a>
+      <a href="reviews.html" class="text-primary/80 hover:text-secondary transition">Reviews</a>
+      <a href="contact.html" class="text-primary/80 hover:text-secondary transition">Contact</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <a href="auth/login.html" class="hidden sm:inline-block px-5 py-2 text-primary font-medium hover:text-secondary transition">Login</a>
+      <a href="auth/signup.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Start Learning</a>
+      <button id="menuBtn" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="mobileMenu" class="hidden lg:hidden border-t border-primary/10 bg-cream">
+    <nav class="px-4 py-4 flex flex-col gap-3">
+      <a href="index.html" class="text-primary/80 py-2">Home</a>
+      <a href="courses.html" class="text-primary font-medium py-2">Courses</a>
+      <a href="teachers.html" class="text-primary/80 py-2">Teachers</a>
+      <a href="about.html" class="text-primary/80 py-2">About</a>
+      <a href="reviews.html" class="text-primary/80 py-2">Reviews</a>
+      <a href="contact.html" class="text-primary/80 py-2">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<!-- LOADING STATE -->
+<div id="loadingState" class="min-h-[60vh] flex items-center justify-center">
+  <div class="text-center">
+    <div class="loading-spinner mx-auto mb-4"></div>
+    <p class="text-charcoal/60 text-sm">Loading course details...</p>
+  </div>
+</div>
+
+<!-- NOT FOUND STATE -->
+<div id="notFoundState" class="hidden min-h-[60vh] flex items-center justify-center px-4">
+  <div class="text-center max-w-md">
+    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <h3 class="text-2xl font-bold text-primary mb-2">Course Not Found</h3>
+    <p class="text-charcoal/60 mb-6">The course you're looking for doesn't exist or has been removed.</p>
+    <a href="courses.html" class="btn-primary inline-block px-6 py-3 rounded-full font-semibold">Browse All Courses</a>
+  </div>
+</div>
+
+<!-- COURSE CONTENT -->
+<div id="courseContent" class="hidden">
+  <!-- HERO -->
+  <section class="islamic-pattern py-12 md:py-16">
+    <div class="max-w-7xl mx-auto px-4">
+      <a href="courses.html" class="inline-flex items-center gap-2 text-primary/60 hover:text-secondary text-sm mb-4">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        All Courses
+      </a>
+      <div class="grid md:grid-cols-2 gap-10 items-start">
+        <div>
+          <div id="coursePopular" class="hidden inline-block px-3 py-1 bg-secondary text-primary text-xs font-bold rounded-full mb-3">POPULAR</div>
+          <h1 id="courseTitle" class="text-4xl md:text-5xl font-bold text-primary mb-4">Course Title</h1>
+          <div class="gold-divider mb-6"></div>
+          <p id="courseDescription" class="text-charcoal/70 text-lg mb-6">Course description...</p>
+          <div class="flex flex-wrap gap-4 mb-8">
+            <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-primary/10">
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span id="courseDuration" class="text-sm font-medium text-primary">Duration</span>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-primary/10">
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              <span id="courseLevel" class="text-sm font-medium text-primary capitalize">Level</span>
+            </div>
+            <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-primary/10">
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+              <span id="courseCategory" class="text-sm font-medium text-primary capitalize">Category</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="absolute -top-4 -right-4 w-40 h-40 bg-secondary/15 rounded-full blur-3xl"></div>
+          <div class="relative bg-white rounded-3xl p-6 shadow-xl border border-primary/5">
+            <div class="aspect-video rounded-2xl bg-primary flex items-center justify-center mb-5 overflow-hidden" id="courseThumb">
+              <span id="courseIcon" class="text-7xl font-bold text-secondary"></span>
+            </div>
+            <div class="text-center mb-5">
+              <p class="text-xs text-charcoal/50 mb-1">Starting from</p>
+              <p id="coursePrice" class="text-3xl font-bold text-primary">৳0</p>
+            </div>
+            <a id="enrollBtn" href="#" class="btn-primary w-full py-3.5 rounded-full font-semibold text-center block mb-3">Enroll Now</a>
+            <a href="free-assessment.html" class="btn-outline w-full py-3.5 rounded-full font-semibold text-center block">Free Trial Class</a>
+            <p class="text-xs text-charcoal/50 text-center mt-4">💡 7-day money back guarantee</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT YOU'LL LEARN -->
+  <section class="py-12 md:py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-primary mb-2 text-center">What You'll Learn</h2>
+      <div class="gold-divider mx-auto mb-8"></div>
+      <div id="learningPoints" class="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- COURSE FEATURES -->
+  <section class="py-12 md:py-16 islamic-pattern">
+    <div class="max-w-7xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-primary mb-2 text-center">What's Included</h2>
+      <div class="gold-divider mx-auto mb-8"></div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-6 rounded-2xl text-center card-hover border border-primary/5">
+          <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="font-bold text-primary mb-1">1-on-1 Live Classes</h3>
+          <p class="text-xs text-charcoal/60">Personal attention from your teacher</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl text-center card-hover border border-primary/5">
+          <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <h3 class="font-bold text-primary mb-1">Study Materials</h3>
+          <p class="text-xs text-charcoal/60">PDFs, workbooks & guides</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl text-center card-hover border border-primary/5">
+          <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="font-bold text-primary mb-1">Certificate</h3>
+          <p class="text-xs text-charcoal/60">Upon course completion</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl text-center card-hover border border-primary/5">
+          <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="font-bold text-primary mb-1">Flexible Timing</h3>
+          <p class="text-xs text-charcoal/60">Choose your own schedule</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-12 md:py-16 bg-primary">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Start?</h2>
+      <p class="text-white/80 mb-8">Enroll now or book a free trial class first.</p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a id="ctaEnroll" href="#" class="bg-secondary text-primary px-8 py-3.5 rounded-full font-semibold hover:bg-secondary-light transition">Enroll Now</a>
+        <a href="free-assessment.html" class="border-2 border-white text-white px-8 py-3.5 rounded-full font-semibold hover:bg-white hover:text-primary transition">Book Free Trial</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer class="bg-primary-dark text-white pt-16 pb-6">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid md:grid-cols-4 gap-8 mb-12">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <img src="assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+          <div>
+            <div class="font-heading font-bold text-white">Al-Arabiyah</div>
+            <div class="text-xs text-white/60">Learning Center</div>
+          </div>
+        </div>
+        <p class="text-white/70 text-sm">Learn - Practice - Grow</p>
+        <p class="text-white/60 text-sm mt-2">Better Qur'an Readers, A Stronger Ummah.</p>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-secondary">Quick Links</h4>
+        <ul class="space-y-2 text-sm text-white/70">
+          <li><a href="index.html" class="hover:text-secondary transition">Home</a></li>
+          <li><a href="courses.html" class="hover:text-secondary transition">Courses</a></li>
+          <li><a href="teachers.html" class="hover:text-secondary transition">Teachers</a></li>
+          <li><a href="about.html" class="hover:text-secondary transition">About Us</a></li>
+          <li><a href="contact.html" class="hover:text-secondary transition">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-secondary">Resources</h4>
+        <ul class="space-y-2 text-sm text-white/70">
+          <li><a href="reviews.html" class="hover:text-secondary transition">Reviews</a></li>
+          <li><a href="faq.html" class="hover:text-secondary transition">FAQ</a></li>
+          <li><a href="student-resources.html" class="hover:text-secondary transition">Student Resources</a></li>
+          <li><a href="certificate-verification.html" class="hover:text-secondary transition">Verify Certificate</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-secondary">Contact</h4>
+        <ul class="space-y-2 text-sm text-white/70">
+          <li>WhatsApp: <span data-phone-text>+8801737326555</span></li>
+          <li>Email: <span data-email-text>info@alarabiyahlearningcenter.com</span></li>
+          <li>Rajshahi, Bangladesh</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 pt-6 text-center text-sm text-white/50">
+      <p>2026 Al-Arabiyah Learning Center. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/8801737326555" target="_blank" class="whatsapp-float" aria-label="WhatsApp">
+  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+</a>
+
+<script>
+const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+document.getElementById('menuBtn').addEventListener('click', () => {
+  document.getElementById('mobileMenu').classList.toggle('hidden');
+});
+
+const COURSE_ICONS = {
+  'noorani-qaida': '📖',
+  'quran-reading': '📗',
+  'tajweed': '🕌',
+  'hifz': '🕋',
+  'islamic-learning': '☪️'
+};
+
+const LEARNING_POINTS = {
+  'noorani-qaida': ['Arabic letters & pronunciation', 'Harakat (vowels)', 'Letter joining rules', 'Basic reading practice', 'Madd & sukoon rules', 'Confident Quran reading foundation'],
+  'quran-reading': ['Fluent Quran recitation', 'Correct pronunciation', 'Reading with Tajweed basics', 'Understanding verse meanings', 'Daily reading habit', 'Complete Quran navigation'],
+  'tajweed': ['All Tajweed rules', 'Makharij (articulation points)', 'Proper pronunciation', 'Rules of Noon & Meem', 'Madd rules in depth', 'Beautiful recitation'],
+  'hifz': ['Systematic memorization', 'Daily revision schedule', 'Strong retention techniques', 'Complete Juz memorization', 'Memory strengthening', 'Quranic discipline'],
+  'islamic-learning': ['Islamic fundamentals', 'Pillars of Islam', 'Prophet stories', 'Daily duas', 'Islamic manners', 'Fiqh basics']
+};
+
+function formatPrice(bdt, usd) {
+  const parts = [];
+  if (bdt && Number(bdt) > 0) parts.push('৳' + bdt);
+  if (usd && Number(usd) > 0) parts.push('$' + usd);
+  return parts.length ? parts.join(' / ') : 'Free';
+}
+
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+
+  if (!slug) {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('notFoundState').classList.remove('hidden');
+    return;
+  }
+
+  const { data: course } = await db.from('courses').select('*').eq('slug', slug).eq('is_active', true).maybeSingle();
+
+  document.getElementById('loadingState').classList.add('hidden');
+
+  if (!course) {
+    document.getElementById('notFoundState').classList.remove('hidden');
+    return;
+  }
+
+  // Page title
+  document.title = course.title + ' | Al-Arabiyah Learning Center';
+
+  // Populate content
+  if (course.is_popular) document.getElementById('coursePopular').classList.remove('hidden');
+  document.getElementById('courseTitle').textContent = course.title;
+  document.getElementById('courseDescription').textContent = course.description || 'A comprehensive course designed to help you learn Quran effectively.';
+  document.getElementById('courseDuration').textContent = (course.duration_months || 1) + ' months';
+  document.getElementById('courseLevel').textContent = course.level || 'beginner';
+  document.getElementById('courseCategory').textContent = course.category || 'quran';
+  document.getElementById('courseIcon').textContent = COURSE_ICONS[course.slug] || '📚';
+  document.getElementById('coursePrice').textContent = formatPrice(course.price_bdt, course.price_usd);
+
+  // Enroll links
+  const enrollUrl = 'student/payment.html?course=' + course.id;
+  document.getElementById('enrollBtn').href = enrollUrl;
+  document.getElementById('ctaEnroll').href = enrollUrl;
+
+  // Learning points
+  const points = LEARNING_POINTS[course.slug] || ['High quality education', 'Qualified teachers', '1-on-1 classes', 'Flexible schedule', 'Course materials', 'Certificate upon completion'];
+  document.getElementById('learningPoints').innerHTML = points.map(p => `
+    <div class="flex items-start gap-3 p-4 bg-cream rounded-xl">
+      <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg class="w-3.5 h-3.5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <span class="text-charcoal/80 text-sm">${p}</span>
+    </div>
+  `).join('');
+
+  // Thumbnail background
+  if (course.thumbnail_url) {
+    document.getElementById('courseThumb').innerHTML = `<img src="${course.thumbnail_url}" alt="${course.title}" class="w-full h-full object-cover">`;
+  }
+
+  document.getElementById('courseContent').classList.remove('hidden');
+})();
+</script>
+
+<script src="assets/js/site-loader.js"></script>
+
+</body>
+</html>
