@@ -2,9 +2,8 @@ name: Class Reminders
 
 on:
   schedule:
-    # Every 5 minutes — check for upcoming classes
     - cron: '*/5 * * * *'
-  workflow_dispatch: # Manual trigger for testing
+  workflow_dispatch:
 
 jobs:
   send-reminders:
@@ -17,10 +16,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
-        run: npm install @supabase/supabase-js web-push
+        run: |
+          npm init -y
+          npm install @supabase/supabase-js@2 web-push@3.6.7 ws@8
 
       - name: Send class reminders
         run: node scripts/send-reminders.js
