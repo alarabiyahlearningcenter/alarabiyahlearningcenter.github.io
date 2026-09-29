@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Class | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+.teacher-card{border:2px solid rgba(10,54,34,.1);transition:.2s;cursor:pointer}
+.teacher-card:hover{border-color:rgba(10,54,34,.3)}
+.teacher-card.selected{border-color:#0A3622;background:rgba(10,54,34,.03)}
+.teacher-card.selected .teacher-avatar{background:#D4AF37;color:#0A3622}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Learning Center</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-sm text-primary font-medium hover:text-secondary">← Dashboard</a>
+      <div id="notifBellContainer"></div>
+      <div class="relative">
+        <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
+          <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">S</div>
+        </button>
+        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary/10 py-2">
+          <div class="px-4 py-2 border-b border-primary/10">
+            <p id="userName" class="text-sm font-semibold text-primary">Student</p>
+            <p id="userEmail" class="text-xs text-charcoal/60 truncate">student@email.com</p>
+          </div>
+          <a href="profile.html" class="block px-4 py-2 text-sm text-charcoal/70 hover:bg-cream">My Profile</a>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="my-courses.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          My Courses
+        </a>
+        <a href="book-class.html" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/15 text-primary font-medium border-l-3 border-secondary">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Book a Class
+        </a>
+        <a href="live-class.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          My Live Classes
+        </a>
+        <a href="payment.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Payments
+        </a>
+        <a href="certificate.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Certificates
+        </a>
+        <a href="profile.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70 hover:bg-secondary/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          My Profile
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Book a Class</h1>
+      <p class="text-charcoal/60 text-sm">Select a teacher and schedule your session</p>
+    </div>
+
+    <form id="bookingForm" class="max-w-3xl space-y-6">
+
+      <!-- Step 1: Select Teacher -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5">
+        <h3 class="font-bold text-primary mb-1 flex items-center gap-2">
+          <span class="w-7 h-7 bg-primary text-secondary text-xs font-bold rounded-full flex items-center justify-center">1</span>
+          Choose Your Teacher
+        </h3>
+        <p class="text-xs text-charcoal/60 mb-4">Select your preferred teacher for this class</p>
+        <div id="teachersList" class="grid sm:grid-cols-2 gap-3">
+          <p class="text-charcoal/60 text-sm col-span-2 text-center py-6">Loading teachers...</p>
+        </div>
+      </div>
+
+      <!-- Step 2: Class Details -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5">
+        <h3 class="font-bold text-primary mb-1 flex items-center gap-2">
+          <span class="w-7 h-7 bg-primary text-secondary text-xs font-bold rounded-full flex items-center justify-center">2</span>
+          Class Details
+        </h3>
+        <p class="text-xs text-charcoal/60 mb-4">When would you like to have your class?</p>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Date *</label>
+            <input type="date" id="classDate" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Time *</label>
+            <input type="time" id="classTime" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Duration *</label>
+            <select id="duration" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60">60 minutes</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Course (optional)</label>
+            <select id="courseId" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+              <option value="">Select course</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-semibold text-primary mb-2">Class Topic / Notes (optional)</label>
+          <textarea id="notes" rows="3" placeholder="Any specific topic or request for this class..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 3: Confirm -->
+      <div class="bg-secondary/10 border border-secondary/30 rounded-2xl p-5">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div class="text-xs text-charcoal/70">
+            <p class="font-semibold text-primary mb-1">Booking Information</p>
+            <ul class="space-y-1 pl-3 list-disc">
+              <li>A Jitsi Meet room will be auto-generated for this class</li>
+              <li>Your teacher and admin will be notified immediately</li>
+              <li>You'll receive a confirmation notification</li>
+              <li>Cancel at least 4 hours before the class if needed</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="flex gap-3">
+        <a href="dashboard.html" class="flex-1 py-3.5 border-2 border-primary text-primary rounded-xl font-semibold text-center hover:bg-primary hover:text-white transition">Cancel</a>
+        <button type="submit" id="submitBtn" class="flex-1 btn-primary py-3.5 rounded-xl font-semibold">Confirm Booking</button>
+      </div>
+      <p id="formStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  // Wait for db to be ready
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) { console.error('db not ready'); return; }
+  const db = window.db;
+
+  // Sidebar
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('userMenu').classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => document.getElementById('userMenu').classList.add('hidden'));
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await db.auth.signOut();
+    window.location.href = '../auth/login.html';
+  });
+
+  // Auth
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
+  const fullName = profile?.full_name || session.user.email.split('@')[0];
+  document.getElementById('userName').textContent = fullName;
+  document.getElementById('userEmail').textContent = session.user.email;
+  document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+
+  // Load teachers
+  const { data: teachers } = await db.from('teachers').select('*').eq('is_active', true).order('sort_order');
+  const tList = document.getElementById('teachersList');
+
+  let selectedTeacher = null;
+
+  if (!teachers || teachers.length === 0) {
+    tList.innerHTML = '<p class="text-charcoal/60 text-sm col-span-2 text-center py-6">No teachers available yet. Please contact admin.</p>';
+  } else {
+    tList.innerHTML = teachers.map(t => {
+      const name = t.name || 'Teacher';
+      const spec = (t.specialities || []).slice(0, 2).join(', ') || 'Quran Teacher';
+      return `
+        <div class="teacher-card rounded-2xl p-4" data-id="${t.id}" data-name="${name.replace(/'/g, "\\'")}">
+          <div class="flex items-center gap-3">
+            <div class="teacher-avatar w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold transition">${name.charAt(0).toUpperCase()}</div>
+            <div class="min-w-0 flex-1">
+              <p class="font-bold text-primary text-sm truncate">${name}</p>
+              <p class="text-xs text-charcoal/60 truncate">${spec}</p>
+              <p class="text-xs text-charcoal/50 mt-0.5">${t.experience_years || 0}+ years exp</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    tList.querySelectorAll('.teacher-card').forEach(card => {
+      card.addEventListener('click', () => {
+        tList.querySelectorAll('.teacher-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedTeacher = { id: card.dataset.id, name: card.dataset.name };
+      });
+    });
+  }
+
+  // Load courses for optional select
+  const { data: courses } = await db.from('courses').select('id, title').eq('is_active', true);
+  const cSel = document.getElementById('courseId');
+  (courses || []).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.title;
+    cSel.appendChild(opt);
+  });
+
+  // Preselect course from URL
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('course')) cSel.value = params.get('course');
+
+  // Set min date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('classDate').min = today;
+  document.getElementById('classDate').value = today;
+
+  // Form submit
+  document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('formStatus');
+
+    if (!selectedTeacher) {
+      status.textContent = '❌ Please select a teacher';
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Booking...';
+    status.classList.add('hidden');
+
+    const dateStr = document.getElementById('classDate').value;
+    const timeStr = document.getElementById('classTime').value;
+    const scheduledAt = new Date(dateStr + 'T' + timeStr).toISOString();
+    const duration = Number(document.getElementById('duration').value);
+    const notes = document.getElementById('notes').value.trim();
+    const courseId = document.getElementById('courseId').value || null;
+    const jitsiRoom = 'ALC-Class-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000);
+
+    const { error } = await db.from('classes').insert({
+      student_id: session.user.id,
+      teacher_id: selectedTeacher.id,
+      course_id: courseId,
+      title: 'Class with ' + selectedTeacher.name,
+      scheduled_at: scheduledAt,
+      duration_min: duration,
+      notes: notes,
+      jitsi_room: jitsiRoom,
+      status: 'scheduled'
+    });
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Confirm Booking';
+      return;
+    }
+
+    // Notify teacher
+    const { data: teacherData } = await db.from('teachers').select('profile_id').eq('id', selectedTeacher.id).single();
+    if (teacherData?.profile_id && window.Notif) {
+      await Notif.send(
+        teacherData.profile_id,
+        'New Class Booking 📅',
+        fullName + ' booked a ' + duration + ' min class on ' + dateStr + ' at ' + timeStr,
+        'class',
+        '/teacher/my-classes.html'
+      ).catch(() => {});
+    }
+
+    // Notify admins
+    if (window.Notif) {
+      await Notif.toAdmins(
+        'New Class Booking',
+        fullName + ' booked a class with ' + selectedTeacher.name,
+        'class',
+        '/admin/classes.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = '✓ Class booked! Redirecting...';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+
+    setTimeout(() => {
+      window.location.href = 'live-class.html';
+    }, 1500);
+  });
+})();
+</script>
+
+</body>
+</html>
