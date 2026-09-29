@@ -86,6 +86,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/push-notifications.js"></script>
 <script src="../assets/js/admin-shell.js"></script>
 <script>
 (async () => {
@@ -161,6 +162,59 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     }).join('');
   }
 })();
+
+// ===== Push Notification Subscribe =====
+(async () => {
+  const card = document.getElementById('pushSubscribeCard');
+  const btn = document.getElementById('subscribeBtn');
+  if (!card || !btn || !window.PushManager) return;
+  if (!window.PushManager.isSupported()) return;
+
+  const perm = window.PushManager.getPermission();
+  if (perm === 'denied') return;
+
+  const subscribed = await window.PushManager.isSubscribed();
+  if (subscribed) {
+    card.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div>
+          <p class="font-bold text-sm">Notifications Enabled</p>
+          <p class="text-xs text-white/70 mt-0.5">You'll receive class reminders</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  card.classList.remove('hidden');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Enabling...';
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) { alert('Please login first'); return; }
+      await window.PushManager.subscribe(session.user.id);
+      card.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div>
+            <p class="font-bold text-sm">✓ Notifications Enabled!</p>
+            <p class="text-xs text-white/70 mt-0.5">You'll get reminders before class</p>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Enable Now';
+      alert('Could not enable: ' + err.message);
+    }
+  });
+})();
+
 </script>
 
 </body>

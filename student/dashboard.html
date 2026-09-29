@@ -128,6 +128,22 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
         <p class="text-charcoal/60 text-sm">Welcome back to your learning journey</p>
       </div>
 
+      <!-- Push Notification Subscribe Card -->
+      <div id="pushSubscribeCard" class="hidden bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-5 mb-6 text-white">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3 flex-1 min-w-[200px]">
+            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6" style="color:#D4AF37" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            </div>
+            <div>
+              <p class="font-bold text-sm">Enable Class Reminders</p>
+              <p class="text-xs text-white/70 mt-0.5">Get push notifications 30/15/5 min before class</p>
+            </div>
+          </div>
+          <button id="subscribeBtn" class="bg-secondary text-primary px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap">Enable Now</button>
+        </div>
+      </div>
+
       <!-- Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5">
@@ -372,6 +388,61 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 </script>
 
 <script src="../assets/js/notifications.js"></script>
-<script src="../assets/js/inject-bell.js"></script>
+<script src="../assets/js/push-notifications.js"></script>
+<script src="../assets/js/inject-bell.js">
+// ===== Push Notification Subscribe =====
+(async () => {
+  const card = document.getElementById('pushSubscribeCard');
+  const btn = document.getElementById('subscribeBtn');
+  if (!card || !btn || !window.PushManager) return;
+  if (!window.PushManager.isSupported()) return;
+
+  const perm = window.PushManager.getPermission();
+  if (perm === 'denied') return;
+
+  const subscribed = await window.PushManager.isSubscribed();
+  if (subscribed) {
+    card.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div>
+          <p class="font-bold text-sm">Notifications Enabled</p>
+          <p class="text-xs text-white/70 mt-0.5">You'll receive class reminders</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  card.classList.remove('hidden');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Enabling...';
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) { alert('Please login first'); return; }
+      await window.PushManager.subscribe(session.user.id);
+      card.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div>
+            <p class="font-bold text-sm">✓ Notifications Enabled!</p>
+            <p class="text-xs text-white/70 mt-0.5">You'll get reminders before class</p>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Enable Now';
+      alert('Could not enable: ' + err.message);
+    }
+  });
+})();
+
+</script>
 </body>
 </html>
