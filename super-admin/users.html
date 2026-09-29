@@ -207,6 +207,17 @@ input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px 
 
     const { error } = await db.from('profiles').update({ role: newRole }).eq('id', editingUserId);
 
+    // Notify user of role change
+    if (!error && window.Notif) {
+      await Notif.send(
+        editingUserId,
+        'Role Updated 👤',
+        'Your account role has been changed to: ' + newRole.replace('_', ' ').toUpperCase(),
+        'info',
+        '/auth/login.html'
+      ).catch(() => {});
+    }
+
     if (error) {
       status.textContent = '❌ ' + error.message;
       status.className = 'text-sm text-center text-red-600 mt-3';

@@ -146,6 +146,28 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     }).join('');
   }
 
+  window.refundPayment = async (id) => {
+    if (!confirm('Mark this payment as refunded?')) return;
+    const { data: payInfo } = await db.from('payments').select('student_id, amount').eq('id', id).single();
+    const { error } = await db.from('payments').update({ 
+      status: 'refunded',
+      verified_by: ctx.session.user.id,
+      verified_at: new Date().toISOString()
+    }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    
+    if (payInfo?.student_id && window.Notif) {
+      await Notif.send(
+        payInfo.student_id,
+        'Payment Refunded 💵',
+        'Your payment of ৳' + payInfo.amount + ' has been refunded.',
+        'info',
+        '/student/payment.html'
+      ).catch(() => {});
+    }
+    loadPayments();
+  };
+
   window.verifyPayment = async (id) => {
     if (!confirm('Verify this payment?')) return;
     const { error } = await db.from('payments').update({ 
@@ -171,6 +193,17 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
             plan_id: payInfo.plan_id || null,
             status: 'active'
           });
+          
+          // Notify student of enrollment
+          if (window.Notif) {
+            await Notif.send(
+              payInfo.student_id,
+              'Enrolled in Course 🎓',
+              'You have been enrolled. Start learning now!',
+              'success',
+              '/student/my-courses.html'
+            ).catch(() => {});
+          }
         }
       }
       if (payInfo?.student_id) {
@@ -183,12 +216,23 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 
   window.rejectPayment = async (id) => {
     if (!confirm('Reject this payment?')) return;
+    const { data: payInfo } = await db.from('payments').select('student_id, amount').eq('id', id).single();
     const { error } = await db.from('payments').update({ 
       status: 'rejected',
       verified_by: ctx.session.user.id,
       verified_at: new Date().toISOString()
     }).eq('id', id);
     if (error) { alert('Error: ' + error.message); return; }
+    
+    if (payInfo?.student_id && window.Notif) {
+      await Notif.send(
+        payInfo.student_id,
+        'Payment Rejected',
+        'Your payment of ৳' + payInfo.amount + ' was rejected. Please contact support.',
+        'error',
+        '/student/payment.html'
+      ).catch(() => {});
+    }
     loadPayments();
   };
 

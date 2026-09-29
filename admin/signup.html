@@ -19,6 +19,7 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 input:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
 .admin-badge{background:linear-gradient(135deg,#0A3622,#062218);color:#D4AF37}
 </style>
+<script src="../assets/js/notifications.js"></script>
 </head>
 <body class="bg-cream min-h-screen flex flex-col islamic-pattern">
 
@@ -166,6 +167,16 @@ document.getElementById('adminSignupForm').addEventListener('submit', async (e) 
     btn.disabled = false;
     btn.textContent = 'Create Admin Account';
     return;
+  }
+
+  // Notify other admins
+  if (window.Notif) {
+    window.Notif.toAdmins(
+      'New Admin Joined 👑',
+      fullName + ' (' + email + ') just registered as an admin.',
+      'signup',
+      '/super-admin/admins.html'
+    ).catch(() => {});
   }
 
   status.textContent = '✓ Admin account created! Redirecting...';

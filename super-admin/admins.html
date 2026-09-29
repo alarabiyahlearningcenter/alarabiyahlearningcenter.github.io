@@ -192,6 +192,16 @@ input:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34
     if (!confirm(`Demote "${name}" to Student? They will lose admin access.`)) return;
     const { error } = await db.from('profiles').update({ role: 'student' }).eq('id', id);
     if (error) { alert('Error: ' + error.message); return; }
+    
+    if (window.Notif) {
+      await Notif.send(
+        id,
+        'Admin Access Removed',
+        'Your admin access has been revoked. You now have student access.',
+        'warning',
+        '/auth/login.html'
+      ).catch(() => {});
+    }
     alert('✓ Admin demoted to Student');
     loadAdmins();
   };
