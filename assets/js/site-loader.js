@@ -272,3 +272,26 @@
     });
   });
 })();
+
+// ============================================
+// HERO BANNER AUTO-INJECT
+// ============================================
+(function() {
+  function onReady(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  onReady(() => {
+    window.addEventListener('siteSettingsLoaded', (e) => {
+      const S = e.detail || {};
+      if (!S.hero_banner_url) return;
+
+      // Find hero image on home page (has alt "Child reading Quran")
+      const heroImg = document.querySelector('img[alt*="Quran"], img[alt*="reading"], img[alt*="hero"]');
+      if (heroImg && heroImg.src !== S.hero_banner_url) {
+        heroImg.src = S.hero_banner_url;
+      }
+    });
+  });
+})();
