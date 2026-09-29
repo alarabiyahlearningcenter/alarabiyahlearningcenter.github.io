@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Plan Requests | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white}
+.btn-red{background:#dc2626;color:white}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+.badge{font-size:11px;font-weight:600;padding:2px 10px;border-radius:999px}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Custom Plan Requests</h1>
+    <p class="text-charcoal/60 text-sm">Review and quote custom plans for students</p>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Pending</p>
+      <p id="statPending" class="text-2xl font-bold text-yellow-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Quoted</p>
+      <p id="statQuoted" class="text-2xl font-bold text-blue-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Accepted</p>
+      <p id="statAccepted" class="text-2xl font-bold text-green-600">0</p>
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="requestsList" class="space-y-3"></div>
+</div>
+
+<!-- Quote Modal -->
+<div id="quoteModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="font-bold text-lg">Send Quote</h3>
+      <button onclick="closeQuoteModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6">
+      <div id="modalRequestInfo" class="bg-cream rounded-xl p-4 mb-4 text-sm space-y-1"></div>
+
+      <form id="quoteForm" class="space-y-4">
+        <input type="hidden" id="requestId">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Quote (BDT ৳) *</label>
+            <input type="number" id="quoteBdt" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Quote (USD $)</label>
+            <input type="number" id="quoteUsd" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Message to Student *</label>
+          <textarea id="adminNote" rows="4" required placeholder="We have created a custom plan for you..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeQuoteModal()" class="flex-1 py-3 border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary hover:text-white transition">Cancel</button>
+          <button type="submit" id="quoteSubmitBtn" class="flex-1 btn-primary py-3 rounded-xl font-semibold">Send Quote</button>
+        </div>
+        <p id="quoteStatus" class="text-sm text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allRequests = [];
+
+  window.closeQuoteModal = () => {
+    document.getElementById('quoteModal').classList.add('hidden');
+  };
+
+  window.openQuoteModal = (req) => {
+    document.getElementById('requestId').value = req.id;
+    document.getElementById('modalRequestInfo').innerHTML = `
+      <p class="font-semibold text-primary">${req.student_name || 'Student'}</p>
+      <p class="text-charcoal/70">📞 ${req.phone || 'N/A'}</p>
+      <p class="text-charcoal/70">⏱️ ${req.duration_min || '?'} min × ${req.classes_per_week || '?'}/week</p>
+      ${req.preferred_days ? `<p class="text-charcoal/70">📅 ${req.preferred_days}</p>` : ''}
+      ${req.preferred_time ? `<p class="text-charcoal/70">🕐 ${req.preferred_time}</p>` : ''}
+      ${req.course_interest ? `<p class="text-charcoal/70">📚 ${req.course_interest}</p>` : ''}
+      ${req.notes ? `<p class="text-charcoal/70">📝 ${req.notes}</p>` : ''}
+    `;
+    document.getElementById('quoteBdt').value = req.quoted_price_bdt || '';
+    document.getElementById('quoteUsd').value = req.quoted_price_usd || '';
+    document.getElementById('adminNote').value = req.admin_note || '';
+    document.getElementById('quoteStatus').classList.add('hidden');
+    document.getElementById('quoteModal').classList.remove('hidden');
+  };
+
+  function statusBadge(status) {
+    const colors = {
+      pending: 'background:#fef3c7;color:#92400e',
+      quoted: 'background:#dbeafe;color:#1e40af',
+      accepted: 'background:#dcfce7;color:#166534',
+      rejected: 'background:#fee2e2;color:#991b1b'
+    };
+    return `<span class="badge" style="${colors[status] || colors.pending}">${status.toUpperCase()}</span>`;
+  }
+
+  function renderRequests(list) {
+    const box = document.getElementById('requestsList');
+    if (!list.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No custom plan requests yet</div>';
+      return;
+    }
+    box.innerHTML = list.map(r => {
+      const date = new Date(r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+          <div class="flex flex-col md:flex-row md:items-start justify-between gap-3 mb-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <p class="font-bold text-primary">${r.student_name || 'Student'}</p>
+                ${statusBadge(r.status)}
+              </div>
+              <p class="text-xs text-charcoal/60">📞 ${r.phone || 'N/A'} • ${date}</p>
+            </div>
+            <div class="text-right">
+              ${r.quoted_price_bdt ? `<p class="font-bold text-primary text-lg">৳${r.quoted_price_bdt}</p><p class="text-xs text-charcoal/50">${r.quoted_price_usd ? '$' + r.quoted_price_usd : ''}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-charcoal/70 mb-3">
+            <div><span class="font-semibold text-primary">Duration:</span> ${r.duration_min || '?'} min</div>
+            <div><span class="font-semibold text-primary">Per Week:</span> ${r.classes_per_week || '?'}x</div>
+            <div><span class="font-semibold text-primary">Days:</span> ${r.preferred_days || 'Any'}</div>
+            <div><span class="font-semibold text-primary">Time:</span> ${r.preferred_time || 'Any'}</div>
+          </div>
+
+          ${r.course_interest ? `<p class="text-xs text-charcoal/60 mb-2"><span class="font-semibold text-primary">Course:</span> ${r.course_interest}</p>` : ''}
+          ${r.notes ? `<p class="text-xs text-charcoal/60 mb-3 p-3 bg-cream rounded-lg">📝 ${r.notes}</p>` : ''}
+          ${r.admin_note ? `<p class="text-xs text-blue-700 mb-3 p-3 bg-blue-50 rounded-lg"><strong>Your note:</strong> ${r.admin_note}</p>` : ''}
+
+          <div class="flex flex-wrap gap-2 pt-3 border-t border-primary/10">
+            ${r.status === 'pending' ? `
+              <button onclick='openQuoteModal(${JSON.stringify(r).replace(/'/g, "\\'")})' class="btn-primary text-xs px-4 py-2 rounded-full font-semibold">💬 Send Quote</button>
+              <button onclick="rejectRequest('${r.id}')" class="btn-red text-xs px-4 py-2 rounded-full font-semibold">✕ Reject</button>
+            ` : ''}
+            ${r.status === 'quoted' ? `
+              <button onclick='openQuoteModal(${JSON.stringify(r).replace(/'/g, "\\'")})' class="btn-primary text-xs px-4 py-2 rounded-full font-semibold">✏️ Edit Quote</button>
+              <span class="text-xs text-charcoal/60 self-center">Waiting for student response...</span>
+            ` : ''}
+            ${r.status === 'accepted' ? `
+              <span class="text-xs text-green-700 font-semibold self-center">✓ Student accepted this quote</span>
+            ` : ''}
+            <a href="https://wa.me/${(r.phone || '').replace(/[^0-9]/g, '')}" target="_blank" class="text-xs bg-green-50 text-green-700 px-4 py-2 rounded-full font-semibold hover:bg-green-100">WhatsApp</a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.rejectRequest = async (id) => {
+    if (!confirm('Reject this custom plan request?')) return;
+    const { error } = await db.from('custom_plan_requests').update({ 
+      status: 'rejected',
+      processed_at: new Date().toISOString(),
+      processed_by: ctx.session.user.id
+    }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadRequests();
+  };
+
+  document.getElementById('quoteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('quoteSubmitBtn');
+    const status = document.getElementById('quoteStatus');
+    const id = document.getElementById('requestId').value;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const payload = {
+      quoted_price_bdt: Number(document.getElementById('quoteBdt').value),
+      quoted_price_usd: document.getElementById('quoteUsd').value ? Number(document.getElementById('quoteUsd').value) : null,
+      admin_note: document.getElementById('adminNote').value.trim(),
+      status: 'quoted',
+      processed_at: new Date().toISOString(),
+      processed_by: ctx.session.user.id
+    };
+
+    const { data: req } = await db.from('custom_plan_requests').select('student_id, student_name').eq('id', id).single();
+
+    const { error } = await db.from('custom_plan_requests').update(payload).eq('id', id);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Send Quote';
+      return;
+    }
+
+    // Notify student if logged in
+    if (req?.student_id && window.Notif) {
+      await Notif.send(
+        req.student_id,
+        'Custom Quote Received 💰',
+        'We have prepared a custom plan for you: ৳' + payload.quoted_price_bdt + '. Check details and confirm.',
+        'success',
+        '/student/payment.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = '✓ Quote sent!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+
+    setTimeout(() => {
+      closeQuoteModal();
+      btn.disabled = false;
+      btn.textContent = 'Send Quote';
+      loadRequests();
+    }, 1200);
+  });
+
+  async function loadRequests() {
+    document.getElementById('loading').classList.remove('hidden');
+    const { data } = await db.from('custom_plan_requests').select('*').order('created_at', { ascending: false });
+    allRequests = data || [];
+
+    document.getElementById('statPending').textContent = allRequests.filter(r => r.status === 'pending').length;
+    document.getElementById('statQuoted').textContent = allRequests.filter(r => r.status === 'quoted').length;
+    document.getElementById('statAccepted').textContent = allRequests.filter(r => r.status === 'accepted').length;
+
+    renderRequests(allRequests);
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  loadRequests();
+})();
+</script>
+
+</body>
+</html>
