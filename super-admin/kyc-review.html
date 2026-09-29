@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KYC Review | Super Admin</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white}
+.btn-green:hover{background:#15803d}
+.btn-red{background:#dc2626;color:white}
+.btn-red:hover{background:#b91c1c}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px}
+.doc-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:2px solid rgba(10,54,34,.1);background:#fff;cursor:pointer;transition:.2s}
+.doc-thumb:hover{border-color:#0A3622;transform:scale(1.02)}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="super-admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">KYC Review</h1>
+    <p class="text-charcoal/60 text-sm">Review and approve teacher/admin verification documents</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Pending Review</p>
+      <p id="statPending" class="text-2xl font-bold text-yellow-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Approved</p>
+      <p id="statApproved" class="text-2xl font-bold text-green-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Rejected</p>
+      <p id="statRejected" class="text-2xl font-bold text-red-600">0</p>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="bg-white rounded-2xl p-4 border border-primary/5 mb-6">
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="text-sm font-semibold text-primary mr-2">Filter:</span>
+      <button class="kyc-filter badge" data-filter="pending" style="background:#fef3c7;color:#92400e">Pending</button>
+      <button class="kyc-filter badge" data-filter="approved" style="background:#dcfce7;color:#166534">Approved</button>
+      <button class="kyc-filter badge" data-filter="rejected" style="background:#fee2e2;color:#991b1b">Rejected</button>
+      <button class="kyc-filter badge" data-filter="all" style="background:#e5e7eb;color:#374151">All</button>
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="reviewList" class="space-y-4"></div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl max-w-4xl w-full my-8">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+      <h3 class="font-bold text-lg">Review KYC Submission</h3>
+      <button onclick="closeReviewModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+
+    <div class="p-6">
+      <div id="modalUserInfo" class="bg-cream rounded-xl p-4 mb-5"></div>
+
+      <h4 class="font-bold text-primary mb-3">Submitted Documents</h4>
+      <div id="modalDocs" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
+
+      <div id="modalPreviousNote" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
+        <p class="text-xs text-blue-800"><strong>Student's Note:</strong> <span id="modalUserNote"></span></p>
+      </div>
+
+      <div class="border-t border-primary/10 pt-5">
+        <label class="block text-sm font-semibold text-primary mb-2">Admin Note (visible to user if rejected)</label>
+        <textarea id="reviewNote" rows="3" placeholder="Optional: reason for rejection or additional notes..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+      </div>
+
+      <div class="flex gap-3 mt-5">
+        <button onclick="closeReviewModal()" class="flex-1 py-3 border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary hover:text-white transition">Cancel</button>
+        <button id="rejectBtn" class="flex-1 btn-red py-3 rounded-xl font-semibold">✕ Reject</button>
+        <button id="approveBtn" class="flex-1 btn-green py-3 rounded-xl font-semibold">✓ Approve</button>
+      </div>
+      <p id="modalStatus" class="text-sm text-center mt-3 hidden"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Image Preview Lightbox -->
+<div id="lightbox" class="hidden fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="Preview" class="max-w-full max-h-full object-contain rounded-lg" />
+  <button class="absolute top-4 right-4 text-white text-3xl">&times;</button>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/super-admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initSuperAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allSubmissions = [];
+  let currentFilter = 'pending';
+  let currentUserId = null;
+
+  window.closeReviewModal = () => {
+    document.getElementById('reviewModal').classList.add('hidden');
+    currentUserId = null;
+  };
+
+  window.openLightbox = (src) => {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.remove('hidden');
+  };
+  window.closeLightbox = () => {
+    document.getElementById('lightbox').classList.add('hidden');
+  };
+
+  async function getSignedUrl(path) {
+    const { data } = await db.storage.from('kyc').createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+  }
+
+  function statusBadge(status) {
+    const colors = {
+      pending: 'background:#fef3c7;color:#92400e',
+      approved: 'background:#dcfce7;color:#166534',
+      rejected: 'background:#fee2e2;color:#991b1b',
+      not_submitted: 'background:#e5e7eb;color:#374151'
+    };
+    const labels = {
+      pending: '⏳ Pending',
+      approved: '✓ Approved',
+      rejected: '✕ Rejected',
+      not_submitted: 'Not Submitted'
+    };
+    return `<span class="badge" style="${colors[status]}">${labels[status] || status}</span>`;
+  }
+
+  async function renderSubmissions(list) {
+    const box = document.getElementById('reviewList');
+    if (!list.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No submissions in this category</div>';
+      return;
+    }
+    box.innerHTML = list.map(u => {
+      const name = u.full_name || u.email?.split('@')[0] || 'User';
+      const submitted = u.kyc_submitted_at ? new Date(u.kyc_submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${name.charAt(0).toUpperCase()}</div>
+              <div class="min-w-0">
+                <p class="font-bold text-primary text-sm">${name} ${statusBadge(u.kyc_status)}</p>
+                <p class="text-xs text-charcoal/60 truncate">${u.email || ''} • ${u.role.toUpperCase()}</p>
+                <p class="text-xs text-charcoal/50 mt-0.5">Submitted: ${submitted}</p>
+              </div>
+            </div>
+            <div>
+              <button onclick="openReview('${u.id}')" class="btn-primary text-xs px-4 py-2 rounded-full font-semibold">Review →</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.openReview = async (userId) => {
+    const user = allSubmissions.find(u => u.id === userId);
+    if (!user) return;
+    currentUserId = userId;
+
+    const name = user.full_name || user.email?.split('@')[0] || 'User';
+    document.getElementById('modalUserInfo').innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-lg">${name.charAt(0).toUpperCase()}</div>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-primary">${name}</p>
+          <p class="text-xs text-charcoal/70">${user.email || ''}</p>
+          <p class="text-xs text-charcoal/70">${user.phone || ''} • ${user.country || 'N/A'}</p>
+          <p class="text-xs text-charcoal/70 mt-1"><strong>Role:</strong> ${user.role.toUpperCase()}</p>
+        </div>
+        ${statusBadge(user.kyc_status)}
+      </div>
+    `;
+
+    // Load documents
+    const docsBox = document.getElementById('modalDocs');
+    docsBox.innerHTML = '<p class="col-span-full text-charcoal/60 text-sm">Loading documents...</p>';
+
+    const { data: docs } = await db.from('kyc_documents').select('*').eq('user_id', userId);
+
+    if (!docs || !docs.length) {
+      docsBox.innerHTML = '<p class="col-span-full text-charcoal/60 text-sm text-center py-6">No documents found</p>';
+    } else {
+      const withUrls = await Promise.all(docs.map(async d => {
+        const url = await getSignedUrl(d.file_url);
+        return { ...d, signedUrl: url };
+      }));
+
+      docsBox.innerHTML = withUrls.map(d => {
+        const labels = {
+          nid_front: 'NID Front',
+          nid_back: 'NID Back',
+          education_cert: 'Education Cert',
+          selfie: 'Selfie'
+        };
+        const label = labels[d.document_type] || d.document_type;
+        const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(d.file_url);
+        return `
+          <div>
+            <p class="text-xs font-semibold text-primary mb-2">${label}</p>
+            ${isImage && d.signedUrl ? 
+              `<img src="${d.signedUrl}" class="doc-thumb" onclick="openLightbox('${d.signedUrl}')" alt="${label}">` :
+              `<a href="${d.signedUrl || '#'}" target="_blank" class="block doc-thumb flex items-center justify-center">
+                <div class="text-center">
+                  <svg class="w-8 h-8 text-primary/50 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  <p class="text-xs text-primary mt-1">Open File</p>
+                </div>
+              </a>`
+            }
+          </div>
+        `;
+      }).join('');
+    }
+
+    // User's note
+    if (user.kyc_notes) {
+      document.getElementById('modalPreviousNote').classList.remove('hidden');
+      document.getElementById('modalUserNote').textContent = user.kyc_notes;
+    } else {
+      document.getElementById('modalPreviousNote').classList.add('hidden');
+    }
+
+    document.getElementById('reviewNote').value = '';
+    document.getElementById('modalStatus').classList.add('hidden');
+    document.getElementById('reviewModal').classList.remove('hidden');
+  };
+
+  async function processReview(decision) {
+    if (!currentUserId) return;
+    const note = document.getElementById('reviewNote').value.trim();
+    const btn = decision === 'approved' ? document.getElementById('approveBtn') : document.getElementById('rejectBtn');
+    const otherBtn = decision === 'approved' ? document.getElementById('rejectBtn') : document.getElementById('approveBtn');
+    const status = document.getElementById('modalStatus');
+
+    btn.disabled = true;
+    otherBtn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Processing...';
+
+    const { error } = await db.from('profiles').update({
+      kyc_status: decision,
+      kyc_reviewed_at: new Date().toISOString(),
+      kyc_reviewed_by: ctx.session.user.id,
+      kyc_notes: note || null
+    }).eq('id', currentUserId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      otherBtn.disabled = false;
+      btn.textContent = originalText;
+      return;
+    }
+
+    // Notify user
+    if (window.Notif) {
+      if (decision === 'approved') {
+        await Notif.send(
+          currentUserId,
+          'KYC Approved ✓',
+          'Your identity has been verified! You now have full access to your teacher features.',
+          'success',
+          '/teacher/dashboard.html'
+        ).catch(() => {});
+      } else {
+        await Notif.send(
+          currentUserId,
+          'KYC Rejected',
+          note || 'Your documents did not meet requirements. Please re-upload correct documents.',
+          'error',
+          '/teacher/kyc.html'
+        ).catch(() => {});
+      }
+    }
+
+    status.textContent = decision === 'approved' ? '✓ Approved!' : '✕ Rejected';
+    status.className = 'text-sm text-center ' + (decision === 'approved' ? 'text-green-600' : 'text-red-600') + ' mt-3';
+    status.classList.remove('hidden');
+
+    setTimeout(() => {
+      closeReviewModal();
+      loadSubmissions();
+    }, 1200);
+  }
+
+  document.getElementById('approveBtn').addEventListener('click', () => processReview('approved'));
+  document.getElementById('rejectBtn').addEventListener('click', () => processReview('rejected'));
+
+  async function loadSubmissions() {
+    document.getElementById('loading').classList.remove('hidden');
+
+    const { data } = await db.from('profiles')
+      .select('*')
+      .in('role', ['teacher', 'admin'])
+      .order('kyc_submitted_at', { ascending: false, nullsFirst: false });
+
+    allSubmissions = data || [];
+
+    const pending = allSubmissions.filter(u => u.kyc_status === 'pending').length;
+    const approved = allSubmissions.filter(u => u.kyc_status === 'approved').length;
+    const rejected = allSubmissions.filter(u => u.kyc_status === 'rejected').length;
+
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statApproved').textContent = approved;
+    document.getElementById('statRejected').textContent = rejected;
+
+    applyFilter();
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function applyFilter() {
+    const filters = document.querySelectorAll('.kyc-filter');
+    filters.forEach(f => {
+      f.style.opacity = f.dataset.filter === currentFilter ? '1' : '0.5';
+      f.style.outline = f.dataset.filter === currentFilter ? '2px solid #0A3622' : 'none';
+    });
+
+    let list = allSubmissions;
+    if (currentFilter !== 'all') {
+      list = list.filter(u => u.kyc_status === currentFilter);
+    }
+    renderSubmissions(list);
+  }
+
+  document.querySelectorAll('.kyc-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFilter = btn.dataset.filter;
+      applyFilter();
+    });
+  });
+
+  loadSubmissions();
+})();
+</script>
+
+</body>
+</html>
