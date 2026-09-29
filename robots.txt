@@ -1,0 +1,12 @@
+# Al-Arabiyah Learning Center — robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /super-admin/
+Disallow: /student/
+Disallow: /teacher/
+Disallow: /auth/
+Disallow: /assets/
+
+Sitemap: https://alarabiyahlearningcenter.github.io/sitemap.xml
