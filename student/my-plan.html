@@ -168,6 +168,16 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
   const loading = document.getElementById('loading');
   const content = document.getElementById('planContent');
 
+  // Check for pending custom plan quotes FIRST
+  const { data: pendingQuotes } = await db
+    .from('custom_plan_requests')
+    .select('*')
+    .eq('student_id', session.user.id)
+    .eq('status', 'quoted')
+    .order('processed_at', { ascending: false });
+
+  const pendingQuote = pendingQuotes && pendingQuotes.length > 0 ? pendingQuotes[0] : null;
+
   // Fetch active enrollment with plan
   const { data: enrollment } = await db
     .from('enrollments')
@@ -181,9 +191,61 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
   loading.classList.add('hidden');
   content.classList.remove('hidden');
 
+  // Render pending quote section if exists
+  let quoteHtml = '';
+  if (pendingQuote) {
+    quoteHtml = `
+      <div class="quote-card mb-6" id="quoteCard">
+        <div class="relative">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="badge" style="background:#D4AF37;color:#0A3622;">CUSTOM QUOTE</span>
+            <span class="text-xs text-charcoal/60">${new Date(pendingQuote.processed_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          </div>
+          <h2 class="text-2xl font-bold text-primary mb-2">Your Personalized Plan</h2>
+          <p class="text-sm text-charcoal/70 mb-4">Our team has prepared a custom plan for your specific needs.</p>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-xs">
+            <div class="bg-white rounded-lg p-3">
+              <p class="text-charcoal/50 mb-1">Duration</p>
+              <p class="font-bold text-primary">${pendingQuote.duration_min} min</p>
+            </div>
+            <div class="bg-white rounded-lg p-3">
+              <p class="text-charcoal/50 mb-1">Classes / Week</p>
+              <p class="font-bold text-primary">${pendingQuote.classes_per_week}x</p>
+            </div>
+            <div class="bg-white rounded-lg p-3">
+              <p class="text-charcoal/50 mb-1">Days</p>
+              <p class="font-bold text-primary">${pendingQuote.preferred_days || 'Flexible'}</p>
+            </div>
+            <div class="bg-white rounded-lg p-3">
+              <p class="text-charcoal/50 mb-1">Time</p>
+              <p class="font-bold text-primary">${pendingQuote.preferred_time || 'Flexible'}</p>
+            </div>
+          </div>
+
+          ${pendingQuote.course_interest ? `<p class="text-xs text-charcoal/70 mb-3"><strong>Course:</strong> ${pendingQuote.course_interest}</p>` : ''}
+          ${pendingQuote.admin_note ? `<div class="bg-white rounded-xl p-4 mb-4"><p class="text-xs text-charcoal/60 mb-1"><strong>Message from team:</strong></p><p class="text-sm text-charcoal/80">${pendingQuote.admin_note}</p></div>` : ''}
+
+          <div class="bg-primary rounded-2xl p-5 text-center mb-4">
+            <p class="text-white/60 text-xs mb-1">Your Custom Price</p>
+            <p class="text-4xl font-bold" style="color:#D4AF37;">৳${Number(pendingQuote.quoted_price_bdt).toLocaleString()}</p>
+            ${pendingQuote.quoted_price_usd ? `<p class="text-white/60 text-sm mt-1">$${pendingQuote.quoted_price_usd}</p>` : ''}
+            <p class="text-white/50 text-xs mt-2">per month</p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="rejectQuote('${pendingQuote.id}')" class="flex-1 py-3 border-2 border-red-400 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition">✕ Decline</button>
+            <button onclick="acceptQuote('${pendingQuote.id}', ${pendingQuote.quoted_price_bdt})" class="flex-1 btn-primary py-3 rounded-xl font-semibold">✓ Accept & Enroll</button>
+          </div>
+          <p id="quoteStatus" class="text-sm text-center hidden mt-3"></p>
+        </div>
+      </div>
+    `;
+  }
+
   if (!enrollment) {
     // No active plan — show empty state
-    content.innerHTML = `
+    content.innerHTML = quoteHtml + `
       <div class="bg-white rounded-3xl p-10 border border-primary/5 text-center">
         <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
@@ -220,7 +282,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
   const priceBdt = plan?.price_bdt || 0;
   const priceUsd = plan?.price_usd || 0;
 
-  content.innerHTML = `
+  content.innerHTML = quoteHtml + `
     <div class="max-w-3xl space-y-6">
 
       <!-- Active Plan Card -->
@@ -298,6 +360,76 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       </div>
     </div>
   `;
+
+  // ===== Custom Quote Accept / Reject =====
+  window.acceptQuote = async (quoteId, price) => {
+    const status = document.getElementById('quoteStatus');
+    if (!confirm('Accept this custom plan and proceed to enrollment?')) return;
+
+    status.textContent = 'Processing...';
+    status.className = 'text-sm text-center text-primary mt-3';
+    status.classList.remove('hidden');
+
+    const { error } = await db.from('custom_plan_requests').update({
+      status: 'accepted',
+      processed_at: new Date().toISOString()
+    }).eq('id', quoteId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+      return;
+    }
+
+    // Notify admins
+    if (window.Notif) {
+      window.Notif.toAdmins(
+        'Custom Plan Accepted 🎉',
+        fullName + ' accepted the custom quote of ৳' + price + '. Please send payment link.',
+        'success',
+        '/admin/custom-plans.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = '✓ Accepted! Redirecting to payment...';
+    status.className = 'text-sm text-center text-green-600 mt-3';
+
+    setTimeout(() => {
+      window.location.href = 'payment.html?custom=' + quoteId;
+    }, 1500);
+  };
+
+  window.rejectQuote = async (quoteId) => {
+    if (!confirm('Decline this custom quote? You can request a new one anytime.')) return;
+    const status = document.getElementById('quoteStatus');
+
+    const { error } = await db.from('custom_plan_requests').update({
+      status: 'rejected',
+      processed_at: new Date().toISOString()
+    }).eq('id', quoteId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    // Notify admins
+    if (window.Notif) {
+      window.Notif.toAdmins(
+        'Custom Plan Declined',
+        fullName + ' declined the custom quote.',
+        'warning',
+        '/admin/custom-plans.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = 'Quote declined.';
+    status.className = 'text-sm text-center text-charcoal/60 mt-3';
+    setTimeout(() => location.reload(), 1200);
+  };
+
 })();
 </script>
 
