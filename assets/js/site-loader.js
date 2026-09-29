@@ -174,3 +174,55 @@
     });
   });
 })();
+
+// ============================================
+// SEO META TAG INJECTION
+// Applies settings from Super Admin → SEO page
+// ============================================
+(function() {
+  function onReady(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  onReady(() => {
+    window.addEventListener('siteSettingsLoaded', (e) => {
+      const S = e.detail || {};
+
+      function setMeta(attr, name, content) {
+        if (!content) return;
+        let tag = document.querySelector(`meta[${attr}="${name}"]`);
+        if (!tag) {
+          tag = document.createElement('meta');
+          tag.setAttribute(attr, name);
+          document.head.appendChild(tag);
+        }
+        tag.setAttribute('content', content);
+      }
+
+      // ---- Meta Title ----
+      if (S.meta_title) document.title = S.meta_title;
+
+      // ---- Standard Meta ----
+      if (S.meta_description) setMeta('name', 'description', S.meta_description);
+      if (S.meta_keywords) setMeta('name', 'keywords', S.meta_keywords);
+
+      // ---- Open Graph ----
+      if (S.og_title) setMeta('property', 'og:title', S.og_title);
+      if (S.og_description) setMeta('property', 'og:description', S.og_description);
+      if (S.og_image) setMeta('property', 'og:image', S.og_image);
+
+      // ---- Twitter Card ----
+      setMeta('name', 'twitter:card', 'summary_large_image');
+      if (S.og_title) setMeta('name', 'twitter:title', S.og_title);
+      if (S.og_description) setMeta('name', 'twitter:description', S.og_description);
+      if (S.og_image) setMeta('name', 'twitter:image', S.og_image);
+
+      // ---- Google Search Console Verification ----
+      if (S.gsc_code) {
+        const cleanCode = S.gsc_code.replace(/^google-site-verification=/, '');
+        setMeta('name', 'google-site-verification', cleanCode);
+      }
+    });
+  });
+})();
