@@ -226,3 +226,49 @@
     });
   });
 })();
+
+// ============================================
+// AUTO-INJECT PRICING LINK IN NAVIGATION
+// ============================================
+(function() {
+  function onReady(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  onReady(() => {
+    // Skip admin/student/teacher/super-admin/auth pages
+    const path = window.location.pathname;
+    if (path.match(/\/(admin|student|teacher|super-admin|auth)\//)) return;
+
+    // ---- 1. Desktop Nav (before About) ----
+    document.querySelectorAll('nav.hidden.lg\\:flex a[href="about.html"]').forEach(aboutLink => {
+      if (aboutLink.parentElement.querySelector('a[href="pricing.html"]')) return;
+      const p = document.createElement('a');
+      p.href = 'pricing.html';
+      p.className = 'text-primary/80 hover:text-secondary transition';
+      p.textContent = 'Pricing';
+      aboutLink.parentElement.insertBefore(p, aboutLink);
+    });
+
+    // ---- 2. Mobile Nav (before About) ----
+    document.querySelectorAll('#mobileMenu nav a[href="about.html"]').forEach(aboutLink => {
+      if (aboutLink.parentElement.querySelector('a[href="pricing.html"]')) return;
+      const p = document.createElement('a');
+      p.href = 'pricing.html';
+      p.className = 'text-primary/80 py-2';
+      p.textContent = 'Pricing';
+      aboutLink.parentElement.insertBefore(p, aboutLink);
+    });
+
+    // ---- 3. Footer Quick Links (after Teachers) ----
+    document.querySelectorAll('footer a[href="teachers.html"]').forEach(t => {
+      const parentLi = t.parentElement;
+      if (!parentLi || parentLi.tagName !== 'LI') return;
+      if (parentLi.parentElement.querySelector('a[href="pricing.html"]')) return;
+      const li = document.createElement('li');
+      li.innerHTML = '<a href="pricing.html" class="hover:text-secondary transition">Pricing</a>';
+      parentLi.parentElement.insertBefore(li, parentLi.nextSibling);
+    });
+  });
+})();
