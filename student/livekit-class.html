@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Class | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#1a1a1a;color:white;margin:0;padding:0}
+h1,h2,h3{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-danger{background:#dc2626;color:white}
+.btn-danger:hover{background:#b91c1c}
+.btn-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.2s;cursor:pointer;border:none}
+.btn-icon:hover{transform:scale(1.1)}
+.video-tile{background:#2a2a2a;border-radius:16px;overflow:hidden;position:relative;aspect-ratio:16/9}
+.video-tile video{width:100%;height:100%;object-fit:cover}
+.video-name{position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,.7);padding:4px 12px;border-radius:8px;font-size:13px;font-weight:600}
+.control-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);border-radius:50px;padding:12px 20px;display:flex;gap:12px;z-index:100;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+
+<!-- Loading State -->
+<div id="loadingState" class="min-h-screen flex items-center justify-center bg-[#0A3622]">
+  <div class="text-center">
+    <div class="w-16 h-16 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="text-white/80">Joining class...</p>
+  </div>
+</div>
+
+<!-- Error State -->
+<div id="errorState" class="hidden min-h-screen flex items-center justify-center p-4 bg-[#0A3622]">
+  <div class="max-w-md bg-white/5 backdrop-blur rounded-3xl p-8 text-center border border-white/10">
+    <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+    <h2 class="text-2xl font-bold text-white mb-2">Connection Error</h2>
+    <p id="errorMessage" class="text-white/70 text-sm mb-6">Unable to join the class</p>
+    <a href="live-class.html" class="inline-block bg-secondary text-primary px-6 py-3 rounded-full font-semibold">Back to Classes</a>
+  </div>
+</div>
+
+<!-- Main Video Interface -->
+<div id="videoInterface" class="hidden min-h-screen flex flex-col">
+
+  <!-- Top Bar -->
+  <div class="bg-black/80 backdrop-blur px-4 py-3 flex items-center justify-between border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <img src="../assets/images/logo.png" alt="Logo" class="w-9 h-9 rounded-full border-2 border-secondary object-cover">
+      <div>
+        <p class="font-bold text-sm" id="roomTitle">Live Class</p>
+        <p class="text-xs text-white/60" id="roomStatus">Connecting...</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div id="participantCount" class="bg-white/10 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5">
+        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+        <span id="participantCountText">0</span>
+      </div>
+      <button onclick="window.location.href='live-class.html'" class="btn-icon bg-red-500 hover:bg-red-600" title="Leave">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Video Grid -->
+  <div class="flex-1 p-4 overflow-y-auto">
+    <div id="videoGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto"></div>
+  </div>
+
+  <!-- Control Bar -->
+  <div class="control-bar">
+    <button id="micBtn" class="btn-icon bg-white/10 hover:bg-white/20" title="Toggle Microphone">
+      <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+    </button>
+
+    <button id="camBtn" class="btn-icon bg-white/10 hover:bg-white/20" title="Toggle Camera">
+      <svg id="camIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+    </button>
+
+    <button id="screenBtn" class="btn-icon bg-white/10 hover:bg-white/20" title="Share Screen">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+    </button>
+
+    <button id="chatBtn" class="btn-icon bg-white/10 hover:bg-white/20 relative" title="Chat">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      <span id="chatBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
+    </button>
+
+    <button onclick="window.location.href='live-class.html'" class="btn-icon btn-danger" title="End Class">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Chat Panel -->
+<div id="chatPanel" class="hidden fixed right-4 top-20 bottom-24 w-80 bg-black/90 backdrop-blur rounded-2xl border border-white/10 flex flex-col z-50">
+  <div class="p-4 border-b border-white/10 flex items-center justify-between">
+    <h3 class="font-bold">Chat</h3>
+    <button onclick="document.getElementById('chatPanel').classList.add('hidden')" class="text-white/60 hover:text-white">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-sm"></div>
+  <div class="p-3 border-t border-white/10">
+    <div class="flex gap-2">
+      <input id="chatInput" type="text" placeholder="Type a message..." class="flex-1 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-secondary">
+      <button id="chatSend" class="bg-secondary text-primary w-10 h-10 rounded-full flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+const TOKEN_SERVER = 'https://vgsgisyneymtszuslftb.supabase.co/functions/v1/livekit-token';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let room = null;
+let localVideoTrack = null;
+let localAudioTrack = null;
+let micEnabled = true;
+let camEnabled = true;
+
+const params = new URLSearchParams(window.location.search);
+const roomName = params.get('room');
+const isTeacher = params.get('teacher') === 'true';
+
+if (!roomName) {
+  document.getElementById('loadingState').classList.add('hidden');
+  document.getElementById('errorState').classList.remove('hidden');
+  document.getElementById('errorMessage').textContent = 'No room specified in URL';
+}
+
+async function getToken() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw new Error('You must be logged in');
+
+  const { data: profile } = await sb.from('profiles').select('full_name').eq('id', session.user.id).single();
+
+  const res = await fetch(TOKEN_SERVER, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + session.access_token,
+      'apikey': SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify({
+      roomName: roomName,
+      participantName: profile?.full_name || session.user.email.split('@')[0],
+      isTeacher: isTeacher
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to get token');
+  }
+
+  return await res.json();
+}
+
+function createVideoTile(participant, isLocal) {
+  const tile = document.createElement('div');
+  tile.className = 'video-tile';
+  tile.id = 'tile-' + participant.identity;
+
+  const video = document.createElement('video');
+  video.autoplay = true;
+  video.playsInline = true;
+  if (isLocal) video.muted = true;
+  video.id = 'video-' + participant.identity;
+  tile.appendChild(video);
+
+  const name = document.createElement('div');
+  name.className = 'video-name';
+  name.textContent = (participant.name || participant.identity) + (isLocal ? ' (You)' : '');
+  tile.appendChild(name);
+
+  if (isLocal) {
+    const localIndicator = document.createElement('div');
+    localIndicator.className = 'absolute top-3 left-3 bg-secondary text-primary text-xs font-bold px-2 py-1 rounded-full';
+    localIndicator.textContent = 'YOU';
+    tile.appendChild(localIndicator);
+  }
+
+  return tile;
+}
+
+async function startClass() {
+  try {
+    document.getElementById('roomTitle').textContent = 'Live Class';
+    document.getElementById('roomStatus').textContent = 'Connecting...';
+
+    const { token, url } = await getToken();
+
+    room = new LivekitClient.Room({
+      adaptiveStream: true,
+      dynacast: true,
+      videoCaptureDefaults: { resolution: LivekitClient.VideoPresets.h720.resolution }
+    });
+
+    room
+      .on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === 'video' || track.kind === 'audio') {
+          let videoEl = document.getElementById('video-' + participant.identity);
+          if (!videoEl) {
+            const grid = document.getElementById('videoGrid');
+            const tile = createVideoTile(participant, false);
+            grid.appendChild(tile);
+            videoEl = document.getElementById('video-' + participant.identity);
+          }
+          track.attach(videoEl);
+        }
+      })
+      .on(LivekitClient.RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+        track.detach();
+        const tile = document.getElementById('tile-' + participant.identity);
+        if (tile && !room.remoteParticipants.get(participant.identity)?.getTrackPublications().length) {
+          // keep tile, just detach
+        }
+      })
+      .on(LivekitClient.RoomEvent.ParticipantConnected, (participant) => {
+        updateParticipantCount();
+      })
+      .on(LivekitClient.RoomEvent.ParticipantDisconnected, (participant) => {
+        const tile = document.getElementById('tile-' + participant.identity);
+        if (tile) tile.remove();
+        updateParticipantCount();
+      })
+      .on(LivekitClient.RoomEvent.DataReceived, (payload, participant) => {
+        const text = new TextDecoder().decode(payload);
+        addChatMessage(participant?.name || 'Someone', text);
+      })
+      .on(LivekitClient.RoomEvent.Disconnected, () => {
+        document.getElementById('roomStatus').textContent = 'Disconnected';
+      });
+
+    await room.connect(url, token);
+
+    document.getElementById('roomStatus').textContent = 'Connected';
+
+    // Enable local camera + mic
+    await room.localParticipant.enableCameraAndMicrophone();
+
+    // Show local video
+    const grid = document.getElementById('videoGrid');
+    const localTile = createVideoTile(room.localParticipant, true);
+    grid.appendChild(localTile);
+
+    // Attach local tracks
+    room.localParticipant.trackPublications.forEach(pub => {
+      if (pub.track) {
+        pub.track.attach(document.getElementById('video-' + room.localParticipant.identity));
+      }
+    });
+
+    updateParticipantCount();
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('videoInterface').classList.remove('hidden');
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('errorState').classList.remove('hidden');
+    document.getElementById('errorMessage').textContent = err.message;
+  }
+}
+
+function updateParticipantCount() {
+  if (!room) return;
+  const count = room.remoteParticipants.size + 1;
+  document.getElementById('participantCountText').textContent = count;
+}
+
+// Mic toggle
+document.getElementById('micBtn').addEventListener('click', async () => {
+  if (!room) return;
+  micEnabled = !micEnabled;
+  await room.localParticipant.setMicrophoneEnabled(micEnabled);
+  document.getElementById('micBtn').classList.toggle('bg-red-500', !micEnabled);
+  document.getElementById('micBtn').classList.toggle('bg-white/10', micEnabled);
+});
+
+// Cam toggle
+document.getElementById('camBtn').addEventListener('click', async () => {
+  if (!room) return;
+  camEnabled = !camEnabled;
+  await room.localParticipant.setCameraEnabled(camEnabled);
+  document.getElementById('camBtn').classList.toggle('bg-red-500', !camEnabled);
+  document.getElementById('camBtn').classList.toggle('bg-white/10', camEnabled);
+});
+
+// Screen share
+document.getElementById('screenBtn').addEventListener('click', async () => {
+  if (!room) return;
+  const btn = document.getElementById('screenBtn');
+  try {
+    const isSharing = room.localParticipant.isScreenShareEnabled;
+    await room.localParticipant.setScreenShareEnabled(!isSharing);
+    btn.classList.toggle('bg-secondary', !isSharing);
+  } catch (err) {
+    alert('Screen share cancelled or not supported');
+  }
+});
+
+// Chat
+document.getElementById('chatBtn').addEventListener('click', () => {
+  document.getElementById('chatPanel').classList.toggle('hidden');
+  document.getElementById('chatBadge').classList.add('hidden');
+});
+
+document.getElementById('chatSend').addEventListener('click', sendChat);
+document.getElementById('chatInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendChat();
+});
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !room) return;
+
+  const data = new TextEncoder().encode(text);
+  await room.localParticipant.publishData(data, { reliable: true });
+  addChatMessage('You', text);
+  input.value = '';
+}
+
+function addChatMessage(name, text) {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'bg-white/5 rounded-lg p-3';
+  div.innerHTML = `<p class="text-xs text-secondary font-semibold mb-1">${name}</p><p class="text-white/90">${text}</p>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+
+  if (document.getElementById('chatPanel').classList.contains('hidden')) {
+    const badge = document.getElementById('chatBadge');
+    const count = parseInt(badge.textContent) + 1;
+    badge.textContent = count;
+    badge.classList.remove('hidden');
+  }
+}
+
+// Start
+if (roomName) startClass();
+</script>
+
+</body>
+</html>
