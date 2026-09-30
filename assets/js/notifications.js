@@ -4,9 +4,42 @@
 
 window.Notif = {
 
+  // Check if user wants this type of notification
+  async shouldSend(userId, category) {
+    try {
+      const { data: prefs } = await window.db.from('notification_preferences').select('*').eq('user_id', userId).maybeSingle();
+      if (!prefs) return true; // Default: send
+      
+      const prefMap = {
+        'class': 'class_reminders',
+        'payment': 'payments',
+        'success': 'payments', // payment success
+        'certificate': 'certificates',
+        'info': 'announcements',
+        'signup': 'announcements',
+        'review': 'announcements'
+      };
+      
+      const prefKey = prefMap[category];
+      if (!prefKey) return true;
+      return prefs[prefKey] !== false;
+    } catch (e) {
+      return true;
+    }
+  },
+
+
   // Send to a specific user
   async send(userId, title, message, type = 'info', link = null) {
     if (!userId) return { error: 'No user ID' };
+    
+    // Check preference
+    const should = await this.shouldSend(userId, type);
+    if (!should) {
+      console.log('Notification skipped (user preference):', title);
+      return { skipped: true };
+    }
+    
     return window.db.from('notifications').insert({
       user_id: userId,
       title, message, type, link
