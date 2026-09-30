@@ -330,6 +330,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
   document.getElementById('classDate').min = today;
   document.getElementById('classDate').value = today;
 
+  // Live availability warning
+  ['classDate', 'classTime', 'duration'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      if (!selectedTeacher) return;
+      const d = document.getElementById('classDate').value;
+      const t = document.getElementById('classTime').value;
+      if (!d || !t) return;
+      const avail = checkAvailability(d, t);
+      const status = document.getElementById('formStatus');
+      if (!avail.ok) {
+        status.textContent = '⚠️ ' + avail.reason;
+        status.className = 'text-sm text-center text-yellow-700 bg-yellow-50 py-3 rounded-xl';
+        status.classList.remove('hidden');
+      } else {
+        status.classList.add('hidden');
+      }
+    });
+  });
+
   // Form submit
   let teacherAvailability = {};
   let teacherBlockedDates = [];
@@ -433,6 +454,49 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
     return displayH + ':' + m;
   }
 
+  function checkAvailability(dateStr, timeStr) {
+    // Parse the selected datetime
+    const [y, mo, d] = dateStr.split('-').map(Number);
+    const [h, mi] = timeStr.split(':').map(Number);
+    const selectedDate = new Date(y, mo - 1, d, h, mi);
+    const dayOfWeek = selectedDate.getDay();
+
+    // Check blocked dates
+    if (teacherBlockedDates.includes(dateStr)) {
+      return { ok: false, reason: 'Teacher is not available on this date (blocked).' };
+    }
+
+    // Check day availability
+    const slots = teacherAvailability[dayOfWeek] || [];
+    if (!slots.length) {
+      return { ok: false, reason: 'Teacher has no slots on this day. Please pick another day.' };
+    }
+
+    // Check if time falls within any slot
+    const timeInMin = h * 60 + mi;
+    const duration = Number(document.getElementById('duration').value) || 30;
+    const endTimeInMin = timeInMin + duration;
+
+    let fits = false;
+    for (const s of slots) {
+      const [sh, sm] = s.start_time.split(':').map(Number);
+      const [eh, em] = s.end_time.split(':').map(Number);
+      const slotStart = sh * 60 + sm;
+      const slotEnd = eh * 60 + em;
+      if (timeInMin >= slotStart && endTimeInMin <= slotEnd) {
+        fits = true;
+        break;
+      }
+    }
+
+    if (!fits) {
+      const slotList = slots.map(s => formatTime(s.start_time) + '-' + formatTime(s.end_time)).join(', ');
+      return { ok: false, reason: 'Selected time is outside teacher\'s availability (' + slotList + ')' };
+    }
+
+    return { ok: true };
+  }
+
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -453,6 +517,52 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
     const timeStr = document.getElementById('classTime').value;
     const scheduledAt = new Date(dateStr + 'T' + timeStr).toISOString();
     const duration = Number(document.getElementById('duration').value);
+
+        // ==== FEATURE 1: Enforce teacher availability ====
+        const availCheck = checkAvailability(dateStr, timeStr);
+        if (!availCheck.ok) {
+          status.textContent = '⚠️ ' + availCheck.reason;
+          status.className = 'text-sm text-center text-red-600';
+          status.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Confirm Booking';
+          return;
+        }
+        // ==== END FEATURE 1 ====
+
+        // ==== FEATURE 2: Double-booking check ====
+        const selStartMs = new Date(dateStr + 'T' + timeStr).getTime();
+        const selEndMs   = selStartMs + duration * 60000;
+        const winStartIso = new Date(selStartMs - 4 * 3600 * 1000).toISOString();
+        const winEndIso   = new Date(selStartMs + 4 * 3600 * 1000).toISOString();
+
+        const { data: existingClasses, error: dblErr } = await db
+          .from('classes')
+          .select('id, scheduled_at, duration_min, status')
+          .eq('teacher_id', selectedTeacher.id)
+          .in('status', ['scheduled', 'confirmed', 'pending', 'rescheduled'])
+          .gte('scheduled_at', winStartIso)
+          .lte('scheduled_at', winEndIso);
+
+        if (dblErr) {
+          console.warn('Double-booking check failed:', dblErr);
+        } else if (existingClasses && existingClasses.length) {
+          const clash = existingClasses.find(cl => {
+            const cStart = new Date(cl.scheduled_at).getTime();
+            const cEnd   = cStart + (cl.duration_min || 60) * 60000;
+            return selStartMs < cEnd && selEndMs > cStart;
+          });
+          if (clash) {
+            status.textContent = '⚠️ Teacher already booked at this time. Please pick another slot.';
+            status.className = 'text-sm text-center text-red-600';
+            status.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Confirm Booking';
+            return;
+          }
+        }
+        // ==== END FEATURE 2 ====
+
     const notes = document.getElementById('notes').value.trim();
     const courseId = document.getElementById('courseId').value || null;
     const jitsiRoom = 'ALC-Class-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000);
