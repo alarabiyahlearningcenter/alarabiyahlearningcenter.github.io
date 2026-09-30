@@ -176,6 +176,7 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
           </div>
           <p id="statClasses" class="text-2xl font-bold text-primary">0</p>
           <p class="text-xs text-charcoal/60 mt-1">Upcoming Classes</p>
+          <p id="statExternalClasses" class="text-xs text-green-600 mt-1">0 external</p>
         </div>
         <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5">
           <div class="flex items-center justify-between mb-3">
@@ -319,6 +320,15 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   // Load upcoming classes
   const { data: upcomingClasses } = await db.from('classes').select('*').eq('student_id', user.id).eq('status', 'scheduled').gte('scheduled_at', new Date().toISOString()).order('scheduled_at', { ascending: true }).limit(5);
   document.getElementById('statClasses').textContent = upcomingClasses?.length || 0;
+
+  // External classes count
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0,0,0,0);
+  const { data: extClasses } = await db.from('classes')
+    .select('id').eq('student_id', user.id).eq('is_external', true)
+    .gte('scheduled_at', monthStart.toISOString());
+  document.getElementById('statExternalClasses').textContent = (extClasses?.length || 0) + ' external';
 
   // Next class display
   if (upcomingClasses && upcomingClasses.length > 0) {
