@@ -274,7 +274,30 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   status.className = 'text-sm text-center text-green-600';
   status.classList.remove('hidden');
 
-  setTimeout(() => {
+  
+    // Process referral
+    const storedRef = localStorage.getItem('referralCode');
+    if (storedRef) {
+      try {
+        const { data: refCodeRow } = await db.from('referral_codes').select('*').eq('code', storedRef).eq('is_active', true).maybeSingle();
+        if (refCodeRow && refCodeRow.user_id !== data.user.id) {
+          await db.from('referral_uses').insert({
+            referral_code_id: refCodeRow.id,
+            referrer_id: refCodeRow.user_id,
+            referred_user_id: data.user.id,
+            status: 'pending',
+            reward_amount: 0
+          });
+          await db.from('profiles').update({ referred_by: refCodeRow.user_id }).eq('id', data.user.id);
+          if (window.Notif) {
+            await Notif.send(refCodeRow.user_id, 'New Referral! 🎁', fullName + ' signed up using your code', 'success', '/referral.html').catch(() => {});
+          }
+        }
+      } catch (e) { console.error('Referral error:', e); }
+      localStorage.removeItem('referralCode');
+    }
+
+    setTimeout(() => {
     window.location.href = selectedRole === 'teacher' 
       ? '../teacher/dashboard.html' 
       : '../student/dashboard.html';
