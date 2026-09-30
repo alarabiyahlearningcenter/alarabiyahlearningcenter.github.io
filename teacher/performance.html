@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Performance | Teacher Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.stat-card{background:white;border-radius:20px;padding:20px;border:1px solid rgba(10,54,34,.05);transition:.3s}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.stat-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:12px}
+.chart-container{position:relative;height:260px}
+.rating-bar{height:8px;background:#F0EBD8;border-radius:4px;overflow:hidden}
+.rating-bar div{height:100%;background:#D4AF37;transition:width 0.5s}
+@media print{.no-print{display:none!important}body{background:white!important}}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10 no-print">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Logo" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Teacher Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-sm text-primary font-medium hover:text-secondary">← Dashboard</a>
+      <div id="notifBellContainer"></div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto no-print">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="performance.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          My Performance
+        </a>
+        <a href="my-classes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          My Classes
+        </a>
+        <a href="availability.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          My Availability
+        </a>
+        <a href="chat.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Chat
+        </a>
+        <a href="my-students.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          My Students
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20 no-print"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+
+    <div class="mb-6 no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">My Performance</h1>
+        <p class="text-charcoal/60 text-sm">Your teaching analytics and stats</p>
+      </div>
+      <button onclick="window.print()" class="bg-primary text-white px-5 py-2.5 rounded-full font-semibold text-sm inline-flex items-center gap-2 justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        Print Report
+      </button>
+    </div>
+
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="reportContent" class="hidden">
+      <div class="hidden print:block mb-6 pb-4 border-b-2 border-primary">
+        <h1 class="text-2xl font-bold text-primary">Al-Arabiyah Learning Center</h1>
+        <p class="text-sm text-charcoal/70">Teacher Performance Report</p>
+        <p id="printInfo" class="text-xs text-charcoal/60 mt-2"></p>
+      </div>
+
+      <!-- Period Filter -->
+      <div class="bg-white rounded-2xl p-4 border border-primary/5 mb-6 no-print">
+        <div class="grid sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-primary mb-1">From Date</label>
+            <input type="date" id="fromDate" class="w-full px-3 py-2.5 border border-primary/20 rounded-xl bg-cream text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-primary mb-1">To Date</label>
+            <input type="date" id="toDate" class="w-full px-3 py-2.5 border border-primary/20 rounded-xl bg-cream text-sm">
+          </div>
+          <div class="flex items-end">
+            <button id="applyFilter" class="w-full btn-primary py-2.5 rounded-xl font-semibold text-sm">Apply Filter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overview Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#dbeafe">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <p class="text-xs text-charcoal/60 mb-1">Total Classes</p>
+          <p id="statClasses" class="text-2xl font-bold text-primary">0</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#dcfce7">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <p class="text-xs text-charcoal/60 mb-1">Completed</p>
+          <p id="statCompleted" class="text-2xl font-bold text-primary">0</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7">
+            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <p class="text-xs text-charcoal/60 mb-1">Hours Taught</p>
+          <p id="statHours" class="text-2xl font-bold text-primary">0</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(212,175,55,.2)">
+            <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+          </div>
+          <p class="text-xs text-charcoal/60 mb-1">Rating</p>
+          <p id="statRating" class="text-2xl font-bold text-primary">0.0</p>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl p-6 border border-primary/5">
+          <h3 class="text-lg font-bold text-primary mb-4">Classes per Month</h3>
+          <div class="chart-container"><canvas id="classesChart"></canvas></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-primary/5">
+          <h3 class="text-lg font-bold text-primary mb-4">Class Types</h3>
+          <div class="chart-container"><canvas id="typesChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Attendance Stats -->
+      <div class="grid lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl p-6 border border-primary/5">
+          <h3 class="text-lg font-bold text-primary mb-4">Attendance Summary</h3>
+          <div id="attendanceSummary" class="space-y-3"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-primary/5">
+          <h3 class="text-lg font-bold text-primary mb-4">Student Ratings</h3>
+          <div id="ratingsBreakdown"></div>
+        </div>
+      </div>
+
+      <!-- Top Students -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5 mb-6">
+        <h3 class="text-lg font-bold text-primary mb-4">Most Active Students</h3>
+        <div id="topStudents"></div>
+      </div>
+
+      <!-- Recent Reviews -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5">
+        <h3 class="text-lg font-bold text-primary mb-4">Recent Reviews</h3>
+        <div id="recentReviews"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) return;
+  const db = window.db;
+
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+
+  const { data: profile } = await db.from('profiles').select('full_name').eq('id', session.user.id).single();
+  const fullName = profile?.full_name || session.user.email.split('@')[0];
+
+  const { data: teacher } = await db.from('teachers').select('*').eq('profile_id', session.user.id).maybeSingle();
+  if (!teacher) { alert('Teacher profile not found'); return; }
+
+  const PRIMARY = '#0A3622';
+  const SECONDARY = '#D4AF37';
+  const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Default filter: last 6 months
+  const today = new Date();
+  const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+  document.getElementById('fromDate').value = sixMonthsAgo.toISOString().split('T')[0];
+  document.getElementById('toDate').value = today.toISOString().split('T')[0];
+
+  let classesChart = null;
+  let typesChart = null;
+
+  async function loadPerformance() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('reportContent').classList.add('hidden');
+
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    // Fetch classes
+    const { data: allClasses } = await db.from('classes').select('*').eq('teacher_id', teacher.id);
+    let classes = allClasses || [];
+
+    // Filter by date
+    if (fromDate) {
+      const fromISO = new Date(fromDate + 'T00:00:00').toISOString();
+      classes = classes.filter(c => c.scheduled_at >= fromISO);
+    }
+    if (toDate) {
+      const toISO = new Date(toDate + 'T23:59:59').toISOString();
+      classes = classes.filter(c => c.scheduled_at <= toISO);
+    }
+
+    // Fetch attendance
+    const classIds = classes.map(c => c.id);
+    let attendance = [];
+    if (classIds.length) {
+      const { data: att } = await db.from('attendance').select('*').in('class_id', classIds);
+      attendance = att || [];
+    }
+
+    // Fetch reviews for this teacher
+    const { data: allReviews } = await db.from('reviews').select('*').eq('is_approved', true);
+    const reviews = allReviews || [];
+
+    // ===== Calculate Stats =====
+    const totalClasses = classes.length;
+    const completedClasses = classes.filter(c => c.status === 'completed').length;
+    const totalMinutes = classes.filter(c => c.status === 'completed').reduce((s, c) => s + (c.duration_min || 30), 0);
+    const totalHours = Math.round(totalMinutes / 60);
+    const avgRating = reviews.length ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : '0.0';
+
+    document.getElementById('statClasses').textContent = totalClasses;
+    document.getElementById('statCompleted').textContent = completedClasses;
+    document.getElementById('statHours').textContent = totalHours;
+    document.getElementById('statRating').textContent = avgRating;
+
+    document.getElementById('printInfo').innerHTML = `
+      <strong>Teacher:</strong> ${fullName}<br>
+      <strong>Period:</strong> ${fromDate} to ${toDate}<br>
+      <strong>Generated:</strong> ${new Date().toLocaleString('en-GB')}
+    `;
+
+    // ===== Classes per Month =====
+    const monthlyData = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      monthlyData[key] = { label: MONTHS_SHORT[d.getMonth()] + ' ' + String(d.getFullYear()).slice(-2), count: 0 };
+    }
+    classes.forEach(c => {
+      const d = new Date(c.scheduled_at);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      if (monthlyData[key]) monthlyData[key].count++;
+    });
+
+    const monthLabels = Object.values(monthlyData).map(m => m.label);
+    const monthCounts = Object.values(monthlyData).map(m => m.count);
+
+    if (classesChart) classesChart.destroy();
+    classesChart = new Chart(document.getElementById('classesChart'), {
+      type: 'bar',
+      data: {
+        labels: monthLabels,
+        datasets: [{
+          label: 'Classes',
+          data: monthCounts,
+          backgroundColor: SECONDARY,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+
+    // ===== Class Types =====
+    const platformCount = classes.filter(c => !c.is_external).length;
+    const externalCount = classes.filter(c => c.is_external).length;
+    const methodCounts = { whatsapp: 0, phone: 0, 'in-person': 0, other: 0 };
+    classes.filter(c => c.is_external).forEach(c => {
+      if (methodCounts[c.external_method] !== undefined) methodCounts[c.external_method]++;
+    });
+
+    if (typesChart) typesChart.destroy();
+    typesChart = new Chart(document.getElementById('typesChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Platform', 'WhatsApp', 'Phone', 'In-Person', 'Other'],
+        datasets: [{
+          data: [platformCount, methodCounts.whatsapp, methodCounts.phone, methodCounts['in-person'], methodCounts.other],
+          backgroundColor: [PRIMARY, '#25D366', '#3b82f6', '#8b5cf6', '#64748b'],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } },
+        cutout: '65%'
+      }
+    });
+
+    // ===== Attendance Summary =====
+    const presentCount = attendance.filter(a => a.status === 'present').length;
+    const absentCount = attendance.filter(a => a.status === 'absent').length;
+    const lateCount = attendance.filter(a => a.status === 'late').length;
+    const totalAtt = attendance.length;
+    const presentPct = totalAtt > 0 ? Math.round((presentCount / totalAtt) * 100) : 0;
+
+    document.getElementById('attendanceSummary').innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-charcoal/70">Present</span>
+        <span class="text-sm font-bold text-green-600">${presentCount}</span>
+      </div>
+      <div class="rating-bar mb-3"><div style="width: ${presentPct}%; background: #16a34a;"></div></div>
+
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-charcoal/70">Absent</span>
+        <span class="text-sm font-bold text-red-600">${absentCount}</span>
+      </div>
+      <div class="rating-bar mb-3"><div style="width: ${totalAtt > 0 ? Math.round((absentCount / totalAtt) * 100) : 0}%; background: #dc2626;"></div></div>
+
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-charcoal/70">Late</span>
+        <span class="text-sm font-bold text-yellow-600">${lateCount}</span>
+      </div>
+      <div class="rating-bar mb-3"><div style="width: ${totalAtt > 0 ? Math.round((lateCount / totalAtt) * 100) : 0}%; background: #eab308;"></div></div>
+
+      <div class="pt-3 border-t border-primary/10 mt-4">
+        <p class="text-xs text-charcoal/60">Total attendance records: <strong>${totalAtt}</strong></p>
+      </div>
+    `;
+
+    // ===== Ratings Breakdown =====
+    const ratingCounts = [0, 0, 0, 0, 0];
+    reviews.forEach(r => {
+      const idx = Math.max(0, Math.min(4, (r.rating || 5) - 1));
+      ratingCounts[idx]++;
+    });
+    const totalReviews = reviews.length;
+
+    document.getElementById('ratingsBreakdown').innerHTML = [5, 4, 3, 2, 1].map(stars => {
+      const count = ratingCounts[stars - 1];
+      const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+      return `
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-xs text-charcoal/60 w-12">${stars} ★</span>
+          <div class="flex-1 rating-bar"><div style="width: ${pct}%"></div></div>
+          <span class="text-xs font-semibold text-primary w-8 text-right">${count}</span>
+        </div>
+      `;
+    }).join('') + `<p class="text-xs text-charcoal/60 pt-3 mt-2 border-t border-primary/10">Total reviews: <strong>${totalReviews}</strong></p>`;
+
+    // ===== Top Students =====
+    const studentClassCount = {};
+    classes.forEach(c => {
+      if (c.student_id) studentClassCount[c.student_id] = (studentClassCount[c.student_id] || 0) + 1;
+    });
+
+    const topIds = Object.entries(studentClassCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const topBox = document.getElementById('topStudents');
+
+    if (!topIds.length) {
+      topBox.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No student activity yet</p>';
+    } else {
+      const { data: students } = await db.from('profiles').select('id, full_name, email').in('id', topIds.map(t => t[0]));
+      const nameMap = {};
+      (students || []).forEach(s => nameMap[s.id] = s);
+
+      topBox.innerHTML = topIds.map(([sid, count], idx) => {
+        const s = nameMap[sid] || {};
+        const name = s.full_name || s.email?.split('@')[0] || 'Student';
+        return `
+          <div class="flex items-center gap-3 py-3 border-b border-primary/5 last:border-0">
+            <span class="w-7 h-7 rounded-full bg-primary text-secondary text-xs font-bold flex items-center justify-center flex-shrink-0">${idx + 1}</span>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-primary text-sm truncate">${name}</p>
+              <p class="text-xs text-charcoal/60 truncate">${s.email || ''}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-bold text-primary">${count}</p>
+              <p class="text-xs text-charcoal/50">classes</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===== Recent Reviews =====
+    const revBox = document.getElementById('recentReviews');
+    const recentReviews = reviews.slice(0, 5);
+
+    if (!recentReviews.length) {
+      revBox.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No reviews yet</p>';
+    } else {
+      revBox.innerHTML = recentReviews.map(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        return `
+          <div class="py-3 border-b border-primary/5 last:border-0">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-xs">${(r.student_name || 'S').charAt(0).toUpperCase()}</div>
+                <p class="text-sm font-semibold text-primary">${r.student_name}</p>
+              </div>
+              <div class="text-right">
+                <div class="text-secondary text-xs">${'★'.repeat(r.rating || 5)}</div>
+                <p class="text-xs text-charcoal/50">${date}</p>
+              </div>
+            </div>
+            <p class="text-xs text-charcoal/70 italic">"${r.review_text || ''}"</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('reportContent').classList.remove('hidden');
+  }
+
+  document.getElementById('applyFilter').addEventListener('click', loadPerformance);
+
+  await loadPerformance();
+})();
+</script>
+
+</body>
+</html>
