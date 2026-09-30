@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Profile | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.islamic-pattern{background-image:radial-gradient(circle at 20% 30%,rgba(212,175,55,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(10,54,34,0.05) 0%,transparent 50%)}
+.btn-primary{background:#0A3622;color:white;transition:.3s;box-shadow:0 4px 14px rgba(10,54,34,.25)}
+.btn-primary:hover{background:#062218;transform:translateY(-2px)}
+.btn-outline{background:transparent;color:#0A3622;border:2px solid #0A3622;transition:.3s}
+.btn-outline:hover{background:#0A3622;color:white}
+.gold-divider{height:3px;width:60px;background:linear-gradient(90deg,#D4AF37,#E8C766);border-radius:2px}
+.whatsapp-float{position:fixed;bottom:24px;right:24px;z-index:999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,211,102,.4)}
+.loading-spinner{display:inline-block;width:40px;height:40px;border:4px solid rgba(10,54,34,.2);border-top-color:#0A3622;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <img src="assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+      <div class="hidden sm:block">
+        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
+        <div class="text-xs text-primary/70">Learning Center</div>
+      </div>
+    </a>
+    <nav class="hidden lg:flex items-center gap-8">
+      <a href="index.html" class="text-primary/80 hover:text-secondary">Home</a>
+      <a href="courses.html" class="text-primary/80 hover:text-secondary">Courses</a>
+      <a href="teachers.html" class="text-primary/80 hover:text-secondary">Teachers</a>
+      <a href="pricing.html" class="text-primary/80 hover:text-secondary">Pricing</a>
+      <a href="contact.html" class="text-primary/80 hover:text-secondary">Contact</a>
+    </nav>
+    <a href="auth/login.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Login</a>
+  </div>
+</header>
+
+<div id="loadingState" class="min-h-[60vh] flex items-center justify-center">
+  <div class="text-center">
+    <div class="loading-spinner mx-auto mb-4"></div>
+    <p class="text-charcoal/60 text-sm">Loading teacher profile...</p>
+  </div>
+</div>
+
+<div id="notFoundState" class="hidden min-h-[60vh] flex items-center justify-center px-4">
+  <div class="text-center max-w-md">
+    <h2 class="text-2xl font-bold text-primary mb-2">Teacher Not Found</h2>
+    <a href="teachers.html" class="btn-primary inline-block px-6 py-3 rounded-full font-semibold mt-4">All Teachers</a>
+  </div>
+</div>
+
+<main id="profileContent" class="hidden max-w-6xl mx-auto px-4 py-12">
+
+  <section class="islamic-pattern rounded-3xl p-8 md:p-12 mb-8">
+    <div class="grid md:grid-cols-3 gap-8 items-center">
+      <div class="text-center md:text-left">
+        <div id="teacherPhoto" class="w-40 h-40 mx-auto md:mx-0 rounded-full bg-primary flex items-center justify-center text-secondary text-6xl font-bold border-4 border-secondary overflow-hidden">
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <div id="teacherBadge" class="hidden inline-block bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full mb-3">VERIFIED TEACHER</div>
+        <h1 id="teacherName" class="text-4xl font-bold text-primary mb-2"></h1>
+        <p id="teacherRole" class="text-lg text-secondary font-semibold mb-4"></p>
+        <div class="gold-divider mb-4"></div>
+        <p id="teacherBio" class="text-charcoal/70 mb-5"></p>
+        <div class="flex flex-wrap gap-3">
+          <a href="free-assessment.html" class="btn-primary px-6 py-3 rounded-full font-semibold">Book Free Trial</a>
+          <a href="https://wa.me/8801737326555" target="_blank" class="btn-outline px-6 py-3 rounded-full font-semibold">Contact</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid md:grid-cols-3 gap-5 mb-8">
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-2xl font-bold text-primary" id="statExp">0+</p>
+      <p class="text-xs text-charcoal/60">Years Experience</p>
+    </div>
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-2xl font-bold text-primary" id="statSpecs">0</p>
+      <p class="text-xs text-charcoal/60">Specialities</p>
+    </div>
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      </div>
+      <p class="text-2xl font-bold text-primary" id="statCourses">0</p>
+      <p class="text-xs text-charcoal/60">Courses</p>
+    </div>
+  </section>
+
+  <section id="specialitiesSection" class="bg-white rounded-2xl p-6 md:p-8 border border-primary/5 mb-8">
+    <h2 class="text-2xl font-bold text-primary mb-4">Specialities</h2>
+    <div id="specialitiesList" class="flex flex-wrap gap-2"></div>
+  </section>
+
+  <section id="qualsSection" class="hidden bg-white rounded-2xl p-6 md:p-8 border border-primary/5 mb-8">
+    <h2 class="text-2xl font-bold text-primary mb-4">Qualifications</h2>
+    <ul id="qualsList" class="space-y-2"></ul>
+  </section>
+
+  <section class="bg-primary rounded-2xl p-8 text-center text-white">
+    <h2 class="text-2xl md:text-3xl font-bold mb-3">Learn from an Expert</h2>
+    <p class="text-white/80 mb-6">Book a free trial class and experience the difference</p>
+    <a href="free-assessment.html" class="bg-secondary text-primary px-8 py-3.5 rounded-full font-semibold inline-block">Book Free Trial</a>
+  </section>
+</main>
+
+<footer class="bg-primary-dark text-white py-8 mt-12">
+  <div class="max-w-7xl mx-auto px-4 text-center text-sm text-white/60">
+    <p>2026 Al-Arabiyah Learning Center. All rights reserved.</p>
+  </div>
+</footer>
+
+<a href="https://wa.me/8801737326555" target="_blank" class="whatsapp-float">
+  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+</a>
+
+<script src="assets/js/site-loader.js"></script>
+<script>
+(async () => {
+  const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHl6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const params = new URLSearchParams(window.location.search);
+  const teacherId = params.get('id');
+
+  if (!teacherId) {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('notFoundState').classList.remove('hidden');
+    return;
+  }
+
+  const { data: teacher } = await db.from('teachers').select('*').eq('id', teacherId).eq('is_active', true).maybeSingle();
+
+  document.getElementById('loadingState').classList.add('hidden');
+
+  if (!teacher) {
+    document.getElementById('notFoundState').classList.remove('hidden');
+    return;
+  }
+
+  document.title = teacher.name + ' | Al-Arabiyah Learning Center';
+
+  // Photo
+  const photoBox = document.getElementById('teacherPhoto');
+  if (teacher.photo_url) {
+    photoBox.innerHTML = '<img src="' + teacher.photo_url + '" class="w-full h-full object-cover">';
+  } else {
+    photoBox.textContent = teacher.name.charAt(0).toUpperCase();
+  }
+
+  document.getElementById('teacherName').textContent = teacher.name;
+  document.getElementById('teacherRole').textContent = (teacher.specialities && teacher.specialities.length) ? teacher.specialities.slice(0,2).join(' • ') : 'Qur\'an Teacher';
+  document.getElementById('teacherBio').textContent = teacher.bio || 'Qualified Qur\'an teacher with years of experience in teaching students of all ages.';
+  document.getElementById('statExp').textContent = (teacher.experience_years || 0) + '+';
+  document.getElementById('statSpecs').textContent = (teacher.specialities || []).length;
+  document.getElementById('teacherBadge').classList.remove('hidden');
+
+  // Specialities
+  if (teacher.specialities && teacher.specialities.length) {
+    document.getElementById('specialitiesList').innerHTML = teacher.specialities.map(s => 
+      '<span class="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">' + s + '</span>'
+    ).join('');
+  } else {
+    document.getElementById('specialitiesSection').classList.add('hidden');
+  }
+
+  // Qualifications
+  if (teacher.qualifications && teacher.qualifications.length) {
+    document.getElementById('qualsSection').classList.remove('hidden');
+    document.getElementById('qualsList').innerHTML = teacher.qualifications.map(q => 
+      '<li class="flex items-start gap-3 text-sm text-charcoal/70"><span class="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3.5 h-3.5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>' + q + '</li>'
+    ).join('');
+  }
+
+  // Courses count
+  const { count } = await db.from('classes').select('*', { count: 'exact', head: true }).eq('teacher_id', teacherId);
+  document.getElementById('statCourses').textContent = count || 0;
+
+  document.getElementById('profileContent').classList.remove('hidden');
+})();
+</script>
+</body>
+</html>
