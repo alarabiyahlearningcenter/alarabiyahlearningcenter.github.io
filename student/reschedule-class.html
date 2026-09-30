@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reschedule Class | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+.class-card{background:white;border-radius:16px;padding:20px;border:1px solid rgba(10,54,34,.05);margin-bottom:12px;transition:.3s}
+.class-card:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Learning Center</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="live-class.html" class="text-sm text-primary font-medium hover:text-secondary">← My Classes</a>
+      <div id="notifBellContainer"></div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="live-class.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          My Classes
+        </a>
+        <a href="chat.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Chat
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Reschedule Class</h1>
+      <p class="text-charcoal/60 text-sm">Move your upcoming class to a new time</p>
+    </div>
+
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="classesList" class="max-w-3xl"></div>
+  </main>
+</div>
+
+<!-- Reschedule Modal -->
+<div id="rescheduleModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full">
+    <div class="bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="font-bold text-lg">Reschedule Class</h3>
+      <button onclick="closeRescheduleModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6">
+      <div id="classInfoBox" class="bg-cream rounded-xl p-4 mb-4 text-sm"></div>
+
+      <form id="rescheduleForm" class="space-y-4">
+        <input type="hidden" id="classId">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">New Date *</label>
+          <input type="date" id="newDate" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">New Time *</label>
+          <input type="time" id="newTime" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Reason *</label>
+          <textarea id="rescheduleReason" rows="3" required placeholder="Why do you need to reschedule?" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+          <p class="text-xs text-yellow-800">⚠️ You must reschedule at least <strong>4 hours</strong> before the class starts. Your teacher and admin will be notified.</p>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeRescheduleModal()" class="flex-1 py-3 border-2 border-primary text-primary rounded-xl font-semibold">Cancel</button>
+          <button type="submit" id="rescheduleBtn" class="flex-1 btn-primary py-3 rounded-xl font-semibold">Confirm Reschedule</button>
+        </div>
+        <p id="rescheduleStatus" class="text-sm text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) return;
+  const db = window.db;
+
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  const user = session.user;
+
+  let upcomingClasses = [];
+  let teachersMap = {};
+
+  window.closeRescheduleModal = () => document.getElementById('rescheduleModal').classList.add('hidden');
+
+  async function loadClasses() {
+    document.getElementById('loading').classList.remove('hidden');
+
+    const { data: classes } = await db.from('classes')
+      .select('*')
+      .eq('student_id', user.id)
+      .eq('status', 'scheduled')
+      .gte('scheduled_at', new Date().toISOString())
+      .order('scheduled_at', { ascending: true });
+
+    upcomingClasses = classes || [];
+
+    // Load teacher names
+    const teacherIds = [...new Set(upcomingClasses.map(c => c.teacher_id).filter(Boolean))];
+    if (teacherIds.length) {
+      const { data: teachers } = await db.from('teachers').select('id, name').in('id', teacherIds);
+      (teachers || []).forEach(t => teachersMap[t.id] = t.name);
+    }
+
+    renderClasses();
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderClasses() {
+    const box = document.getElementById('classesList');
+    if (!upcomingClasses.length) {
+      box.innerHTML = `
+        <div class="bg-white rounded-2xl p-10 text-center border border-primary/5">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-primary mb-2">No Upcoming Classes</h3>
+          <p class="text-charcoal/60 text-sm">You don't have any scheduled classes to reschedule.</p>
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = upcomingClasses.map(c => {
+      const date = new Date(c.scheduled_at);
+      const dateStr = date.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const teacherName = teachersMap[c.teacher_id] || 'Teacher';
+      const hoursLeft = Math.round((date - new Date()) / (1000 * 60 * 60));
+      const canReschedule = hoursLeft >= 4;
+      const rescheduleCount = c.reschedule_count || 0;
+
+      return `
+        <div class="class-card">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-start gap-4 flex-1 min-w-0">
+              <div class="w-14 h-14 bg-primary rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0">
+                <span class="text-xs">${date.toLocaleDateString('en-US', { month: 'short' })}</span>
+                <span class="text-lg font-bold leading-none">${date.getDate()}</span>
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-primary">${c.title || 'Quran Class'}</p>
+                <p class="text-xs text-charcoal/60">With ${teacherName}</p>
+                <p class="text-xs text-charcoal/60 mt-1">📅 ${dateStr} • 🕐 ${timeStr} • ${c.duration_min || 30} min</p>
+                ${rescheduleCount > 0 ? `<p class="text-xs text-yellow-600 mt-1">⚠️ Rescheduled ${rescheduleCount} time${rescheduleCount > 1 ? 's' : ''}</p>` : ''}
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-2">
+              ${canReschedule ? `
+                <span class="text-xs text-green-600 font-semibold">${hoursLeft}h remaining</span>
+                <button onclick="openReschedule('${c.id}')" class="btn-primary text-xs px-4 py-2 rounded-full font-semibold">Reschedule</button>
+              ` : `
+                <span class="text-xs text-red-600 font-semibold">Too late (${hoursLeft}h left)</span>
+                <span class="text-xs text-charcoal/50">Min 4h required</span>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.openReschedule = (classId) => {
+    const cls = upcomingClasses.find(c => c.id === classId);
+    if (!cls) return;
+
+    const date = new Date(cls.scheduled_at);
+    const dateStr = date.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById('classId').value = classId;
+    document.getElementById('classInfoBox').innerHTML = `
+      <p class="font-bold text-primary mb-1">${cls.title || 'Quran Class'}</p>
+      <p class="text-xs text-charcoal/70">Current: ${dateStr} at ${timeStr}</p>
+      <p class="text-xs text-charcoal/70">With ${teachersMap[cls.teacher_id] || 'Teacher'}</p>
+    `;
+
+    // Set min date = tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('newDate').min = tomorrow.toISOString().split('T')[0];
+    document.getElementById('newDate').value = tomorrow.toISOString().split('T')[0];
+    document.getElementById('newTime').value = date.toTimeString().slice(0, 5);
+    document.getElementById('rescheduleReason').value = '';
+
+    document.getElementById('rescheduleStatus').classList.add('hidden');
+    document.getElementById('rescheduleModal').classList.remove('hidden');
+  };
+
+  document.getElementById('rescheduleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('rescheduleBtn');
+    const status = document.getElementById('rescheduleStatus');
+    const classId = document.getElementById('classId').value;
+    const newDate = document.getElementById('newDate').value;
+    const newTime = document.getElementById('newTime').value;
+    const reason = document.getElementById('rescheduleReason').value.trim();
+
+    if (!classId) return;
+
+    const cls = upcomingClasses.find(c => c.id === classId);
+    if (!cls) return;
+
+    const newScheduledAt = new Date(newDate + 'T' + newTime).toISOString();
+    const newDateObj = new Date(newScheduledAt);
+
+    if (newDateObj <= new Date()) {
+      status.textContent = '❌ New time must be in the future';
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    const hoursLeft = (new Date(cls.scheduled_at) - new Date()) / (1000 * 60 * 60);
+    if (hoursLeft < 4) {
+      status.textContent = '❌ Cannot reschedule within 4 hours of class';
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Rescheduling...';
+
+    const oldScheduledAt = cls.scheduled_at;
+
+    // Update class
+    const { error } = await db.from('classes').update({
+      scheduled_at: newScheduledAt,
+      original_scheduled_at: cls.original_scheduled_at || oldScheduledAt,
+      reschedule_count: (cls.reschedule_count || 0) + 1,
+      reschedule_requested_by: user.id,
+      reschedule_reason: reason,
+      last_rescheduled_at: new Date().toISOString()
+    }).eq('id', classId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Confirm Reschedule';
+      return;
+    }
+
+    // Log history
+    await db.from('reschedule_history').insert({
+      class_id: classId,
+      old_scheduled_at: oldScheduledAt,
+      new_scheduled_at: newScheduledAt,
+      rescheduled_by: user.id,
+      reason: reason
+    }).catch(() => {});
+
+    // Notify teacher
+    if (cls.teacher_id) {
+      const { data: teacherProfile } = await db.from('teachers').select('profile_id').eq('id', cls.teacher_id).single();
+      if (teacherProfile?.profile_id && window.Notif) {
+        const newDateFmt = newDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        const newTimeFmt = newDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        await Notif.send(
+          teacherProfile.profile_id,
+          'Class Rescheduled 🔄',
+          (cls.title || 'Class') + ' moved to ' + newDateFmt + ' at ' + newTimeFmt + '. Reason: ' + reason,
+          'warning',
+          '/teacher/my-classes.html'
+        ).catch(() => {});
+      }
+    }
+
+    // Notify admins
+    if (window.Notif) {
+      await Notif.toAdmins(
+        'Class Rescheduled 🔄',
+        (cls.title || 'Class') + ' was rescheduled by student. Reason: ' + reason,
+        'warning',
+        '/admin/classes.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = '✓ Rescheduled! Teacher and admin notified.';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    btn.textContent = '✓ Done!';
+
+    setTimeout(() => {
+      closeRescheduleModal();
+      loadClasses();
+      btn.disabled = false;
+      btn.textContent = 'Confirm Reschedule';
+    }, 1500);
+  });
+
+  loadClasses();
+})();
+</script>
+
+</body>
+</html>
