@@ -269,6 +269,26 @@ document.getElementById('menuBtn').addEventListener('click', () => {
   document.getElementById('mobileMenu').classList.toggle('hidden');
 });
 
+async function loadNotices() {
+  const { data } = await db.from('notices').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(3);
+  if (!data || !data.length) return;
+  
+  document.getElementById('noticesSection').classList.remove('hidden');
+  document.getElementById('noticesGrid').innerHTML = data.map(n => {
+    const date = new Date(n.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return \`
+      <div class="bg-white rounded-2xl p-5 border border-secondary/30">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-2 h-2 bg-secondary rounded-full"></span>
+          <p class="text-xs text-charcoal/60">\${date}</p>
+        </div>
+        <h3 class="font-bold text-primary mb-2">\${n.title}</h3>
+        <p class="text-xs text-charcoal/70 line-clamp-3">\${n.body || ''}</p>
+      </div>
+    \`;
+  }).join('');
+}
+
 async function loadCourses() {
   const { data } = await db.from('courses').select('*').eq('is_active', true).order('sort_order').limit(6);
   const grid = document.getElementById('coursesGrid');
@@ -319,6 +339,7 @@ async function loadReviews() {
   `).join('');
 }
 
+loadNotices();
 loadCourses();
 loadReviews();
 

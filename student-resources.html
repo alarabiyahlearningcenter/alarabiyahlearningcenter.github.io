@@ -74,7 +74,7 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
 </section>
 
 <section class="py-12 md:py-16 bg-white">
-  <div class="max-w-7xl mx-auto px-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div id="resourcesGrid" class="max-w-7xl mx-auto px-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
     <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
       <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
         <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
@@ -192,5 +192,37 @@ document.getElementById('menuBtn').addEventListener('click', () => {
 </script>
 
 <script src="assets/js/site-loader.js"></script>
+
+<script>
+(async () => {
+  const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  const { data } = await sb.from('resources').select('*').eq('is_active', true).order('sort_order');
+  if (!data || !data.length) return;
+  
+  const icons = {
+    guide: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+    checklist: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+    pdf: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+    video: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
+    other: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z'
+  };
+  
+  document.getElementById('resourcesGrid').innerHTML = data.map(r => \`
+    <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
+      <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="\${icons[r.category] || icons.other}"/></svg>
+      </div>
+      <h3 class="font-bold text-primary mb-2">\${r.title}</h3>
+      <p class="text-charcoal/60 text-sm mb-4">\${r.description || ''}</p>
+      \${r.file_url ? \`<a href="\${r.file_url}" target="_blank" class="text-secondary font-semibold text-sm hover:underline">Open Resource →</a>\` : '<span class="text-charcoal/40 text-sm">Coming soon</span>'}
+    </div>
+  \`).join('');
+})();
+</script>
+
 </body>
 </html>

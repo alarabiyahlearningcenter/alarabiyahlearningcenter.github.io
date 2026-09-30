@@ -238,6 +238,11 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
           <label class="block text-sm font-semibold text-primary mb-2">Transaction ID *</label>
           <input type="text" id="transactionId" required placeholder="e.g. 8N7A2B3C4D" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream uppercase">
         </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Payment Screenshot (optional)</label>
+          <input type="file" id="screenshotInput" accept="image/*" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream text-sm">
+          <p class="text-xs text-charcoal/50 mt-1">Upload bKash/Nagad payment screenshot</p>
+        </div>
         <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Submit Payment</button>
         <p id="formStatus" class="text-sm text-center hidden"></p>
       </form>
@@ -282,8 +287,21 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     btn.disabled = true;
     btn.textContent = 'Submitting...';
 
+    let screenshotUrl = null;
+    const screenshotFile = document.getElementById('screenshotInput')?.files[0];
+    if (screenshotFile) {
+      const ext = screenshotFile.name.split('.').pop().toLowerCase();
+      const path = user.id + '/' + Date.now() + '.' + ext;
+      const { error: upErr } = await db.storage.from('payments').upload(path, screenshotFile);
+      if (!upErr) {
+        const { data: urlData } = db.storage.from('payments').getPublicUrl(path);
+        screenshotUrl = urlData.publicUrl;
+      }
+    }
+
     const payload = {
       student_id: user.id,
+      screenshot_url: screenshotUrl,
       course_id: document.getElementById('courseSelect').value,
       amount: Number(document.getElementById('amount').value),
       method: document.getElementById('method').value,
