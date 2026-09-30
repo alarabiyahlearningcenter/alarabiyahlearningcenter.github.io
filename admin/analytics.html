@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.stat-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chart-container{position:relative;height:280px}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Analytics Dashboard</h1>
+    <p class="text-charcoal/60 text-sm">Complete overview of your platform performance</p>
+  </div>
+
+  <!-- KPI Cards Row 1 -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="stat-icon" style="background:#dbeafe">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </div>
+        <span id="growthStudents" class="text-xs font-semibold text-green-600">+0%</span>
+      </div>
+      <p class="text-xs text-charcoal/60 mb-1">Total Students</p>
+      <p id="kpiStudents" class="text-2xl font-bold text-primary">0</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="stat-icon" style="background:rgba(212,175,55,.2)">
+          <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+      </div>
+      <p class="text-xs text-charcoal/60 mb-1">Total Teachers</p>
+      <p id="kpiTeachers" class="text-2xl font-bold text-primary">0</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="stat-icon" style="background:#dcfce7">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <span id="growthRevenue" class="text-xs font-semibold text-green-600">+0%</span>
+      </div>
+      <p class="text-xs text-charcoal/60 mb-1">Total Revenue</p>
+      <p id="kpiRevenue" class="text-2xl font-bold text-primary">৳0</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 card-hover border border-primary/5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="stat-icon" style="background:#fef3c7">
+          <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+      </div>
+      <p class="text-xs text-charcoal/60 mb-1">Pending Actions</p>
+      <p id="kpiPending" class="text-2xl font-bold text-primary">0</p>
+    </div>
+  </div>
+
+  <!-- KPI Cards Row 2 -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 card-hover border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Active Enrollments</p>
+      <p id="kpiEnrollments" class="text-xl font-bold text-primary">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 card-hover border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Total Classes</p>
+      <p id="kpiClasses" class="text-xl font-bold text-primary">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 card-hover border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Certificates Issued</p>
+      <p id="kpiCerts" class="text-xl font-bold text-primary">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 card-hover border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Quiz Attempts</p>
+      <p id="kpiQuiz" class="text-xl font-bold text-primary">0</p>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="grid lg:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 lg:col-span-2">
+      <h3 class="text-lg font-bold text-primary mb-4">Revenue (Last 6 Months)</h3>
+      <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <h3 class="text-lg font-bold text-primary mb-4">User Breakdown</h3>
+      <div class="chart-container"><canvas id="usersChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="grid lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <h3 class="text-lg font-bold text-primary mb-4">New Signups (Last 6 Months)</h3>
+      <div class="chart-container"><canvas id="signupsChart"></canvas></div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <h3 class="text-lg font-bold text-primary mb-4">Payment Status</h3>
+      <div class="chart-container"><canvas id="paymentChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Top Courses -->
+  <div class="bg-white rounded-2xl p-6 border border-primary/5 mb-6">
+    <h3 class="text-lg font-bold text-primary mb-4">Top Courses by Enrollments</h3>
+    <div id="topCourses"></div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <h3 class="text-lg font-bold text-primary mb-4">Recent Users</h3>
+      <div id="recentUsers"></div>
+    </div>
+    <div class="bg-white rounded-2xl p-6 border border-primary/5">
+      <h3 class="text-lg font-bold text-primary mb-4">Recent Payments</h3>
+      <div id="recentPayments"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  const PRIMARY = '#0A3622';
+  const SECONDARY = '#D4AF37';
+
+  // ===== Fetch All Data =====
+  const [
+    profilesRes,
+    coursesRes,
+    paymentsRes,
+    enrollmentsRes,
+    classesRes,
+    certsRes,
+    quizRes
+  ] = await Promise.all([
+    db.from('profiles').select('id, role, created_at'),
+    db.from('courses').select('id, title'),
+    db.from('payments').select('amount, status, created_at, course_id'),
+    db.from('enrollments').select('id, course_id, status, created_at'),
+    db.from('classes').select('id, status, created_at'),
+    db.from('certificates').select('id, created_at'),
+    db.from('quiz_attempts').select('id, percentage, passed')
+  ]);
+
+  const profiles = profilesRes.data || [];
+  const courses = coursesRes.data || [];
+  const payments = paymentsRes.data || [];
+  const enrollments = enrollmentsRes.data || [];
+  const classes = classesRes.data || [];
+  const certs = certsRes.data || [];
+  const quizAttempts = quizRes.data || [];
+
+  // ===== KPI Calculations =====
+  const students = profiles.filter(p => p.role === 'student');
+  const teachers = profiles.filter(p => p.role === 'teacher');
+  const verified = payments.filter(p => p.status === 'verified');
+  const totalRevenue = verified.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const activeEnrollments = enrollments.filter(e => e.status === 'active').length;
+  const pendingPayments = payments.filter(p => p.status === 'pending').length;
+
+  document.getElementById('kpiStudents').textContent = students.length;
+  document.getElementById('kpiTeachers').textContent = teachers.length;
+  document.getElementById('kpiRevenue').textContent = '৳' + totalRevenue.toLocaleString();
+  document.getElementById('kpiPending').textContent = pendingPayments;
+  document.getElementById('kpiEnrollments').textContent = activeEnrollments;
+  document.getElementById('kpiClasses').textContent = classes.length;
+  document.getElementById('kpiCerts').textContent = certs.length;
+  document.getElementById('kpiQuiz').textContent = quizAttempts.length;
+
+  // ===== Growth Rates =====
+  function getLast6Months() {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        year: d.getFullYear(),
+        month: d.getMonth()
+      });
+    }
+    return months;
+  }
+
+  const months = getLast6Months();
+  const revenueByMonth = months.map(m => {
+    return verified.filter(p => {
+      const d = new Date(p.created_at);
+      return d.getFullYear() === m.year && d.getMonth() === m.month;
+    }).reduce((s, p) => s + Number(p.amount || 0), 0);
+  });
+
+  const signupsByMonth = months.map(m => {
+    return profiles.filter(u => {
+      const d = new Date(u.created_at);
+      return d.getFullYear() === m.year && d.getMonth() === m.month;
+    }).length;
+  });
+
+  // Growth % — last month vs previous
+  const lastRev = revenueByMonth[revenueByMonth.length - 1] || 0;
+  const prevRev = revenueByMonth[revenueByMonth.length - 2] || 0;
+  const revGrowth = prevRev > 0 ? Math.round(((lastRev - prevRev) / prevRev) * 100) : (lastRev > 0 ? 100 : 0);
+  const growRevEl = document.getElementById('growthRevenue');
+  growRevEl.textContent = (revGrowth >= 0 ? '+' : '') + revGrowth + '%';
+  growRevEl.className = 'text-xs font-semibold ' + (revGrowth >= 0 ? 'text-green-600' : 'text-red-600');
+
+  const lastStudents = signupsByMonth[signupsByMonth.length - 1] || 0;
+  const prevStudents = signupsByMonth[signupsByMonth.length - 2] || 0;
+  const studGrowth = prevStudents > 0 ? Math.round(((lastStudents - prevStudents) / prevStudents) * 100) : (lastStudents > 0 ? 100 : 0);
+  const growStudEl = document.getElementById('growthStudents');
+  growStudEl.textContent = (studGrowth >= 0 ? '+' : '') + studGrowth + '%';
+  growStudEl.className = 'text-xs font-semibold ' + (studGrowth >= 0 ? 'text-green-600' : 'text-red-600');
+
+  // ===== Chart 1: Revenue =====
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'line',
+    data: {
+      labels: months.map(m => m.label),
+      datasets: [{
+        label: 'Revenue',
+        data: revenueByMonth,
+        borderColor: PRIMARY,
+        backgroundColor: 'rgba(10,54,34,0.1)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: SECONDARY,
+        pointBorderColor: PRIMARY,
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => '৳' + v } } }
+    }
+  });
+
+  // ===== Chart 2: Users Breakdown =====
+  new Chart(document.getElementById('usersChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Students', 'Teachers', 'Admins'],
+      datasets: [{
+        data: [
+          students.length,
+          teachers.length,
+          profiles.filter(p => p.role === 'admin' || p.role === 'super_admin').length
+        ],
+        backgroundColor: ['#3b82f6', SECONDARY, PRIMARY],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } } },
+      cutout: '65%'
+    }
+  });
+
+  // ===== Chart 3: Signups =====
+  new Chart(document.getElementById('signupsChart'), {
+    type: 'bar',
+    data: {
+      labels: months.map(m => m.label),
+      datasets: [{
+        label: 'Signups',
+        data: signupsByMonth,
+        backgroundColor: SECONDARY,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+
+  // ===== Chart 4: Payment Status =====
+  const pStatuses = ['pending', 'verified', 'rejected', 'refunded'];
+  const pCounts = pStatuses.map(s => payments.filter(p => p.status === s).length);
+  new Chart(document.getElementById('paymentChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Pending', 'Verified', 'Rejected', 'Refunded'],
+      datasets: [{
+        data: pCounts,
+        backgroundColor: ['#eab308', '#16a34a', '#dc2626', '#64748b'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+
+  // ===== Top Courses =====
+  const enrollCount = {};
+  enrollments.forEach(e => {
+    if (e.course_id) enrollCount[e.course_id] = (enrollCount[e.course_id] || 0) + 1;
+  });
+  const topCourses = Object.entries(enrollCount)
+    .map(([cid, count]) => {
+      const c = courses.find(x => x.id === cid);
+      return { title: c?.title || 'Unknown', count };
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  const topBox = document.getElementById('topCourses');
+  if (!topCourses.length) {
+    topBox.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No enrollment data</p>';
+  } else {
+    const max = topCourses[0].count;
+    topBox.innerHTML = topCourses.map((c, i) => {
+      const pct = Math.round((c.count / max) * 100);
+      return `
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-primary text-secondary text-xs font-bold flex items-center justify-center">${i + 1}</span>
+              <p class="text-sm font-semibold text-primary">${c.title}</p>
+            </div>
+            <p class="text-xs text-charcoal/60">${c.count} enrollments</p>
+          </div>
+          <div class="w-full bg-cream rounded-full h-2">
+            <div class="bg-secondary h-2 rounded-full" style="width: ${pct}%"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== Recent Users =====
+  const recentUsers = [...profiles].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+  const rBox = document.getElementById('recentUsers');
+  const rNames = await db.from('profiles').select('id, full_name, email, role, created_at').order('created_at', { ascending: false }).limit(5);
+  const userList = rNames.data || [];
+  if (!userList.length) {
+    rBox.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No users</p>';
+  } else {
+    rBox.innerHTML = userList.map(u => {
+      const name = u.full_name || u.email?.split('@')[0] || 'User';
+      const roleColor = u.role === 'super_admin' ? 'background:#D4AF37;color:#0A3622' : u.role === 'admin' ? 'background:rgba(10,54,34,.15);color:#0A3622' : u.role === 'teacher' ? 'background:rgba(212,175,55,.25);color:#0A3622' : 'background:#dbeafe;color:#1e40af';
+      return `
+        <div class="flex items-center gap-3 py-2 border-b border-primary/5 last:border-0">
+          <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-sm flex-shrink-0">${name.charAt(0).toUpperCase()}</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-primary truncate">${name}</p>
+            <p class="text-xs text-charcoal/60 truncate">${u.email || ''}</p>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="${roleColor}">${u.role}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== Recent Payments =====
+  const recentPay = await db.from('payments').select('*, profiles(full_name, email), courses(title)').order('created_at', { ascending: false }).limit(5);
+  const payList = recentPay.data || [];
+  const pBox = document.getElementById('recentPayments');
+  if (!payList.length) {
+    pBox.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No payments</p>';
+  } else {
+    pBox.innerHTML = payList.map(p => {
+      const name = p.profiles?.full_name || p.profiles?.email?.split('@')[0] || 'Student';
+      const statusColor = p.status === 'verified' ? 'bg-green-100 text-green-700' : p.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+      const date = new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      return `
+        <div class="flex items-center gap-3 py-2 border-b border-primary/5 last:border-0">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-primary truncate">${name}</p>
+            <p class="text-xs text-charcoal/60 truncate">${p.courses?.title || 'N/A'} • ${date}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-bold text-primary">৳${p.amount}</p>
+            <span class="text-xs px-2 py-0.5 rounded-full font-semibold ${statusColor}">${p.status}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+})();
+</script>
+
+</body>
+</html>
