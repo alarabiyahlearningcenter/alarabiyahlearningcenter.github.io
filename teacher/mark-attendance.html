@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mark Attendance | Teacher Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.att-btn{transition:.2s;cursor:pointer;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:600;border:2px solid transparent}
+.att-present{background:#dcfce7;color:#166534}
+.att-present.active{background:#16a34a;color:white;border-color:#16a34a}
+.att-absent{background:#fee2e2;color:#991b1b}
+.att-absent.active{background:#dc2626;color:white;border-color:#dc2626}
+.att-late{background:#fef3c7;color:#92400e}
+.att-late.active{background:#eab308;color:white;border-color:#eab308}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Teacher Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-sm text-primary font-medium hover:text-secondary">← Dashboard</a>
+      <div id="notifBellContainer"></div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="my-classes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          My Classes
+        </a>
+        <a href="mark-attendance.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Mark Attendance
+        </a>
+        <a href="my-students.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          My Students
+        </a>
+        <a href="kyc.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          KYC Verification
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Mark Attendance</h1>
+      <p class="text-charcoal/60 text-sm">Mark who attended the classes</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-4 border border-primary/5 mb-6">
+      <label class="block text-sm font-semibold text-primary mb-2">Select Date</label>
+      <input type="date" id="dateFilter" class="w-full sm:max-w-xs px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+    </div>
+
+    <div id="loading" class="text-center py-10">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="classesList" class="space-y-4"></div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) return;
+  const db = window.db;
+
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
+  if (!profile || profile.role !== 'teacher') { alert('Access Denied'); window.location.href = '../auth/login.html'; return; }
+
+  const { data: teacher } = await db.from('teachers').select('*').eq('profile_id', session.user.id).maybeSingle();
+  if (!teacher) { alert('Teacher profile not found'); return; }
+
+  const studentsMap = {};
+
+  async function loadClasses() {
+    document.getElementById('loading').classList.remove('hidden');
+    const today = new Date().toISOString().split('T')[0];
+    const filterDate = document.getElementById('dateFilter').value || today;
+
+    const dayStart = new Date(filterDate + 'T00:00:00').toISOString();
+    const dayEnd = new Date(filterDate + 'T23:59:59').toISOString();
+
+    const { data: classes } = await db.from('classes').select('*')
+      .eq('teacher_id', teacher.id)
+      .gte('scheduled_at', dayStart)
+      .lte('scheduled_at', dayEnd)
+      .order('scheduled_at', { ascending: true });
+
+    const studentIds = [...new Set((classes || []).map(c => c.student_id).filter(Boolean))];
+    if (studentIds.length) {
+      const { data: students } = await db.from('profiles').select('id, full_name, email').in('id', studentIds);
+      (students || []).forEach(s => studentsMap[s.id] = s);
+    }
+
+    let attMap = {};
+    if (classes && classes.length) {
+      const classIds = classes.map(c => c.id);
+      const { data: att } = await db.from('attendance').select('*').in('class_id', classIds);
+      (att || []).forEach(a => attMap[a.class_id + '_' + a.student_id] = a);
+    }
+
+    renderClasses(classes || [], attMap);
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderClasses(classes, attMap) {
+    const box = document.getElementById('classesList');
+    if (!classes.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No classes for this date</div>';
+      return;
+    }
+    box.innerHTML = classes.map(c => {
+      const student = studentsMap[c.student_id] || {};
+      const sName = student.full_name || student.email?.split('@')[0] || 'Unknown';
+      const time = new Date(c.scheduled_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const key = c.id + '_' + c.student_id;
+      const existing = attMap[key];
+      const status = existing?.status || null;
+
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${sName.charAt(0).toUpperCase()}</div>
+              <div>
+                <p class="font-bold text-primary">${sName}</p>
+                <p class="text-xs text-charcoal/60">${c.title || 'Quran Class'} • ${time} • ${c.duration_min || 30} min</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="markAtt('${c.id}', '${c.student_id}', 'present')" class="att-btn att-present ${status === 'present' ? 'active' : ''}">✓ Present</button>
+              <button onclick="markAtt('${c.id}', '${c.student_id}', 'absent')" class="att-btn att-absent ${status === 'absent' ? 'active' : ''}">✕ Absent</button>
+              <button onclick="markAtt('${c.id}', '${c.student_id}', 'late')" class="att-btn att-late ${status === 'late' ? 'active' : ''}">⏱ Late</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.markAtt = async (classId, studentId, status) => {
+    const { error } = await db.from('attendance').upsert({
+      class_id: classId,
+      student_id: studentId,
+      teacher_id: teacher.id,
+      status: status,
+      marked_by: session.user.id,
+      marked_at: new Date().toISOString()
+    }, { onConflict: 'class_id,student_id' });
+
+    if (error) { alert('Error: ' + error.message); return; }
+    loadClasses();
+  };
+
+  document.getElementById('dateFilter').value = new Date().toISOString().split('T')[0];
+  document.getElementById('dateFilter').addEventListener('change', loadClasses);
+
+  loadClasses();
+})();
+</script>
+
+</body>
+</html>
