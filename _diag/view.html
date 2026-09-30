@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cert.html Viewer</title>
+<style>
+  body { font-family: monospace; font-size: 13px; padding: 12px; background:#0d1117; color:#c9d1d9; margin:0; }
+  h1 { color:#58a6ff; font-size:16px; margin: 8px 0; }
+  pre { white-space: pre-wrap; word-break: break-word; background:#161b22; padding:12px; border-radius:8px; line-height:1.5; }
+  .info { color:#8b949e; font-size:12px; margin-bottom:8px; }
+</style>
+</head>
+<body>
+<h1>📄 student/certificate.html</h1>
+<div class="info" id="info">Loading…</div>
+<pre id="content">fetching…</pre>
+<script>
+fetch('cert.html?v=' + Date.now())
+  .then(r => r.text())
+  .then(t => {
+    const lines = t.split('\n');
+    document.getElementById('info').textContent =
+      'Total lines: ' + lines.length + ' · Total size: ' + t.length + ' chars';
+    document.getElementById('content').textContent = t;
+  })
+  .catch(e => {
+    document.getElementById('content').textContent = 'Error: ' + e.message;
+  });
+</script>
+</body>
+</html>
