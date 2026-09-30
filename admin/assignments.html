@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignments | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Assignments</h1>
+      <p class="text-charcoal/60 text-sm">Create and grade student assignments</p>
+    </div>
+    <button onclick="openAssignModal()" class="btn-primary px-5 py-2.5 rounded-full font-semibold text-sm">+ New Assignment</button>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="assignGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</div>
+
+<div id="assignModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 id="assignModalTitle" class="font-bold text-lg">New Assignment</h3>
+      <button onclick="closeAssignModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="assignForm" class="p-6 space-y-4">
+      <input type="hidden" id="assignId">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Title *</label>
+        <input type="text" id="assignTitle" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Description</label>
+        <textarea id="assignDesc" rows="4" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Course *</label>
+        <select id="assignCourse" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+          <option value="">Select course</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Due Date</label>
+          <input type="datetime-local" id="assignDue" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Max Score</label>
+          <input type="number" id="assignMax" value="100" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+      <div>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="assignActive" checked> Active</label>
+      </div>
+      <button type="submit" id="assignSubmitBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Save Assignment</button>
+      <p id="assignStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allAssignments = [];
+
+  window.closeAssignModal = () => document.getElementById('assignModal').classList.add('hidden');
+
+  window.openAssignModal = (a = null) => {
+    document.getElementById('assignModal').classList.remove('hidden');
+    document.getElementById('assignStatus').classList.add('hidden');
+    if (a) {
+      document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
+      document.getElementById('assignId').value = a.id;
+      document.getElementById('assignTitle').value = a.title || '';
+      document.getElementById('assignDesc').value = a.description || '';
+      document.getElementById('assignCourse').value = a.course_id || '';
+      document.getElementById('assignDue').value = a.due_date ? a.due_date.slice(0,16) : '';
+      document.getElementById('assignMax').value = a.max_score || 100;
+      document.getElementById('assignActive').checked = a.is_active !== false;
+    } else {
+      document.getElementById('assignModalTitle').textContent = 'New Assignment';
+      document.getElementById('assignForm').reset();
+      document.getElementById('assignId').value = '';
+      document.getElementById('assignActive').checked = true;
+      document.getElementById('assignMax').value = 100;
+    }
+  };
+
+  async function loadAssignments() {
+    document.getElementById('loading').classList.remove('hidden');
+    const { data: courses } = await db.from('courses').select('id, title').eq('is_active', true);
+    const cSel = document.getElementById('assignCourse');
+    cSel.innerHTML = '<option value="">Select course</option>' + (courses || []).map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+
+    const { data } = await db.from('assignments').select('*, courses(title)').order('created_at', { ascending: false });
+    allAssignments = data || [];
+
+    // Get submission counts
+    if (allAssignments.length) {
+      const ids = allAssignments.map(a => a.id);
+      const { data: subs } = await db.from('assignment_submissions').select('assignment_id, status').in('assignment_id', ids);
+      const countMap = {};
+      const pendingMap = {};
+      (subs || []).forEach(s => {
+        countMap[s.assignment_id] = (countMap[s.assignment_id] || 0) + 1;
+        if (s.status === 'submitted') pendingMap[s.assignment_id] = (pendingMap[s.assignment_id] || 0) + 1;
+      });
+      allAssignments.forEach(a => {
+        a.submissions_count = countMap[a.id] || 0;
+        a.pending_count = pendingMap[a.id] || 0;
+      });
+    }
+
+    renderAssignments();
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function renderAssignments() {
+    const grid = document.getElementById('assignGrid');
+    if (!allAssignments.length) {
+      grid.innerHTML = '<div class="col-span-full bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No assignments yet</div>';
+      return;
+    }
+    grid.innerHTML = allAssignments.map(a => {
+      const due = a.due_date ? new Date(a.due_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'No due date';
+      return `
+        <div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+              <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+            <div class="flex gap-1 flex-wrap justify-end">
+              ${a.pending_count > 0 ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">${a.pending_count} pending</span>` : ''}
+              <span class="text-xs px-2 py-0.5 rounded-full font-semibold ${a.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${a.is_active ? 'Active' : 'Off'}</span>
+            </div>
+          </div>
+          <h3 class="font-bold text-primary mb-1">${a.title}</h3>
+          <p class="text-xs text-charcoal/60 mb-2">${a.courses?.title || 'No course'}</p>
+          <p class="text-xs text-charcoal/60 mb-3">📅 Due: ${due} • ${a.submissions_count || 0} submissions</p>
+          <div class="flex gap-2 pt-3 border-t border-primary/10">
+            <a href="grade-assignments.html?id=${a.id}" class="flex-1 text-center text-xs bg-secondary text-primary px-3 py-2 rounded-full font-semibold">Grade</a>
+            <button onclick='openAssignModal(${JSON.stringify(a).replace(/'/g, "\\'")})' class="text-xs bg-primary/10 text-primary px-3 py-2 rounded-full font-semibold">Edit</button>
+            <button onclick="deleteAssign('${a.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold">×</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.deleteAssign = async (id) => {
+    if (!confirm('Delete this assignment and all submissions?')) return;
+    await db.from('assignments').delete().eq('id', id);
+    loadAssignments();
+  };
+
+  document.getElementById('assignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('assignSubmitBtn');
+    const status = document.getElementById('assignStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const id = document.getElementById('assignId').value;
+    const payload = {
+      title: document.getElementById('assignTitle').value.trim(),
+      description: document.getElementById('assignDesc').value.trim(),
+      course_id: document.getElementById('assignCourse').value,
+      due_date: document.getElementById('assignDue').value ? new Date(document.getElementById('assignDue').value).toISOString() : null,
+      max_score: Number(document.getElementById('assignMax').value) || 100,
+      is_active: document.getElementById('assignActive').checked
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await db.from('assignments').update(payload).eq('id', id));
+    } else {
+      ({ error } = await db.from('assignments').insert(payload));
+    }
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Save Assignment';
+      return;
+    }
+
+    // Notify students enrolled in this course
+    if (!id && payload.is_active && window.Notif) {
+      const { data: enrolled } = await db.from('enrollments').select('student_id').eq('course_id', payload.course_id).eq('status', 'active');
+      const ids = (enrolled || []).map(e => e.student_id).filter(Boolean);
+      for (const sid of ids) {
+        await Notif.send(sid, 'New Assignment 📝', payload.title + ' has been assigned.', 'info', '/student/assignments.html').catch(() => {});
+      }
+    }
+
+    status.textContent = '✓ Saved!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    setTimeout(() => { closeAssignModal(); loadAssignments(); }, 1000);
+  });
+
+  loadAssignments();
+})();
+</script>
+
+</body>
+</html>
