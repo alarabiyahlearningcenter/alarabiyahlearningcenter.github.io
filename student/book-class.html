@@ -147,6 +147,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
         </div>
       </div>
 
+      <!-- Teacher Availability Display -->
+      <div id="availabilityPanel" class="hidden bg-white rounded-2xl p-6 border border-primary/5">
+        <h3 class="font-bold text-primary mb-1 flex items-center gap-2">
+          <span class="w-7 h-7 bg-secondary text-primary text-xs font-bold rounded-full flex items-center justify-center">★</span>
+          Teacher's Available Times
+        </h3>
+        <p class="text-xs text-charcoal/60 mb-4">Choose from these times (in green)</p>
+        <div id="availabilityGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+        <div id="availabilityMsg" class="hidden mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-xs text-yellow-800"></div>
+      </div>
+
       <!-- Step 2: Class Details -->
       <div class="bg-white rounded-2xl p-6 border border-primary/5">
         <h3 class="font-bold text-primary mb-1 flex items-center gap-2">
@@ -287,6 +298,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
         tList.querySelectorAll('.teacher-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         selectedTeacher = { id: card.dataset.id, name: card.dataset.name };
+        loadTeacherAvailability(selectedTeacher.id);
       });
     });
   }
@@ -311,6 +323,108 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
   document.getElementById('classDate').value = today;
 
   // Form submit
+  let teacherAvailability = {};
+  let teacherBlockedDates = [];
+
+  async function loadTeacherAvailability(teacherId) {
+    const panel = document.getElementById('availabilityPanel');
+    const grid = document.getElementById('availabilityGrid');
+    const msg = document.getElementById('availabilityMsg');
+
+    panel.classList.remove('hidden');
+    grid.innerHTML = '<p class="col-span-full text-charcoal/60 text-sm text-center py-3">Loading...</p>';
+    msg.classList.add('hidden');
+
+    const [availRes, blockRes] = await Promise.all([
+      db.from('teacher_availability').select('*').eq('teacher_id', teacherId).eq('is_active', true).order('day_of_week').order('start_time'),
+      db.from('teacher_blocked_dates').select('*').eq('teacher_id', teacherId).gte('blocked_date', new Date().toISOString().split('T')[0])
+    ]);
+
+    const availability = availRes.data || [];
+    const blocked = blockRes.data || [];
+
+    teacherAvailability = {};
+    availability.forEach(a => {
+      if (!teacherAvailability[a.day_of_week]) teacherAvailability[a.day_of_week] = [];
+      teacherAvailability[a.day_of_week].push(a);
+    });
+    teacherBlockedDates = blocked.map(b => b.blocked_date);
+
+    renderAvailability();
+  }
+
+  function renderAvailability() {
+    const grid = document.getElementById('availabilityGrid');
+    const msg = document.getElementById('availabilityMsg');
+    const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const hasAny = Object.keys(teacherAvailability).length > 0;
+
+    if (!hasAny) {
+      grid.innerHTML = '';
+      msg.textContent = '⚠️ This teacher has not set their availability yet. You can still book any time.';
+      msg.classList.remove('hidden');
+      return;
+    }
+
+    // Show next 7 days with their available slots
+    const today = new Date();
+    let html = '';
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + i);
+      const dayIdx = d.getDay();
+      const dateStr = d.toISOString().split('T')[0];
+      const slots = teacherAvailability[dayIdx] || [];
+      const isBlocked = teacherBlockedDates.includes(dateStr);
+      const isPast = i === 0;
+
+      let statusClass = '';
+      let statusText = '';
+      let slotsHtml = '';
+
+      if (isBlocked) {
+        statusClass = 'bg-red-50 border-red-200';
+        statusText = 'Blocked';
+        slotsHtml = '<p class="text-xs text-red-600 text-center py-2">Not available</p>';
+      } else if (!slots.length) {
+        statusClass = 'bg-gray-50 border-gray-200';
+        statusText = 'No slots';
+        slotsHtml = '<p class="text-xs text-gray-500 text-center py-2">Not scheduled</p>';
+      } else {
+        statusClass = 'bg-green-50 border-green-200';
+        statusText = slots.length + ' slot' + (slots.length > 1 ? 's' : '');
+        slotsHtml = slots.map(s => {
+          const st = formatTime(s.start_time);
+          const et = formatTime(s.end_time);
+          return `<span class="text-xs bg-green-600 text-white px-2 py-1 rounded-full block text-center mb-1">${st} - ${et}</span>`;
+        }).join('');
+      }
+
+      html += `
+        <div class="border rounded-xl p-3 ${statusClass}">
+          <p class="text-xs font-bold text-primary mb-1">${i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : DAY_SHORT[dayIdx]}</p>
+          <p class="text-xs text-charcoal/60 mb-2">${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
+          ${slotsHtml}
+        </div>
+      `;
+    }
+
+    grid.innerHTML = html;
+    msg.innerHTML = '💡 <strong>Tip:</strong> Choose a date below that matches the highlighted days above.';
+    msg.classList.remove('hidden');
+  }
+
+  function formatTime(t) {
+    const [h, m] = t.split(':');
+    const hr = Number(h);
+    const ampm = hr >= 12 ? 'PM' : 'AM';
+    const displayH = hr % 12 || 12;
+    return displayH + ':' + m;
+  }
+
   document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
