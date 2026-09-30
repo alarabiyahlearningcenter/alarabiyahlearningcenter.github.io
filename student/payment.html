@@ -236,6 +236,15 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
             <input type="number" id="amount" required placeholder="2000" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
           </div>
           <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Coupon Code (optional)</label>
+          <div class="flex gap-2">
+            <input type="text" id="couponInput" placeholder="Enter code" class="flex-1 px-4 py-3 border border-primary/20 rounded-xl bg-cream uppercase font-mono">
+            <button type="button" id="applyCouponBtn" class="bg-secondary text-primary px-5 rounded-xl font-semibold text-sm whitespace-nowrap">Apply</button>
+          </div>
+          <p id="couponMsg" class="text-xs mt-1 hidden"></p>
+        </div>
+
+        <div>
             <label class="block text-sm font-semibold text-primary mb-2">Method *</label>
             <select id="method" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
               <option value="">Select</option>
@@ -292,6 +301,99 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   });
 
   // Form submit
+  // ===== Coupon Apply Logic =====
+  let appliedCoupon = null;
+
+  document.getElementById('applyCouponBtn').addEventListener('click', async () => {
+    const code = document.getElementById('couponInput').value.trim().toUpperCase();
+    const msg = document.getElementById('couponMsg');
+    const btn = document.getElementById('applyCouponBtn');
+
+    if (!code) {
+      msg.textContent = '❌ Please enter a code';
+      msg.className = 'text-xs mt-1 text-red-600';
+      msg.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Checking...';
+
+    const { data: coupon, error } = await db.from('coupons').select('*').eq('code', code).eq('is_active', true).maybeSingle();
+
+    if (error || !coupon) {
+      msg.textContent = '❌ Invalid or expired coupon';
+      msg.className = 'text-xs mt-1 text-red-600';
+      msg.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+      return;
+    }
+
+    // Check expiry
+    if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
+      msg.textContent = '❌ Coupon expired';
+      msg.className = 'text-xs mt-1 text-red-600';
+      msg.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+      return;
+    }
+
+    // Check max uses
+    if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
+      msg.textContent = '❌ Coupon usage limit reached';
+      msg.className = 'text-xs mt-1 text-red-600';
+      msg.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+      return;
+    }
+
+    // Check if user already used
+    const { data: usage } = await db.from('coupon_usages').select('id').eq('coupon_id', coupon.id).eq('user_id', user.id).maybeSingle();
+    if (usage) {
+      msg.textContent = '❌ You already used this coupon';
+      msg.className = 'text-xs mt-1 text-red-600';
+      msg.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+      return;
+    }
+
+    // Check min amount
+    const currentAmount = Number(document.getElementById('amount').value) || 0;
+    if (coupon.min_amount && currentAmount < coupon.min_amount) {
+      msg.textContent = '❌ Min order ৳' + coupon.min_amount + ' required';
+      msg.className = 'text-xs mt-1 text-red-600';
+      msg.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+      return;
+    }
+
+    // Calculate discount
+    let discount = 0;
+    if (coupon.discount_type === 'percentage') {
+      discount = Math.round((currentAmount * coupon.discount_value) / 100);
+    } else {
+      discount = coupon.discount_value;
+    }
+    discount = Math.min(discount, currentAmount);
+    const finalAmount = currentAmount - discount;
+
+    appliedCoupon = { coupon, discount, originalAmount: currentAmount, finalAmount };
+
+    msg.innerHTML = '✓ Applied! Discount: ৳' + discount + ' → You pay ৳' + finalAmount;
+    msg.className = 'text-xs mt-1 text-green-600 font-semibold';
+    msg.classList.remove('hidden');
+    btn.textContent = 'Applied';
+    btn.classList.add('bg-green-500', 'text-white');
+
+    document.getElementById('amount').value = finalAmount;
+    document.getElementById('amount').dataset.originalAmount = currentAmount;
+  });
+
   document.getElementById('paymentForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
@@ -313,6 +415,8 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
     const payload = {
       student_id: user.id,
+      coupon_id: appliedCoupon ? appliedCoupon.coupon.id : null,
+      discount_amount: appliedCoupon ? appliedCoupon.discount : 0,
       screenshot_url: screenshotUrl,
       course_id: document.getElementById('courseSelect').value,
       amount: Number(document.getElementById('amount').value),
@@ -339,6 +443,16 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       btn.disabled = false;
       btn.textContent = 'Submit Payment';
       return;
+    }
+
+    // Log coupon usage
+    if (appliedCoupon) {
+      await db.from('coupon_usages').insert({
+        coupon_id: appliedCoupon.coupon.id,
+        user_id: user.id,
+        discount_amount: appliedCoupon.discount
+      }).catch(() => {});
+      await db.from('coupons').update({ used_count: (appliedCoupon.coupon.used_count || 0) + 1 }).eq('id', appliedCoupon.coupon.id);
     }
 
     status.textContent = '✓ Payment submitted! Admin will verify soon.';
