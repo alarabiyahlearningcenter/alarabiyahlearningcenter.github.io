@@ -12,6 +12,11 @@ const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@alarabiyahlearningcenter.com';
 
+// EmailJS
+const EMAILJS_SERVICE = process.env.EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE = process.env.EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC = process.env.EMAILJS_PUBLIC_KEY;
+
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -48,6 +53,37 @@ async function sendPush(recipientIds, payload) {
     }
   }
   return sent;
+}
+
+async function sendEmail(recipientEmail, payload) {
+  if (!EMAILJS_SERVICE || !EMAILJS_TEMPLATE || !EMAILJS_PUBLIC) {
+    console.log('EmailJS not configured, skipping email');
+    return false;
+  }
+  if (!recipientEmail) return false;
+
+  try {
+    const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: EMAILJS_SERVICE,
+        template_id: EMAILJS_TEMPLATE,
+        user_id: EMAILJS_PUBLIC,
+        template_params: payload
+      })
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.log('Email send failed:', res.status, text);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.log('Email error:', err.message);
+    return false;
+  }
 }
 
 async function getAdmins() {
@@ -112,8 +148,28 @@ async function processReminders() {
       icon: '/assets/images/logo.png'
     });
 
+    // Send email to student
+    let emailSent = 0;
+    if (cls.student_id) {
+      const { data: student } = await sb.from('profiles').select('email, full_name').eq('id', cls.student_id).single();
+      if (student?.email) {
+        const classDate = new Date(cls.scheduled_at);
+        const dateStr = classDate.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+        const ok = await sendEmail(student.email, {
+          to_email: student.email,
+          reminder_type: type === '30min' ? 'Class starts in 30 minutes' : type === '15min' ? 'Class starts in 15 minutes' : 'Class starting NOW!',
+          class_title: cls.title || 'Quran Class',
+          class_date: dateStr,
+          class_time: timeStr,
+          class_duration: cls.duration_min || 30,
+          join_link: 'https://alarabiyahlearningcenter.github.io/student/live-class.html'
+        });
+        if (ok) emailSent++;
+      }
+    }
+
     await logSent(cls.id, type);
-    console.log(`✓ ${type} reminder for class ${cls.id} → ${sentCount} users`);
+    console.log(`✓ ${type} reminder for class ${cls.id} → push: ${sentCount}, email: ${emailSent}`);
   }
 }
 
