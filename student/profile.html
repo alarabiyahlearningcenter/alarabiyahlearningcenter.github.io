@@ -132,6 +132,20 @@ input:focus { outline: none; border-color: #0A3622; box-shadow: 0 0 0 3px rgba(1
         </div>
       </div>
 
+      <div class="bg-white rounded-2xl p-6 border border-primary/5 mb-6">
+        <h3 class="text-lg font-bold text-primary mb-4">Profile Picture</h3>
+        <div class="flex items-center gap-5">
+          <div id="bigAvatar" class="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-secondary text-3xl font-bold flex-shrink-0 overflow-hidden border-4 border-secondary">
+          </div>
+          <div class="flex-1">
+            <label for="avatarInput" class="cursor-pointer inline-block bg-primary text-white px-5 py-2.5 rounded-full font-semibold text-sm">Upload New Photo</label>
+            <input type="file" id="avatarInput" accept="image/*" class="hidden">
+            <p class="text-xs text-charcoal/60 mt-2">JPG, PNG. Max 2MB. Square image recommended.</p>
+          </div>
+        </div>
+        <p id="avatarStatus" class="text-sm mt-3 hidden"></p>
+      </div>
+
       <form id="profileForm" class="bg-white rounded-2xl p-6 border border-primary/5 space-y-4">
         <h3 class="text-lg font-bold text-primary mb-4">Edit Information</h3>
         
@@ -213,6 +227,45 @@ let currentUser = null;
 
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('profileContent').classList.remove('hidden');
+
+  // Show existing avatar if exists
+  const avatarBox = document.getElementById('bigAvatar');
+  if (profile?.avatar_url) {
+    avatarBox.innerHTML = '<img src="' + profile.avatar_url + '" class="w-full h-full object-cover">';
+  } else {
+    avatarBox.textContent = fullName.charAt(0).toUpperCase();
+  }
+
+  // Avatar upload handler
+  document.getElementById('avatarInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert('Max 2MB'); return; }
+
+    const status = document.getElementById('avatarStatus');
+    status.textContent = 'Uploading...';
+    status.className = 'text-sm mt-3 text-primary';
+    status.classList.remove('hidden');
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = currentUser.id + '/' + Date.now() + '.' + ext;
+    const { error: upErr } = await db.storage.from('avatars').upload(path, file, { upsert: true });
+    
+    if (upErr) {
+      status.textContent = '❌ ' + upErr.message;
+      status.className = 'text-sm mt-3 text-red-600';
+      return;
+    }
+
+    const { data: urlData } = db.storage.from('avatars').getPublicUrl(path);
+    const avatarUrl = urlData.publicUrl;
+
+    await db.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+
+    avatarBox.innerHTML = '<img src="' + avatarUrl + '" class="w-full h-full object-cover">';
+    status.textContent = '✓ Profile picture updated!';
+    status.className = 'text-sm mt-3 text-green-600';
+  });
 })();
 
 document.getElementById('profileForm').addEventListener('submit', async (e) => {
