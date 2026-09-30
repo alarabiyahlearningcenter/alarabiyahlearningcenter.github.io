@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Report | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.card-hover{transition:.3s}
+.card-hover:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.stat-card{background:white;border-radius:16px;padding:20px;border:1px solid rgba(10,54,34,.05)}
+.att-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:white;border-radius:12px;border:1px solid rgba(10,54,34,.05);margin-bottom:8px}
+input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
+}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10 no-print">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Learning Center</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-sm text-primary font-medium hover:text-secondary">← Dashboard</a>
+      <div id="notifBellContainer"></div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto no-print">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="live-class.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          My Classes
+        </a>
+        <a href="attendance-report.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Attendance Report
+        </a>
+        <a href="my-courses.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          My Courses
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20 no-print"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6 no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Attendance Report</h1>
+        <p class="text-charcoal/60 text-sm">Your class attendance history</p>
+      </div>
+      <button onclick="window.print()" class="bg-primary text-white px-5 py-2.5 rounded-full font-semibold text-sm inline-flex items-center gap-2 justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        Print / Save PDF
+      </button>
+    </div>
+
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="reportContent" class="hidden">
+      <!-- Header for print -->
+      <div class="hidden print:block mb-6 pb-4 border-b-2 border-primary">
+        <div class="flex items-center gap-3 mb-2">
+          <img src="../assets/images/logo.png" class="w-14 h-14 rounded-full border-2 border-secondary object-cover">
+          <div>
+            <h1 class="text-2xl font-bold text-primary">Al-Arabiyah Learning Center</h1>
+            <p class="text-sm text-charcoal/70">Student Attendance Report</p>
+          </div>
+        </div>
+        <p id="printInfo" class="text-sm text-charcoal/70 mt-2"></p>
+      </div>
+
+      <!-- Filter -->
+      <div class="bg-white rounded-2xl p-4 border border-primary/5 mb-6 no-print">
+        <div class="grid sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-primary mb-1">From Date</label>
+            <input type="date" id="fromDate" class="w-full px-3 py-2.5 border border-primary/20 rounded-xl bg-cream text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-primary mb-1">To Date</label>
+            <input type="date" id="toDate" class="w-full px-3 py-2.5 border border-primary/20 rounded-xl bg-cream text-sm">
+          </div>
+          <div class="flex items-end">
+            <button id="applyFilter" class="w-full btn-primary py-2.5 rounded-xl font-semibold text-sm">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+          <p class="text-xs text-charcoal/60 mb-1">Total Classes</p>
+          <p id="statTotal" class="text-3xl font-bold text-primary">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="text-xs text-charcoal/60 mb-1">Present</p>
+          <p id="statPresent" class="text-3xl font-bold text-green-600">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="text-xs text-charcoal/60 mb-1">Absent</p>
+          <p id="statAbsent" class="text-3xl font-bold text-red-600">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="text-xs text-charcoal/60 mb-1">Attendance %</p>
+          <p id="statPercent" class="text-3xl font-bold text-secondary">0%</p>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="bg-white rounded-2xl p-5 border border-primary/5 mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-semibold text-primary">Overall Attendance Rate</p>
+          <p id="progressLabel" class="text-sm font-bold text-primary">0%</p>
+        </div>
+        <div class="w-full bg-cream rounded-full h-3">
+          <div id="progressBar" class="bg-secondary h-3 rounded-full transition-all" style="width: 0%"></div>
+        </div>
+        <p id="progressNote" class="text-xs text-charcoal/60 mt-2"></p>
+      </div>
+
+      <!-- Monthly Breakdown -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5 mb-6">
+        <h3 class="font-bold text-primary mb-4">Monthly Breakdown</h3>
+        <div id="monthlyBreakdown" class="space-y-3"></div>
+      </div>
+
+      <!-- Recent Attendance -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5">
+        <h3 class="font-bold text-primary mb-4">Detailed History</h3>
+        <div id="attendanceList"></div>
+      </div>
+    </div>
+
+    <div id="emptyState" class="hidden bg-white rounded-2xl p-10 text-center border border-primary/5">
+      <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3 class="text-xl font-bold text-primary mb-2">No Attendance Data</h3>
+      <p class="text-charcoal/60 text-sm">Your attendance will appear here once classes are marked</p>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) return;
+  const db = window.db;
+
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  const user = session.user;
+
+  const { data: profile } = await db.from('profiles').select('full_name, email').eq('id', user.id).single();
+  const fullName = profile?.full_name || user.email.split('@')[0];
+
+  let allAttendance = [];
+  let classMap = {};
+  let teacherMap = {};
+
+  // Default filter: last 90 days
+  const today = new Date();
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(today.getDate() - 90);
+  document.getElementById('fromDate').value = ninetyDaysAgo.toISOString().split('T')[0];
+  document.getElementById('toDate').value = today.toISOString().split('T')[0];
+
+  async function loadAttendance() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('reportContent').classList.add('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
+
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+
+    const { data: att } = await db.from('attendance')
+      .select('*')
+      .eq('student_id', user.id)
+      .order('marked_at', { ascending: false });
+
+    let filtered = att || [];
+
+    if (fromDate || toDate) {
+      filtered = filtered.filter(a => {
+        const d = new Date(a.marked_at).toISOString().split('T')[0];
+        if (fromDate && d < fromDate) return false;
+        if (toDate && d > toDate) return false;
+        return true;
+      });
+    }
+
+    allAttendance = filtered;
+
+    // Load related classes
+    const classIds = [...new Set(allAttendance.map(a => a.class_id).filter(Boolean))];
+    if (classIds.length) {
+      const { data: classes } = await db.from('classes').select('id, title, scheduled_at, duration_min, teacher_id, is_external, external_method').in('id', classIds);
+      classMap = {};
+      (classes || []).forEach(c => classMap[c.id] = c);
+
+      const teacherIds = [...new Set((classes || []).map(c => c.teacher_id).filter(Boolean))];
+      if (teacherIds.length) {
+        const { data: teachers } = await db.from('teachers').select('id, name').in('id', teacherIds);
+        teacherMap = {};
+        (teachers || []).forEach(t => teacherMap[t.id] = t.name);
+      }
+    }
+
+    document.getElementById('loading').classList.add('hidden');
+
+    if (!allAttendance.length) {
+      document.getElementById('emptyState').classList.remove('hidden');
+      return;
+    }
+
+    renderReport();
+    document.getElementById('reportContent').classList.remove('hidden');
+  }
+
+  function renderReport() {
+    const total = allAttendance.length;
+    const present = allAttendance.filter(a => a.status === 'present').length;
+    const absent = allAttendance.filter(a => a.status === 'absent').length;
+    const late = allAttendance.filter(a => a.status === 'late').length;
+    const cancelled = allAttendance.filter(a => a.status === 'cancelled').length;
+    const percent = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPresent').textContent = present;
+    document.getElementById('statAbsent').textContent = absent;
+    document.getElementById('statPercent').textContent = percent + '%';
+
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressLabel').textContent = percent + '%';
+
+    let note = '';
+    if (percent >= 90) note = '🎉 Excellent attendance!';
+    else if (percent >= 75) note = '👍 Good attendance';
+    else if (percent >= 50) note = '⚠️ Needs improvement';
+    else note = '🚨 Low attendance — please attend regularly';
+    document.getElementById('progressNote').textContent = note;
+
+    // Print info
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    document.getElementById('printInfo').innerHTML = `
+      <strong>Student:</strong> ${fullName} (${user.email})<br>
+      <strong>Period:</strong> ${fromDate} to ${toDate}<br>
+      <strong>Generated:</strong> ${new Date().toLocaleString('en-GB')}
+    `;
+
+    // Monthly breakdown
+    const byMonth = {};
+    allAttendance.forEach(a => {
+      const d = new Date(a.marked_at);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      if (!byMonth[key]) byMonth[key] = { total: 0, present: 0, absent: 0, late: 0 };
+      byMonth[key].total++;
+      if (a.status === 'present') byMonth[key].present++;
+      else if (a.status === 'absent') byMonth[key].absent++;
+      else if (a.status === 'late') byMonth[key].late++;
+    });
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const sortedMonths = Object.keys(byMonth).sort().reverse();
+
+    document.getElementById('monthlyBreakdown').innerHTML = sortedMonths.map(k => {
+      const [yr, mo] = k.split('-');
+      const m = byMonth[k];
+      const mPercent = m.total > 0 ? Math.round(((m.present + m.late) / m.total) * 100) : 0;
+      return `
+        <div class="border border-primary/5 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <p class="font-semibold text-primary text-sm">${monthNames[Number(mo) - 1]} ${yr}</p>
+            <p class="font-bold text-primary text-sm">${mPercent}%</p>
+          </div>
+          <div class="w-full bg-cream rounded-full h-2 mb-3">
+            <div class="bg-secondary h-2 rounded-full" style="width: ${mPercent}%"></div>
+          </div>
+          <div class="flex gap-4 text-xs">
+            <span class="text-green-600">✓ ${m.present} present</span>
+            <span class="text-red-600">✕ ${m.absent} absent</span>
+            ${m.late > 0 ? `<span class="text-yellow-600">⏱ ${m.late} late</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Detailed history
+    document.getElementById('attendanceList').innerHTML = allAttendance.slice(0, 50).map(a => {
+      const cls = classMap[a.class_id] || {};
+      const teacherName = teacherMap[cls.teacher_id] || 'Teacher';
+      const markedDate = new Date(a.marked_at);
+      const dateStr = markedDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = markedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      let badge = '';
+      if (a.status === 'present') badge = '<span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">✓ Present</span>';
+      else if (a.status === 'absent') badge = '<span class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold">✕ Absent</span>';
+      else if (a.status === 'late') badge = '<span class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold">⏱ Late</span>';
+      else badge = '<span class="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-semibold">Cancelled</span>';
+
+      const method = cls.is_external ? ` • <span class="text-secondary font-semibold">${(cls.external_method || 'External').toUpperCase()}</span>` : '';
+
+      return `
+        <div class="att-row">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span class="text-xs font-bold text-primary">${markedDate.getDate()}</span>
+            </div>
+            <div class="min-w-0">
+              <p class="font-semibold text-primary text-sm truncate">${cls.title || 'Class'}${method}</p>
+              <p class="text-xs text-charcoal/60 truncate">${dateStr} • ${timeStr} • With ${teacherName}</p>
+              ${a.notes ? `<p class="text-xs text-charcoal/50 italic truncate">📝 ${a.notes}</p>` : ''}
+            </div>
+          </div>
+          ${badge}
+        </div>
+      `;
+    }).join('');
+
+    if (allAttendance.length > 50) {
+      document.getElementById('attendanceList').innerHTML += `
+        <p class="text-center text-xs text-charcoal/50 py-4">Showing latest 50 records of ${allAttendance.length} total</p>
+      `;
+    }
+  }
+
+  document.getElementById('applyFilter').addEventListener('click', loadAttendance);
+
+  await loadAttendance();
+})();
+</script>
+
+</body>
+</html>
