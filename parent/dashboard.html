@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent Dashboard | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.child-card{background:white;border-radius:20px;padding:20px;border:1px solid rgba(10,54,34,.05);transition:.3s;cursor:pointer}
+.child-card:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.child-card.active{border:2px solid #D4AF37}
+.stat-card{background:white;border-radius:16px;padding:16px;border:1px solid rgba(10,54,34,.05)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Parent Portal</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="hidden md:inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full" style="background:#D4AF37;color:#0A3622;">👨‍👩‍👧 PARENT</span>
+      <div id="notifBellContainer"></div>
+      <div class="relative">
+        <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
+          <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">P</div>
+        </button>
+        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary/10 py-2 z-50">
+          <div class="px-4 py-2 border-b border-primary/10">
+            <p id="userName" class="text-sm font-semibold text-primary">Parent</p>
+            <p id="userEmail" class="text-xs text-charcoal/60 truncate">parent@email.com</p>
+          </div>
+          <a href="profile.html" class="block px-4 py-2 text-sm text-charcoal/70 hover:bg-cream">My Profile</a>
+          <a href="settings.html" class="block px-4 py-2 text-sm text-charcoal/70 hover:bg-cream">Settings</a>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="children.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          My Children
+        </a>
+        <a href="attendance.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Attendance
+        </a>
+        <a href="payments.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Payments
+        </a>
+        <a href="certificates.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+          Certificates
+        </a>
+        <a href="profile.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          My Profile
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="content" class="hidden">
+      <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Assalamu Alaikum, <span id="welcomeName">Parent</span>!</h1>
+        <p class="text-charcoal/60 text-sm">Monitor your child's learning progress</p>
+      </div>
+
+      <!-- Children Selector -->
+      <div class="mb-6">
+        <p class="text-sm font-semibold text-primary mb-3">Select Child</p>
+        <div id="childrenList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- Stats -->
+      <div id="childStats" class="hidden">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="stat-card">
+            <p class="text-xs text-charcoal/60 mb-1">Classes Done</p>
+            <p id="statClasses" class="text-2xl font-bold text-primary">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs text-charcoal/60 mb-1">Attendance</p>
+            <p id="statAttendance" class="text-2xl font-bold text-green-600">0%</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs text-charcoal/60 mb-1">Active Courses</p>
+            <p id="statCourses" class="text-2xl font-bold text-primary">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-xs text-charcoal/60 mb-1">Progress</p>
+            <p id="statProgress" class="text-2xl font-bold text-secondary">0%</p>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-2xl p-6 border border-primary/5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-primary">Recent Classes</h3>
+              <a href="attendance.html" class="text-xs text-secondary font-semibold">View All →</a>
+            </div>
+            <div id="recentClasses"><p class="text-charcoal/60 text-sm text-center py-6">Loading...</p></div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-6 border border-primary/5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-primary">Upcoming Classes</h3>
+            </div>
+            <div id="upcomingClasses"><p class="text-charcoal/60 text-sm text-center py-6">Loading...</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) return;
+  const db = window.db;
+
+  // Sidebar toggle
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+
+  // User menu
+  document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('userMenu').classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => document.getElementById('userMenu').classList.add('hidden'));
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await db.auth.signOut();
+    window.location.href = '../auth/login.html';
+  });
+
+  // Auth check
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  const user = session.user;
+
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile || profile.role !== 'parent') {
+    alert('Access Denied: Parent account required');
+    window.location.href = '../auth/login.html';
+    return;
+  }
+
+  const fullName = profile.full_name || user.email.split('@')[0];
+  document.getElementById('userName').textContent = fullName;
+  document.getElementById('userEmail').textContent = user.email;
+  document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
+  document.getElementById('welcomeName').textContent = fullName.split(' ')[0];
+
+  let children = [];
+  let selectedChild = null;
+
+  // Load children
+  async function loadChildren() {
+    const { data: links } = await db.from('parent_links')
+      .select('*')
+      .eq('parent_id', user.id)
+      .eq('status', 'active');
+
+    const studentIds = (links || []).map(l => l.student_id).filter(Boolean);
+    if (!studentIds.length) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('content').classList.remove('hidden');
+      document.getElementById('childrenList').innerHTML = `
+        <div class="col-span-full bg-white rounded-2xl p-10 text-center border border-primary/5">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-primary mb-2">No Children Linked</h3>
+          <p class="text-charcoal/60 text-sm">Your child needs to generate an invite code from their dashboard.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const { data: students } = await db.from('profiles').select('id, full_name, email, avatar_url, country, age').in('id', studentIds);
+    children = (students || []).map(s => {
+      const link = links.find(l => l.student_id === s.id);
+      return { ...s, relationship: link?.relationship || 'parent' };
+    });
+
+    renderChildren();
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+
+    // Auto-select first child
+    if (children.length) selectChild(children[0].id);
+  }
+
+  function renderChildren() {
+    document.getElementById('childrenList').innerHTML = children.map(c => {
+      const name = c.full_name || c.email?.split('@')[0] || 'Student';
+      const initials = name.charAt(0).toUpperCase();
+      return `
+        <div class="child-card" data-id="${c.id}" onclick="selectChild('${c.id}')">
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-xl flex-shrink-0 overflow-hidden">
+              ${c.avatar_url ? `<img src="${c.avatar_url}" class="w-full h-full object-cover">` : initials}
+            </div>
+            <div class="min-w-0">
+              <p class="font-bold text-primary truncate">${name}</p>
+              <p class="text-xs text-charcoal/60 truncate">${c.email || ''}</p>
+              ${c.age ? `<p class="text-xs text-charcoal/50">Age: ${c.age}</p>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.selectChild = async (childId) => {
+    document.querySelectorAll('.child-card').forEach(el => el.classList.remove('active'));
+    const el = document.querySelector(`.child-card[data-id="${childId}"]`);
+    if (el) el.classList.add('active');
+
+    selectedChild = children.find(c => c.id === childId);
+    if (!selectedChild) return;
+
+    document.getElementById('childStats').classList.remove('hidden');
+
+    // Load stats
+    await loadChildStats(childId);
+  };
+
+  async function loadChildStats(childId) {
+    document.getElementById('recentClasses').innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">Loading...</p>';
+    document.getElementById('upcomingClasses').innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">Loading...</p>';
+
+    // Classes
+    const { data: allClasses } = await db.from('classes').select('*').eq('student_id', childId).order('scheduled_at', { ascending: false });
+    const classes = allClasses || [];
+    const now = new Date();
+    const completedClasses = classes.filter(c => c.status === 'completed' || new Date(c.scheduled_at) < now);
+    const upcomingClasses = classes.filter(c => c.status === 'scheduled' && new Date(c.scheduled_at) >= now);
+
+    document.getElementById('statClasses').textContent = completedClasses.length;
+
+    // Attendance
+    const { data: att } = await db.from('attendance').select('*').eq('student_id', childId);
+    const attendance = att || [];
+    const presentCount = attendance.filter(a => a.status === 'present' || a.status === 'late').length;
+    const attPct = attendance.length > 0 ? Math.round((presentCount / attendance.length) * 100) : 0;
+    document.getElementById('statAttendance').textContent = attPct + '%';
+    document.getElementById('statAttendance').className = 'text-2xl font-bold ' + (attPct >= 75 ? 'text-green-600' : attPct >= 50 ? 'text-yellow-600' : 'text-red-600');
+
+    // Courses
+    const { data: enrolls } = await db.from('enrollments').select('*').eq('student_id', childId).eq('status', 'active');
+    const enrollments = enrolls || [];
+    document.getElementById('statCourses').textContent = enrollments.length;
+
+    // Progress
+    const { data: prog } = await db.from('progress').select('*').eq('student_id', childId).eq('is_completed', true);
+    const progressData = prog || [];
+
+    // Calculate progress % (based on all lessons in enrolled courses)
+    let totalLessons = 0;
+    if (enrollments.length) {
+      const courseIds = enrollments.map(e => e.course_id).filter(Boolean);
+      const { data: mods } = await db.from('modules').select('id, lessons(id)').in('course_id', courseIds);
+      (mods || []).forEach(m => {
+        totalLessons += (m.lessons || []).length;
+      });
+    }
+    const progressPct = totalLessons > 0 ? Math.round((progressData.length / totalLessons) * 100) : 0;
+    document.getElementById('statProgress').textContent = progressPct + '%';
+
+    // Recent Classes
+    const recent = completedClasses.slice(0, 5);
+    if (!recent.length) {
+      document.getElementById('recentClasses').innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No recent classes</p>';
+    } else {
+      document.getElementById('recentClasses').innerHTML = recent.map(c => {
+        const date = new Date(c.scheduled_at);
+        const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const attRec = attendance.find(a => a.class_id === c.id);
+        const attBadge = attRec ? (attRec.status === 'present' ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Present</span>' : attRec.status === 'absent' ? '<span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Absent</span>' : '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Late</span>') : '';
+
+        return `
+          <div class="flex items-center justify-between py-3 border-b border-primary/5 last:border-0">
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-primary text-sm truncate">${c.title || 'Class'}</p>
+              <p class="text-xs text-charcoal/60">${dateStr} • ${timeStr} • ${c.duration_min || 30} min</p>
+            </div>
+            ${attBadge}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Upcoming Classes
+    const upcoming = upcomingClasses.slice(0, 5);
+    if (!upcoming.length) {
+      document.getElementById('upcomingClasses').innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No upcoming classes</p>';
+    } else {
+      document.getElementById('upcomingClasses').innerHTML = upcoming.map(c => {
+        const date = new Date(c.scheduled_at);
+        const daysLeft = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+        const dateStr = date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+        const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const badge = daysLeft === 0 ? '<span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">Today</span>' 
+                    : daysLeft === 1 ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">Tomorrow</span>' 
+                    : `<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">${daysLeft}d</span>`;
+
+        return `
+          <div class="flex items-center justify-between py-3 border-b border-primary/5 last:border-0">
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-primary text-sm truncate">${c.title || 'Class'}</p>
+              <p class="text-xs text-charcoal/60">${dateStr} • ${timeStr}</p>
+            </div>
+            ${badge}
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  await loadChildren();
+})();
+</script>
+
+</body>
+</html>
