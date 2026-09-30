@@ -189,6 +189,10 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   btn.textContent = 'Creating account...';
   status.classList.add('hidden');
 
+  // Capture plan from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const selectedPlanId = urlParams.get('plan');
+  
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const fullName = document.getElementById('fullName').value.trim();
@@ -257,6 +261,12 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   status.textContent = selectedRole === 'teacher' 
     ? '✓ Teacher account created! Waiting for admin approval.' 
     : '✓ Account created! Redirecting...';
+
+  // Save plan for payment page
+  if (selectedPlanId) {
+    localStorage.setItem('selectedPlanId', selectedPlanId);
+  }
+
   status.className = 'text-sm text-center text-green-600';
   status.classList.remove('hidden');
 
