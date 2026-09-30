@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Availability | Teacher Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+.slot-item{background:#F9F7F2;padding:12px 16px;border-radius:12px;border:1px solid rgba(10,54,34,.05);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.day-card{background:white;border-radius:16px;padding:16px;border:1px solid rgba(10,54,34,.05);margin-bottom:12px}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Logo" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Teacher Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-sm text-primary font-medium hover:text-secondary">← Dashboard</a>
+      <div id="notifBellContainer"></div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="my-classes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          My Classes
+        </a>
+        <a href="availability.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          My Availability
+        </a>
+        <a href="chat.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          Chat
+        </a>
+        <a href="log-external-class.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Log External Class
+        </a>
+        <a href="mark-attendance.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Mark Attendance
+        </a>
+        <a href="my-students.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          My Students
+        </a>
+        <a href="kyc.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          KYC Verification
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">My Availability</h1>
+      <p class="text-charcoal/60 text-sm">Set your weekly schedule for classes</p>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl p-6 border border-primary/5 mb-6">
+          <h2 class="text-lg font-bold text-primary mb-4">Weekly Schedule</h2>
+          <div id="weeklySchedule">
+            <p class="text-charcoal/60 text-sm text-center py-6">Loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 border border-primary/5">
+          <h3 class="font-bold text-primary mb-4">Add Time Slot</h3>
+          <form id="slotForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-primary mb-2">Day</label>
+              <select id="slotDay" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-primary mb-2">Start Time</label>
+              <input type="time" id="slotStart" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-primary mb-2">End Time</label>
+              <input type="time" id="slotEnd" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+            </div>
+            <button type="submit" class="btn-primary w-full py-3 rounded-xl font-semibold">Add Slot</button>
+            <p id="slotStatus" class="text-sm text-center hidden"></p>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-primary/5">
+          <h3 class="font-bold text-primary mb-4">Block a Date</h3>
+          <form id="blockForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-primary mb-2">Date</label>
+              <input type="date" id="blockDate" required class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-primary mb-2">Reason (optional)</label>
+              <input type="text" id="blockReason" placeholder="e.g. Vacation" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+            </div>
+            <button type="submit" class="btn-primary w-full py-3 rounded-xl font-semibold">Block Date</button>
+            <p id="blockStatus" class="text-sm text-center hidden"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 border border-primary/5 mt-6">
+      <h3 class="font-bold text-primary mb-4">Blocked Dates</h3>
+      <div id="blockedList">
+        <p class="text-charcoal/60 text-sm text-center py-6">No blocked dates</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) return;
+  const db = window.db;
+
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+
+  const { data: teacher } = await db.from('teachers').select('*').eq('profile_id', session.user.id).maybeSingle();
+  if (!teacher) { alert('Teacher profile not found'); return; }
+
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  let availability = [];
+  let blocked = [];
+
+  async function loadAll() {
+    const [availRes, blockRes] = await Promise.all([
+      db.from('teacher_availability').select('*').eq('teacher_id', teacher.id).eq('is_active', true).order('day_of_week').order('start_time'),
+      db.from('teacher_blocked_dates').select('*').eq('teacher_id', teacher.id).gte('blocked_date', new Date().toISOString().split('T')[0]).order('blocked_date')
+    ]);
+    availability = availRes.data || [];
+    blocked = blockRes.data || [];
+    renderWeekly();
+    renderBlocked();
+  }
+
+  function formatTime(t) {
+    const [h, m] = t.split(':');
+    const hr = Number(h);
+    const ampm = hr >= 12 ? 'PM' : 'AM';
+    const displayH = hr % 12 || 12;
+    return displayH + ':' + m + ' ' + ampm;
+  }
+
+  function renderWeekly() {
+    const box = document.getElementById('weeklySchedule');
+    const grouped = {};
+    availability.forEach(a => {
+      if (!grouped[a.day_of_week]) grouped[a.day_of_week] = [];
+      grouped[a.day_of_week].push(a);
+    });
+
+    const daysWithSlots = Object.keys(grouped);
+
+    if (!daysWithSlots.length) {
+      box.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No time slots yet. Add your first slot using the form →</p>';
+      return;
+    }
+
+    box.innerHTML = DAYS.map((dayName, dayIdx) => {
+      const slots = grouped[dayIdx] || [];
+      if (!slots.length) return '';
+      return `
+        <div class="day-card">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-primary">${dayName}</h3>
+            <span class="text-xs bg-secondary/20 text-primary px-2 py-0.5 rounded-full font-semibold">${slots.length} slot${slots.length > 1 ? 's' : ''}</span>
+          </div>
+          ${slots.map(s => `
+            <div class="slot-item">
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-sm font-semibold text-primary">${formatTime(s.start_time)} — ${formatTime(s.end_time)}</span>
+              </div>
+              <button onclick="deleteSlot('${s.id}')" class="text-red-500 hover:text-red-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderBlocked() {
+    const box = document.getElementById('blockedList');
+    if (!blocked.length) {
+      box.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No blocked dates</p>';
+      return;
+    }
+    box.innerHTML = blocked.map(b => {
+      const d = new Date(b.blocked_date);
+      const dateStr = d.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+        <div class="slot-item">
+          <div>
+            <p class="text-sm font-semibold text-primary">${dateStr}</p>
+            ${b.reason ? `<p class="text-xs text-charcoal/60">${b.reason}</p>` : ''}
+          </div>
+          <button onclick="deleteBlock('${b.id}')" class="text-red-500 hover:text-red-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.deleteSlot = async (id) => {
+    if (!confirm('Remove this time slot?')) return;
+    await db.from('teacher_availability').delete().eq('id', id);
+    loadAll();
+  };
+
+  window.deleteBlock = async (id) => {
+    if (!confirm('Unblock this date?')) return;
+    await db.from('teacher_blocked_dates').delete().eq('id', id);
+    loadAll();
+  };
+
+  document.getElementById('slotForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const status = document.getElementById('slotStatus');
+    const day = Number(document.getElementById('slotDay').value);
+    const start = document.getElementById('slotStart').value;
+    const end = document.getElementById('slotEnd').value;
+
+    if (start >= end) {
+      status.textContent = '❌ End time must be after start time';
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+
+    const { error } = await db.from('teacher_availability').insert({
+      teacher_id: teacher.id,
+      day_of_week: day,
+      start_time: start,
+      end_time: end
+    });
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Add Slot';
+      return;
+    }
+
+    status.textContent = '✓ Slot added!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    e.target.reset();
+    btn.disabled = false;
+    btn.textContent = 'Add Slot';
+    loadAll();
+    setTimeout(() => status.classList.add('hidden'), 2500);
+  });
+
+  document.getElementById('blockForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const status = document.getElementById('blockStatus');
+    const date = document.getElementById('blockDate').value;
+    const reason = document.getElementById('blockReason').value.trim();
+
+    btn.disabled = true;
+    btn.textContent = 'Blocking...';
+
+    const { error } = await db.from('teacher_blocked_dates').insert({
+      teacher_id: teacher.id,
+      blocked_date: date,
+      reason: reason || null
+    });
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Block Date';
+      return;
+    }
+
+    status.textContent = '✓ Date blocked!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    e.target.reset();
+    btn.disabled = false;
+    btn.textContent = 'Block Date';
+    loadAll();
+    setTimeout(() => status.classList.add('hidden'), 2500);
+  });
+
+  // Set default date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('blockDate').min = new Date().toISOString().split('T')[0];
+  document.getElementById('blockDate').value = tomorrow.toISOString().split('T')[0];
+
+  loadAll();
+})();
+</script>
+
+</body>
+</html>
