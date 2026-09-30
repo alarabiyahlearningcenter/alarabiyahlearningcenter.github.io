@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Article | Al-Arabiyah Learning Center</title>
+<meta name="description" content="Read article on Al-Arabiyah Learning Center blog.">
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.islamic-pattern{background-image:radial-gradient(circle at 20% 30%,rgba(212,175,55,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(10,54,34,0.05) 0%,transparent 50%)}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.gold-divider{height:3px;width:60px;background:linear-gradient(90deg,#D4AF37,#E8C766);border-radius:2px}
+.whatsapp-float{position:fixed;bottom:24px;right:24px;z-index:999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,211,102,.4)}
+.article-content{font-size:17px;line-height:1.8;color:#333}
+.article-content p{margin-bottom:1.25rem;white-space:pre-line}
+.article-content h2{font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;color:#0A3622;margin-top:2rem;margin-bottom:1rem}
+.article-content h3{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:600;color:#0A3622;margin-top:1.5rem;margin-bottom:0.75rem}
+.article-content a{color:#D4AF37;text-decoration:underline}
+.article-content blockquote{border-left:4px solid #D4AF37;padding-left:1.25rem;font-style:italic;color:#555;margin:1.5rem 0}
+.share-btn{transition:.2s}
+.share-btn:hover{transform:translateY(-2px)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <img src="assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+      <div class="hidden sm:block">
+        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
+        <div class="text-xs text-primary/70">Learning Center</div>
+      </div>
+    </a>
+    <nav class="hidden lg:flex items-center gap-8">
+      <a href="index.html" class="text-primary/80 hover:text-secondary transition">Home</a>
+      <a href="courses.html" class="text-primary/80 hover:text-secondary transition">Courses</a>
+      <a href="teachers.html" class="text-primary/80 hover:text-secondary transition">Teachers</a>
+      <a href="pricing.html" class="text-primary/80 hover:text-secondary transition">Pricing</a>
+      <a href="blog.html" class="text-primary font-medium">Blog</a>
+      <a href="contact.html" class="text-primary/80 hover:text-secondary transition">Contact</a>
+    </nav>
+    <a href="auth/login.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Login</a>
+  </div>
+</header>
+
+<div id="loadingState" class="min-h-[60vh] flex items-center justify-center">
+  <div class="text-center">
+    <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary"></div>
+    <p class="text-charcoal/60 mt-4 text-sm">Loading article...</p>
+  </div>
+</div>
+
+<div id="notFoundState" class="hidden min-h-[60vh] flex items-center justify-center px-4">
+  <div class="text-center max-w-md">
+    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <h3 class="text-2xl font-bold text-primary mb-2">Article Not Found</h3>
+    <p class="text-charcoal/60 mb-6">The article you're looking for doesn't exist.</p>
+    <a href="blog.html" class="btn-primary inline-block px-6 py-3 rounded-full font-semibold">Back to Blog</a>
+  </div>
+</div>
+
+<article id="articleContent" class="hidden max-w-3xl mx-auto px-4 py-12">
+  <a href="blog.html" class="inline-flex items-center gap-2 text-primary/60 hover:text-secondary text-sm mb-6">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Back to Blog
+  </a>
+
+  <div class="mb-6">
+    <span id="postCategory" class="inline-block bg-secondary/20 text-primary text-xs font-bold px-3 py-1 rounded-full mb-4 uppercase"></span>
+    <h1 id="postTitle" class="text-3xl md:text-5xl font-bold text-primary mb-4 leading-tight"></h1>
+    <div class="gold-divider mb-6"></div>
+    <div class="flex flex-wrap items-center gap-4 text-sm text-charcoal/60">
+      <div class="flex items-center gap-2">
+        <div id="authorAvatar" class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-sm"></div>
+        <span id="postAuthor" class="font-semibold text-primary"></span>
+      </div>
+      <span>•</span>
+      <span id="postDate"></span>
+      <span>•</span>
+      <span id="postReadTime"></span>
+      <span>•</span>
+      <span id="postViews"></span>
+    </div>
+  </div>
+
+  <img id="postCover" src="" alt="" class="hidden w-full h-auto rounded-3xl mb-8 shadow-lg">
+
+  <div id="postBody" class="article-content"></div>
+
+  <div id="postTags" class="hidden flex flex-wrap gap-2 mt-10 pt-8 border-t border-primary/10"></div>
+
+  <!-- Share -->
+  <div class="mt-8 bg-cream rounded-2xl p-6 border border-primary/5">
+    <p class="font-bold text-primary mb-3">Share this article</p>
+    <div class="flex gap-3 flex-wrap">
+      <a id="shareFb" target="_blank" class="share-btn bg-blue-600 text-white px-4 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
+      </a>
+      <a id="shareWa" target="_blank" class="share-btn bg-green-500 text-white px-4 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+        WhatsApp
+      </a>
+      <a id="shareTw" target="_blank" class="share-btn bg-black text-white px-4 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Twitter
+      </a>
+      <button id="copyLink" class="share-btn bg-cream border-2 border-primary text-primary px-4 py-2.5 rounded-full font-semibold text-sm">Copy Link</button>
+    </div>
+  </div>
+
+  <!-- Related -->
+  <div id="relatedSection" class="hidden mt-12 pt-10 border-t border-primary/10">
+    <h3 class="text-2xl font-bold text-primary mb-6">Related Articles</h3>
+    <div id="relatedPosts" class="grid sm:grid-cols-2 gap-6"></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="mt-12 bg-primary rounded-3xl p-8 text-center text-white">
+    <h3 class="text-2xl font-bold mb-3">Ready to Learn Qur'an?</h3>
+    <p class="text-white/80 mb-6">Book a free trial class today</p>
+    <a href="free-assessment.html" class="bg-secondary text-primary px-8 py-3.5 rounded-full font-semibold inline-block">Book Free Trial</a>
+  </div>
+</article>
+
+<footer class="bg-primary-dark text-white py-8 mt-12">
+  <div class="max-w-7xl mx-auto px-4 text-center text-sm text-white/60">
+    <p>2026 Al-Arabiyah Learning Center. All rights reserved.</p>
+  </div>
+</footer>
+
+<a href="https://wa.me/8801737326555" target="_blank" class="whatsapp-float">
+  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+</a>
+
+<script src="assets/js/site-loader.js"></script>
+<script>
+(async () => {
+  const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+
+  if (!slug) {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('notFoundState').classList.remove('hidden');
+    return;
+  }
+
+  const { data: post } = await db.from('blog_posts').select('*').eq('slug', slug).eq('is_published', true).maybeSingle();
+
+  document.getElementById('loadingState').classList.add('hidden');
+
+  if (!post) {
+    document.getElementById('notFoundState').classList.remove('hidden');
+    return;
+  }
+
+  // Page title & SEO
+  document.title = post.title + ' | Al-Arabiyah Learning Center';
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.content = post.excerpt || (post.content || '').substring(0, 155);
+
+  // Update Meta tags for OG
+  function setMeta(attr, name, content) {
+    if (!content) return;
+    let tag = document.querySelector(`meta[${attr}="${name}"]`);
+    if (!tag) {
+      tag = document.createElement('meta');
+      tag.setAttribute(attr, name);
+      document.head.appendChild(tag);
+    }
+    tag.setAttribute('content', content);
+  }
+  setMeta('property', 'og:title', post.title);
+  setMeta('property', 'og:description', post.excerpt || (post.content || '').substring(0, 155));
+  if (post.cover_image_url) setMeta('property', 'og:image', post.cover_image_url);
+  setMeta('property', 'og:type', 'article');
+
+  // Render
+  const date = new Date(post.published_at || post.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const wordCount = (post.content || '').split(/\s+/).length;
+  const readTime = Math.max(1, Math.round(wordCount / 200));
+
+  document.getElementById('postCategory').textContent = post.category || 'general';
+  document.getElementById('postTitle').textContent = post.title;
+  document.getElementById('postAuthor').textContent = post.author_name || 'Admin';
+  document.getElementById('authorAvatar').textContent = (post.author_name || 'Admin').charAt(0).toUpperCase();
+  document.getElementById('postDate').textContent = date;
+  document.getElementById('postReadTime').textContent = readTime + ' min read';
+  document.getElementById('postViews').textContent = '👁️ ' + ((post.views || 0) + 1) + ' views';
+
+  if (post.cover_image_url) {
+    const cover = document.getElementById('postCover');
+    cover.src = post.cover_image_url;
+    cover.alt = post.title;
+    cover.classList.remove('hidden');
+  }
+
+  // Render body with basic markdown support
+  let html = escapeHtml(post.content || '');
+  // Bold **text**
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Italic *text*
+  html = html.replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1<em>$2</em>');
+  // Headings
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+  // Blockquote
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  // Paragraphs
+  const paragraphs = html.split(/\n\n+/).map(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('<h') || trimmed.startsWith('<blockquote')) return trimmed;
+    return '<p>' + trimmed.replace(/\n/g, '<br>') + '</p>';
+  });
+  document.getElementById('postBody').innerHTML = paragraphs.join('');
+
+  // Tags
+  if (post.tags && post.tags.length) {
+    const tagsBox = document.getElementById('postTags');
+    tagsBox.classList.remove('hidden');
+    tagsBox.innerHTML = '<span class="text-xs font-semibold text-charcoal/60 self-center">Tags:</span>' +
+      post.tags.map(t => `<span class="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">#${t}</span>`).join('');
+  }
+
+  // Share links
+  const pageUrl = window.location.href;
+  const shareText = encodeURIComponent(post.title);
+  document.getElementById('shareFb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+  document.getElementById('shareWa').href = `https://wa.me/?text=${shareText}%20${encodeURIComponent(pageUrl)}`;
+  document.getElementById('shareTw').href = `https://twitter.com/intent/tweet?text=${shareText}&url=${encodeURIComponent(pageUrl)}`;
+
+  document.getElementById('copyLink').addEventListener('click', () => {
+    navigator.clipboard.writeText(pageUrl).then(() => {
+      const btn = document.getElementById('copyLink');
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('bg-green-500', 'text-white', 'border-green-500');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('bg-green-500', 'text-white', 'border-green-500');
+      }, 2000);
+    });
+  });
+
+  // Increment views
+  db.from('blog_posts').update({ views: (post.views || 0) + 1 }).eq('id', post.id).then(() => {});
+
+  // Load related posts
+  const { data: related } = await db.from('blog_posts')
+    .select('*')
+    .eq('is_published', true)
+    .eq('category', post.category)
+    .neq('id', post.id)
+    .limit(2);
+
+  if (related && related.length) {
+    document.getElementById('relatedSection').classList.remove('hidden');
+    document.getElementById('relatedPosts').innerHTML = related.map(r => {
+      const rDate = new Date(r.published_at || r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+        <a href="blog-post.html?slug=${r.slug}" class="bg-white rounded-2xl overflow-hidden border border-primary/5 hover:shadow-lg transition block">
+          ${r.cover_image_url ? `<img src="${r.cover_image_url}" class="w-full h-32 object-cover">` : '<div class="w-full h-32 bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center"><span class="text-4xl">📖</span></div>'}
+          <div class="p-4">
+            <p class="text-xs text-charcoal/50 mb-2">${rDate}</p>
+            <h4 class="font-bold text-primary text-sm line-clamp-2">${r.title}</h4>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('articleContent').classList.remove('hidden');
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+})();
+</script>
+
+</body>
+</html>
