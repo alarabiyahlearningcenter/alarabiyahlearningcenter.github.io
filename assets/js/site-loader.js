@@ -1,3 +1,53 @@
+// ==== MAINTENANCE_GUARD_V1 ====
+(function() {
+  try {
+    const p = location.pathname.toLowerCase();
+    const skip = /\/(admin|super-admin|maintenance|login|signup|forgot-password|parent-signup)\b/.test(p)
+              || p.endsWith('maintenance.html')
+              || p.endsWith('login.html')
+              || p.endsWith('signup.html')
+              || p.endsWith('forgot-password.html')
+              || p.endsWith('parent-signup.html')
+              || p.includes('/super-admin/');
+    if (skip) return;
+
+    const URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+    const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+
+    fetch(URL + '/rest/v1/site_settings?key=eq.maintenance_mode&select=value', {
+      headers: { apikey: KEY, Authorization: 'Bearer ' + KEY }
+    })
+    .then(r => r.ok ? r.json() : null)
+    .then(async rows => {
+      const on = rows && rows[0] && (rows[0].value === 'true' || rows[0].value === true);
+      if (!on) return;
+
+      // Check if current user is admin / super_admin — those bypass maintenance
+      try {
+        const sess = localStorage.getItem('sb-vgsgisyneymtszuslftb-auth-token');
+        if (sess) {
+          const parsed = JSON.parse(sess);
+          const uid = parsed?.user?.id;
+          if (uid) {
+            const pr = await fetch(URL + '/rest/v1/profiles?id=eq.' + uid + '&select=role', {
+              headers: { apikey: KEY, Authorization: 'Bearer ' + (parsed.access_token || KEY) }
+            });
+            if (pr.ok) {
+              const prow = await pr.json();
+              const role = prow?.[0]?.role;
+              if (role === 'admin' || role === 'super_admin') return;
+            }
+          }
+        }
+      } catch(_) {}
+
+      location.replace('/maintenance.html');
+    })
+    .catch(() => { /* fail open */ });
+  } catch(e) { /* fail open */ }
+})();
+// ==== END MAINTENANCE_GUARD_V1 ====
+
 // ============================================
 // SITE LOADER — Auto-apply dynamic settings
 // Loads on every public page

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>We'll Be Back Soon — Al-Arabiyah Learning Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { primary:'#0A3622', secondary:'#D4AF37', cream:'#F9F7F2', charcoal:'#1A1A1A' },
+    fontFamily: { display:['"Playfair Display"','serif'], body:['Inter','sans-serif'] }
+  }}
+};
+</script>
+<style>
+  body { font-family: Inter, sans-serif; background: #0A3622; }
+  .glow { box-shadow: 0 0 60px rgba(212,175,55,.35); }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .dot { animation: pulse-dot 1.5s infinite; }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 text-cream">
+
+<div class="max-w-xl w-full text-center">
+  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/30 mb-8">
+    <span class="w-2 h-2 rounded-full bg-secondary dot"></span>
+    <span class="text-xs uppercase tracking-widest text-secondary font-semibold">Scheduled Maintenance</span>
+  </div>
+
+  <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">
+    We'll Be Back <span class="text-secondary">Soon</span>
+  </h1>
+
+  <p class="text-cream/70 text-base md:text-lg leading-relaxed mb-8">
+    Al-Arabiyah Learning Center is currently undergoing scheduled maintenance
+    to serve you better. Classes will resume shortly — please check back in a few minutes.
+  </p>
+
+  <div id="checkStatus" class="text-sm text-cream/50 mb-8">
+    Auto-checking every 60 seconds…
+  </div>
+
+  <div class="flex flex-wrap items-center justify-center gap-4 mb-10">
+    <a href="https://wa.me/8801737326555" target="_blank"
+       class="px-6 py-3 rounded-lg bg-secondary text-primary font-semibold hover:bg-secondary/90 transition">
+      📱 WhatsApp Support
+    </a>
+    <a href="mailto:alcadmin@gmail.com"
+       class="px-6 py-3 rounded-lg border border-cream/20 text-cream hover:bg-cream/5 transition">
+      ✉️ Email Us
+    </a>
+  </div>
+
+  <p class="text-xs text-cream/40">
+    &copy; <span id="yr"></span> Al-Arabiyah Learning Center — All rights reserved
+  </p>
+</div>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+(async function poll() {
+  try {
+    const URL = (window.SUPABASE_URL) || 'https://vgsgisyneymtszuslftb.supabase.co';
+    const KEY = (window.SUPABASE_ANON_KEY) || '';
+
+    const r = await fetch(`${URL}/rest/v1/site_settings?key=eq.maintenance_mode&select=value`, {
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}` }
+    });
+    if (r.ok) {
+      const j = await r.json();
+      const on = (j?.[0]?.value === 'true' || j?.[0]?.value === true);
+      document.getElementById('checkStatus').textContent =
+        on ? 'Auto-checking every 60 seconds…' : 'Maintenance complete — redirecting…';
+      if (!on) location.replace('/');
+    }
+  } catch(e) { /* ignore */ }
+  setTimeout(poll, 60000);
+})();
+</script>
+</body>
+</html>
