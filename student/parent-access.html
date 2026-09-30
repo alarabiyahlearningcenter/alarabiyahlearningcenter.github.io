@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent Access | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.code-box{font-family:'Courier New',monospace;font-size:28px;font-weight:700;letter-spacing:5px;text-align:center;background:linear-gradient(135deg,#F9F7F2,#F0EBD8);padding:20px;border-radius:16px;border:3px dashed #D4AF37;color:#0A3622;cursor:pointer;transition:.2s}
+.code-box:hover{background:linear-gradient(135deg,#F0EBD8,#E8DCC0)}
+input:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Learning Center</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="dashboard.html" class="text-sm text-primary font-medium hover:text-secondary">← Dashboard</a>
+      <div id="notifBellContainer"></div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="parent-access.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Parent Access
+        </a>
+        <a href="my-courses.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          My Courses
+        </a>
+        <a href="attendance-report.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          Attendance
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Parent Access</h1>
+      <p class="text-charcoal/60 text-sm">Give your parents access to monitor your learning progress</p>
+    </div>
+
+    <div id="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+    </div>
+
+    <div id="content" class="hidden max-w-3xl space-y-6">
+
+      <!-- Intro -->
+      <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div>
+            <p class="text-sm font-semibold text-blue-900">How it works</p>
+            <p class="text-xs text-blue-800 mt-1">Generate a unique code and share it with your parent. They'll create their own account and use the code to link to you.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Code Card -->
+      <div class="bg-white rounded-3xl p-6 md:p-8 border border-primary/5">
+        <h2 class="text-xl font-bold text-primary mb-2">Generate Invite Code</h2>
+        <p class="text-charcoal/60 text-sm mb-5">Create a fresh code to share with your parent</p>
+
+        <div id="currentCodeBox" class="hidden mb-5">
+          <p class="text-xs font-semibold text-primary mb-2">Your active invite code:</p>
+          <div class="code-box" id="currentCode" onclick="copyCode()"></div>
+          <p class="text-xs text-charcoal/50 text-center mt-2">Click to copy</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3 mb-5">
+          <div>
+            <label class="block text-sm font-semibold text-primary mb-2">Relationship</label>
+            <select id="relationship" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+              <option value="parent">Parent</option>
+              <option value="mother">Mother</option>
+              <option value="father">Father</option>
+              <option value="guardian">Guardian</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button id="generateBtn" class="w-full btn-primary py-3 rounded-xl font-semibold">Generate New Code</button>
+          </div>
+        </div>
+
+        <p id="generateStatus" class="text-sm text-center hidden"></p>
+      </div>
+
+      <!-- Linked Parents -->
+      <div class="bg-white rounded-3xl p-6 md:p-8 border border-primary/5">
+        <h2 class="text-xl font-bold text-primary mb-4">Linked Parents</h2>
+        <div id="linkedParents">
+          <p class="text-charcoal/60 text-sm text-center py-6">No parents linked yet</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/inject-bell.js"></script>
+<script>
+(async () => {
+  let tries = 0;
+  while (!window.db && tries < 50) { await new Promise(r => setTimeout(r, 100)); tries++; }
+  if (!window.db) return;
+  const db = window.db;
+
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
+  document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  });
+
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.href = '../auth/login.html'; return; }
+  const user = session.user;
+
+  const { data: profile } = await db.from('profiles').select('full_name').eq('id', user.id).single();
+  const fullName = profile?.full_name || user.email.split('@')[0];
+
+  let activeCode = null;
+  let allLinks = [];
+
+  function generateCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
+  async function loadData() {
+    document.getElementById('loading').classList.remove('hidden');
+
+    // Load all links where this user is the student
+    const { data: links } = await db.from('parent_links')
+      .select('*')
+      .eq('student_id', user.id)
+      .order('created_at', { ascending: false });
+
+    allLinks = links || [];
+
+    // Find pending (unused) code
+    activeCode = allLinks.find(l => l.status === 'pending');
+
+    renderCode();
+    await renderParents();
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+  }
+
+  function renderCode() {
+    if (activeCode) {
+      document.getElementById('currentCodeBox').classList.remove('hidden');
+      document.getElementById('currentCode').textContent = activeCode.link_code;
+    } else {
+      document.getElementById('currentCodeBox').classList.add('hidden');
+    }
+  }
+
+  async function renderParents() {
+    const box = document.getElementById('linkedParents');
+    const linkedParents = allLinks.filter(l => l.status === 'active');
+
+    if (!linkedParents.length) {
+      box.innerHTML = '<p class="text-charcoal/60 text-sm text-center py-6">No parents linked yet</p>';
+      return;
+    }
+
+    // Get parent names
+    const parentIds = linkedParents.map(l => l.parent_id).filter(Boolean);
+    let parentMap = {};
+    if (parentIds.length) {
+      const { data: parents } = await db.from('profiles').select('id, full_name, email').in('id', parentIds);
+      (parents || []).forEach(p => parentMap[p.id] = p);
+    }
+
+    box.innerHTML = linkedParents.map(l => {
+      const parent = parentMap[l.parent_id] || {};
+      const pName = parent.full_name || parent.email?.split('@')[0] || 'Parent';
+      const dateStr = l.accepted_at ? new Date(l.accepted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+      return `
+        <div class="flex items-center gap-3 py-3 border-b border-primary/5 last:border-0">
+          <div class="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${pName.charAt(0).toUpperCase()}</div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-primary text-sm">${pName}</p>
+            <p class="text-xs text-charcoal/60 truncate">${parent.email || ''}</p>
+            <p class="text-xs text-charcoal/40">${l.relationship ? l.relationship.charAt(0).toUpperCase() + l.relationship.slice(1) : 'Parent'} • Linked ${dateStr}</p>
+          </div>
+          <button onclick="revokeAccess('${l.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-full font-semibold hover:bg-red-100">Revoke</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('generateBtn');
+    const status = document.getElementById('generateStatus');
+
+    // Delete old pending codes
+    if (activeCode) {
+      await db.from('parent_links').delete().eq('id', activeCode.id);
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    status.classList.add('hidden');
+
+    const relationship = document.getElementById('relationship').value;
+
+    // Try up to 3 times to avoid collision
+    let error;
+    for (let i = 0; i < 3; i++) {
+      const code = generateCode();
+      const { data, error: err } = await db.from('parent_links').insert({
+        parent_id: user.id, // placeholder, will be replaced when parent accepts
+        student_id: user.id,
+        relationship: relationship,
+        link_code: code,
+        status: 'pending'
+      }).select().single();
+
+      if (!err) {
+        activeCode = data;
+        error = null;
+        break;
+      }
+      error = err;
+    }
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Generate New Code';
+      return;
+    }
+
+    renderCode();
+    status.textContent = '✓ Code generated! Share it with your parent.';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Generate New Code';
+    setTimeout(() => status.classList.add('hidden'), 3000);
+  });
+
+  window.copyCode = () => {
+    if (!activeCode) return;
+    navigator.clipboard.writeText(activeCode.link_code).then(() => {
+      const box = document.getElementById('currentCode');
+      const original = box.textContent;
+      box.textContent = '✓ Copied!';
+      box.style.background = 'linear-gradient(135deg, #dcfce7, #bbf7d0)';
+      setTimeout(() => {
+        box.textContent = original;
+        box.style.background = '';
+      }, 1500);
+    });
+  };
+
+  window.revokeAccess = async (linkId) => {
+    if (!confirm('Revoke this parent\'s access? They will no longer see your progress.')) return;
+    await db.from('parent_links').update({ status: 'revoked' }).eq('id', linkId);
+    
+    // Notify parent
+    const link = allLinks.find(l => l.id === linkId);
+    if (link?.parent_id && window.Notif) {
+      await Notif.send(link.parent_id, 'Access Revoked', 'Your access to ' + fullName + '\'s data has been removed.', 'warning', '/parent/dashboard.html').catch(() => {});
+    }
+    
+    loadData();
+  };
+
+  loadData();
+})();
+</script>
+
+</body>
+</html>
