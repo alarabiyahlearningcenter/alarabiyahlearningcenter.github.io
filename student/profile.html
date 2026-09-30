@@ -121,6 +121,18 @@ input:focus { outline: none; border-color: #0A3622; box-shadow: 0 0 0 3px rgba(1
     </div>
 
     <div id="profileContent" class="hidden max-w-2xl">
+
+      <!-- Profile Completion Card -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5 mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-primary">Profile Completion</h3>
+          <span id="completionPct" class="text-2xl font-bold text-primary">0%</span>
+        </div>
+        <div class="w-full bg-cream rounded-full h-3 mb-3">
+          <div id="completionBar" class="bg-secondary h-3 rounded-full transition-all" style="width: 0%"></div>
+        </div>
+        <p id="completionMsg" class="text-xs text-charcoal/60">Complete your profile to unlock all features</p>
+      </div>
       <div class="bg-white rounded-2xl p-6 border border-primary/5 mb-6">
         <div class="flex items-center gap-4 mb-6">
           <div id="bigAvatar" class="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-secondary text-3xl font-bold">S</div>
@@ -217,6 +229,36 @@ let currentUser = null;
   // Fill profile
   document.getElementById('bigAvatar').textContent = fullName.charAt(0).toUpperCase();
   document.getElementById('displayName').textContent = fullName;
+
+  // Calculate profile completion
+  function calcCompletion() {
+    const fields = [
+      { filled: !!profile?.full_name, weight: 15 },
+      { filled: !!profile?.phone, weight: 15 },
+      { filled: !!profile?.country, weight: 10 },
+      { filled: !!profile?.age, weight: 10 },
+      { filled: !!profile?.avatar_url, weight: 25 },
+      { filled: !!currentUser?.email, weight: 15 },
+      { filled: true, weight: 10 } // email verified baseline
+    ];
+    const total = fields.reduce((sum, f) => sum + (f.filled ? f.weight : 0), 0);
+    return total;
+  }
+
+  const pct = calcCompletion();
+  document.getElementById('completionPct').textContent = pct + '%';
+  document.getElementById('completionBar').style.width = pct + '%';
+  const msg = document.getElementById('completionMsg');
+  if (pct >= 90) {
+    msg.textContent = '🎉 Profile complete!';
+    msg.className = 'text-xs text-green-600';
+  } else if (pct >= 60) {
+    msg.textContent = 'Looking good! Add a profile picture to reach 100%';
+    msg.className = 'text-xs text-charcoal/60';
+  } else {
+    msg.textContent = 'Fill in your details to unlock the full experience';
+    msg.className = 'text-xs text-yellow-600';
+  }
   document.getElementById('displayEmail').textContent = currentUser.email;
   document.getElementById('displayRole').textContent = profile?.role || 'student';
 
@@ -263,6 +305,9 @@ let currentUser = null;
     await db.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
 
     avatarBox.innerHTML = '<img src="' + avatarUrl + '" class="w-full h-full object-cover">';
+
+    // Refresh completion
+    location.reload();
     status.textContent = '✓ Profile picture updated!';
     status.className = 'text-sm mt-3 text-green-600';
   });
