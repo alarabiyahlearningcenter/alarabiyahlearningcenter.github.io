@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade Assignments | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-green{background:#16a34a;color:white}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+.sub-card{transition:.3s}
+.sub-card:hover{box-shadow:0 12px 24px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <a href="assignments.html" class="text-sm text-primary/60 hover:text-secondary">← All Assignments</a>
+      <h1 id="assignTitle" class="text-2xl md:text-3xl font-bold text-primary mt-1 mb-1">Grade Submissions</h1>
+      <p id="assignMeta" class="text-charcoal/60 text-sm">Loading...</p>
+    </div>
+    <div class="flex gap-2">
+      <select id="statusFilter" class="px-4 py-2.5 border border-primary/20 rounded-full bg-white text-sm">
+        <option value="">All Submissions</option>
+        <option value="submitted">Pending</option>
+        <option value="graded">Graded</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Total</p>
+      <p id="statTotal" class="text-2xl font-bold text-primary">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Pending</p>
+      <p id="statPending" class="text-2xl font-bold text-yellow-600">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 border border-primary/5">
+      <p class="text-xs text-charcoal/60 mb-1">Graded</p>
+      <p id="statGraded" class="text-2xl font-bold text-green-600">0</p>
+    </div>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="submissionsList" class="space-y-4"></div>
+</div>
+
+<!-- Grade Modal -->
+<div id="gradeModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 class="font-bold text-lg">Grade Submission</h3>
+      <button onclick="closeGradeModal()" class="text-white/80 hover:text-white text-2xl">&times;</button>
+    </div>
+    <div class="p-6">
+      <div id="studentInfoBox" class="bg-cream rounded-xl p-4 mb-4"></div>
+      <div id="submissionContent" class="mb-4"></div>
+
+      <form id="gradeForm" class="space-y-4">
+        <input type="hidden" id="submissionId">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Score *</label>
+          <input type="number" id="score" required min="0" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Feedback</label>
+          <textarea id="feedback" rows="4" placeholder="Your feedback to the student..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream"></textarea>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeGradeModal()" class="flex-1 py-3 border-2 border-primary text-primary rounded-xl font-semibold">Cancel</button>
+          <button type="submit" id="gradeBtn" class="flex-1 btn-green py-3 rounded-xl font-semibold">Save Grade</button>
+        </div>
+        <p id="gradeStatus" class="text-sm text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  const params = new URLSearchParams(window.location.search);
+  const assignmentId = params.get('id');
+  if (!assignmentId) { window.location.href = 'assignments.html'; return; }
+
+  let allSubs = [];
+  let currentAssign = null;
+
+  window.closeGradeModal = () => document.getElementById('gradeModal').classList.add('hidden');
+
+  async function loadData() {
+    document.getElementById('loading').classList.remove('hidden');
+
+    const { data: assign } = await db.from('assignments').select('*, courses(title)').eq('id', assignmentId).single();
+    if (!assign) { window.location.href = 'assignments.html'; return; }
+    currentAssign = assign;
+
+    document.getElementById('assignTitle').textContent = 'Grade: ' + assign.title;
+    document.getElementById('assignMeta').textContent = (assign.courses?.title || 'No course') + ' • Max Score: ' + (assign.max_score || 100);
+
+    const { data: subs } = await db.from('assignment_submissions').select('*, profiles(full_name, email)').eq('assignment_id', assignmentId).order('submitted_at', { ascending: false });
+    allSubs = subs || [];
+
+    document.getElementById('statTotal').textContent = allSubs.length;
+    document.getElementById('statPending').textContent = allSubs.filter(s => s.status === 'submitted').length;
+    document.getElementById('statGraded').textContent = allSubs.filter(s => s.status === 'graded').length;
+
+    document.getElementById('loading').classList.add('hidden');
+    applyFilter();
+  }
+
+  function renderSubmissions(list) {
+    const box = document.getElementById('submissionsList');
+    if (!list.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No submissions yet</div>';
+      return;
+    }
+    box.innerHTML = list.map(s => {
+      const name = s.profiles?.full_name || s.profiles?.email?.split('@')[0] || 'Student';
+      const date = new Date(s.submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const statusBadge = s.status === 'graded' 
+        ? '<span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">✓ Graded: ' + s.score + '/' + (currentAssign.max_score || 100) + '</span>'
+        : '<span class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold">Pending</span>';
+      
+      return `
+        <div class="sub-card bg-white rounded-2xl p-5 border border-primary/5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${name.charAt(0).toUpperCase()}</div>
+              <div class="min-w-0">
+                <p class="font-bold text-primary text-sm">${name}</p>
+                <p class="text-xs text-charcoal/60">Submitted: ${date}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${statusBadge}
+              <button onclick="openGrade('${s.id}')" class="btn-primary text-xs px-4 py-2 rounded-full font-semibold">${s.status === 'graded' ? 'Edit Grade' : 'Grade Now'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function applyFilter() {
+    const f = document.getElementById('statusFilter').value;
+    const list = f ? allSubs.filter(s => s.status === f) : allSubs;
+    renderSubmissions(list);
+  }
+
+  document.getElementById('statusFilter').addEventListener('change', applyFilter);
+
+  window.openGrade = async (subId) => {
+    const sub = allSubs.find(s => s.id === subId);
+    if (!sub) return;
+    const name = sub.profiles?.full_name || sub.profiles?.email?.split('@')[0] || 'Student';
+
+    document.getElementById('submissionId').value = subId;
+    document.getElementById('studentInfoBox').innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${name.charAt(0).toUpperCase()}</div>
+        <div>
+          <p class="font-bold text-primary text-sm">${name}</p>
+          <p class="text-xs text-charcoal/60">${sub.profiles?.email || ''}</p>
+        </div>
+      </div>
+    `;
+
+    let contentHtml = '';
+    if (sub.text_answer) {
+      contentHtml += `<div class="bg-cream rounded-xl p-4 mb-3"><p class="text-xs font-semibold text-primary mb-1">Student's Answer:</p><p class="text-sm text-charcoal/80 whitespace-pre-line">${sub.text_answer}</p></div>`;
+    }
+    if (sub.file_url) {
+      const { data: signed } = await db.storage.from('assignments').createSignedUrl(sub.file_url, 3600);
+      if (signed?.signedUrl) {
+        contentHtml += `<div class="bg-cream rounded-xl p-4 mb-3">
+          <p class="text-xs font-semibold text-primary mb-2">Attached File:</p>
+          <a href="${signed.signedUrl}" target="_blank" class="text-secondary text-sm font-semibold underline">📎 ${sub.file_name || 'Download File'}</a>
+        </div>`;
+      }
+    }
+    if (!contentHtml) contentHtml = '<p class="text-xs text-charcoal/60 text-center py-3">No content submitted</p>';
+    document.getElementById('submissionContent').innerHTML = contentHtml;
+
+    document.getElementById('score').value = sub.score || '';
+    document.getElementById('score').max = currentAssign.max_score || 100;
+    document.getElementById('feedback').value = sub.feedback || '';
+    document.getElementById('gradeStatus').classList.add('hidden');
+    document.getElementById('gradeModal').classList.remove('hidden');
+  };
+
+  document.getElementById('gradeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('gradeBtn');
+    const status = document.getElementById('gradeStatus');
+    const subId = document.getElementById('submissionId').value;
+    const score = Number(document.getElementById('score').value);
+    const feedback = document.getElementById('feedback').value.trim();
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const sub = allSubs.find(s => s.id === subId);
+    const { error } = await db.from('assignment_submissions').update({
+      score: score,
+      feedback: feedback || null,
+      status: 'graded',
+      graded_by: ctx.session.user.id,
+      graded_at: new Date().toISOString()
+    }).eq('id', subId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600 mt-2';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Save Grade';
+      return;
+    }
+
+    // Notify student
+    if (sub?.student_id && window.Notif) {
+      await Notif.send(
+        sub.student_id,
+        'Assignment Graded ✏️',
+        'You scored ' + score + '/' + (currentAssign.max_score || 100) + ' on "' + currentAssign.title + '"',
+        score >= (currentAssign.max_score || 100) * 0.7 ? 'success' : 'info',
+        '/student/assignments.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = '✓ Grade saved!';
+    status.className = 'text-sm text-center text-green-600 mt-2';
+    status.classList.remove('hidden');
+
+    setTimeout(() => {
+      closeGradeModal();
+      btn.disabled = false;
+      btn.textContent = 'Save Grade';
+      loadData();
+    }, 1200);
+  });
+
+  loadData();
+})();
+</script>
+
+</body>
+</html>
