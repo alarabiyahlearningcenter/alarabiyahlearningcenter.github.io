@@ -141,7 +141,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
       <p class="text-charcoal/60 text-sm">Select a teacher and schedule your session</p>
     </div>
 
-    <form id="bookingForm" class="max-w-3xl space-y-6">
+    <!-- Usage badge -->
+<div id="planUsageBadge" class="hidden mb-4 p-3 rounded-lg border border-secondary/30 bg-secondary/5 text-sm text-charcoal/80"></div>
+
+<form id="bookingForm" class="max-w-3xl space-y-6">
 
       <!-- Step 1: Select Teacher -->
       <div class="bg-white rounded-2xl p-6 border border-primary/5">
@@ -234,6 +237,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
 <script src="../assets/js/supabase-config.js"></script>
 <script src="../assets/js/notifications.js"></script>
 <script src="../assets/js/inject-bell.js"></script>
+<script src="../assets/js/plan-usage.js"></script>
 <script>
 (async () => {
   // Wait for db to be ready
@@ -563,6 +567,23 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
         }
         // ==== END FEATURE 2 ====
 
+        // ==== FEATURE 4: PLAN_USAGE enforce ====
+        try {
+          const usage = await window.PlanUsage.get(session.user.id, db);
+          if (!usage.canBook) {
+            status.textContent = '⚠️ ' + (usage.reason || 'Plan limit reached');
+            status.className = 'text-sm text-center text-red-600';
+            status.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Confirm Booking';
+            return;
+          }
+        } catch (puErr) {
+          console.error('PlanUsage check failed:', puErr);
+        }
+        // ==== END FEATURE 4 ====
+
+
     const notes = document.getElementById('notes').value.trim();
     const courseId = document.getElementById('courseId').value || null;
     const jitsiRoom = 'ALC-Class-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000);
@@ -621,5 +642,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
 })();
 </script>
 
+
+<script>
+(async () => {
+  try {
+    const s = await db.auth.getSession();
+    const uid = s?.data?.session?.user?.id;
+    if (!uid) return;
+    const u = await window.PlanUsage.get(uid, db);
+    const el = document.getElementById('planUsageBadge');
+    if (!el) return;
+    if (!u.hasPlan) {
+      el.innerHTML = '⚠️ <strong>No active plan.</strong> <a class="text-primary underline" href="./my-plan.html">Choose a plan →</a>';
+    } else if (u.unlimited) {
+      el.innerHTML = `✨ <strong>${u.planName || 'Custom Plan'}</strong> — Unlimited classes`;
+    } else {
+      const tone = u.remaining === 0 ? 'text-red-600 font-semibold' : (u.remaining <= 2 ? 'text-amber-600' : '');
+      el.innerHTML = `📊 <strong>${u.planName}</strong> · Used <strong>${u.used}/${u.limit}</strong> this cycle · <span class="${tone}">${u.remaining} remaining</span>`;
+    }
+    el.classList.remove('hidden');
+  } catch(e) { console.warn('badge:', e); }
+})();
+</script>
 </body>
 </html>
