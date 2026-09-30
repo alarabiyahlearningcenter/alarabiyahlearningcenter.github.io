@@ -226,6 +226,11 @@ function generateJitsiRoom(studentId) {
 })();
 
 function joinClass(room, title) {
+  window.location.href = 'livekit-class.html?room=' + room;
+  return;
+  // Old iframe code kept for fallback
+
+  /*
   const container = document.getElementById('liveClassContainer');
   container.innerHTML = `
     <div class="bg-white rounded-2xl border border-primary/5 overflow-hidden">
@@ -247,6 +252,7 @@ function joinClass(room, title) {
     </div>
     <p class="text-center text-xs text-charcoal/50 mt-4">Powered by Jitsi Meet • Free & Secure</p>
   `;
+*/
 }
 </script>
 

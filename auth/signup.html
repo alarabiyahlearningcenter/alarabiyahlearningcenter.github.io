@@ -250,7 +250,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       selectedRole === 'teacher' ? 'New Teacher Signup 👨‍🏫' : 'New Student Signup 👤',
       fullName + ' (' + email + ') just signed up.',
       'signup',
-      '/admin/students.html'
+      selectedRole === 'teacher' ? '/admin/teachers.html' : '/admin/students.html'
     ).catch(() => {});
   }
 
