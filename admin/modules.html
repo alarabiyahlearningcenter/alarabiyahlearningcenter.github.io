@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modules & Lessons | Admin Panel</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,0.15);color:#0A3622;border-left:3px solid #D4AF37}
+.module-card{background:white;border-radius:16px;border:1px solid rgba(10,54,34,.05);margin-bottom:16px;overflow:hidden}
+.module-header{background:#F9F7F2;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.lesson-row{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(10,54,34,.05)}
+.lesson-row:hover{background:#F9F7F2}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Modules & Lessons</h1>
+      <p class="text-charcoal/60 text-sm">Build course structure with modules and lessons</p>
+    </div>
+    <select id="courseSelect" class="px-5 py-2.5 border border-primary/20 rounded-full bg-white text-sm font-semibold text-primary">
+      <option value="">Select Course</option>
+    </select>
+  </div>
+
+  <div id="loading" class="text-center py-10">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary/20 border-t-primary"></div>
+  </div>
+
+  <div id="emptyState" class="hidden bg-white rounded-2xl p-10 text-center border border-primary/5">
+    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+    </div>
+    <h3 class="text-lg font-bold text-primary mb-2">Select a Course</h3>
+    <p class="text-charcoal/60 text-sm">Choose a course from the dropdown to manage its modules and lessons</p>
+  </div>
+
+  <div id="content" class="hidden">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <p class="text-sm text-charcoal/60">Total: <span id="totalCount" class="font-semibold text-primary">0</span> modules</p>
+      <button onclick="openModuleModal()" class="bg-primary text-white px-5 py-2 rounded-full font-semibold text-sm">+ New Module</button>
+    </div>
+    <div id="modulesList"></div>
+  </div>
+</div>
+
+<!-- Module Modal -->
+<div id="moduleModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full">
+    <div class="bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 id="moduleModalTitle" class="font-bold text-lg">New Module</h3>
+      <button onclick="closeModuleModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="moduleForm" class="p-6 space-y-4">
+      <input type="hidden" id="moduleId">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Module Title *</label>
+        <input type="text" id="moduleTitle" required placeholder="e.g. Introduction to Tajweed" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Sort Order</label>
+        <input type="number" id="moduleOrder" value="0" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <button type="submit" id="moduleBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Save Module</button>
+      <p id="moduleStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Lesson Modal -->
+<div id="lessonModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl max-w-lg w-full my-8">
+    <div class="bg-primary text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+      <h3 id="lessonModalTitle" class="font-bold text-lg">New Lesson</h3>
+      <button onclick="closeLessonModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <form id="lessonForm" class="p-6 space-y-4">
+      <input type="hidden" id="lessonId">
+      <input type="hidden" id="lessonModuleId">
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Lesson Title *</label>
+        <input type="text" id="lessonTitle" required placeholder="e.g. Lesson 1: Arabic Letters" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">Video URL (YouTube)</label>
+        <input type="url" id="lessonVideo" placeholder="https://youtube.com/watch?v=..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-primary mb-2">PDF / Attachment URL</label>
+        <input type="url" id="lessonPdf" placeholder="https://..." class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Duration (min)</label>
+          <input type="number" id="lessonDuration" value="10" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-primary mb-2">Sort Order</label>
+          <input type="number" id="lessonOrder" value="0" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
+        </div>
+      </div>
+      <button type="submit" id="lessonBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Save Lesson</button>
+      <p id="lessonStatus" class="text-sm text-center hidden"></p>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+  let allModules = [];
+  let currentCourse = null;
+
+  window.closeModuleModal = () => document.getElementById('moduleModal').classList.add('hidden');
+  window.closeLessonModal = () => document.getElementById('lessonModal').classList.add('hidden');
+
+  // Load courses for dropdown
+  const { data: courses } = await db.from('courses').select('id, title').eq('is_active', true).order('sort_order');
+  const cSel = document.getElementById('courseSelect');
+  cSel.innerHTML = '<option value="">Select Course</option>' + (courses || []).map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+
+  cSel.addEventListener('change', (e) => {
+    currentCourse = e.target.value;
+    if (currentCourse) loadModules(currentCourse);
+    else {
+      document.getElementById('content').classList.add('hidden');
+      document.getElementById('emptyState').classList.remove('hidden');
+    }
+  });
+
+  async function loadModules(courseId) {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('content').classList.add('hidden');
+
+    const { data: modules } = await db.from('modules').select('*').eq('course_id', courseId).order('sort_order');
+    allModules = modules || [];
+
+    // Load lessons for all modules
+    if (allModules.length) {
+      const modIds = allModules.map(m => m.id);
+      const { data: lessons } = await db.from('lessons').select('*').in('module_id', modIds).order('sort_order');
+      const lessonMap = {};
+      (lessons || []).forEach(l => {
+        if (!lessonMap[l.module_id]) lessonMap[l.module_id] = [];
+        lessonMap[l.module_id].push(l);
+      });
+      allModules.forEach(m => m.lessons = lessonMap[m.id] || []);
+    }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('totalCount').textContent = allModules.length;
+    renderModules();
+    document.getElementById('content').classList.remove('hidden');
+  }
+
+  function renderModules() {
+    const box = document.getElementById('modulesList');
+    if (!allModules.length) {
+      box.innerHTML = '<div class="bg-white rounded-2xl p-10 text-center border border-primary/5 text-charcoal/60 text-sm">No modules yet. Click "New Module" to start building this course.</div>';
+      return;
+    }
+    box.innerHTML = allModules.map(m => `
+      <div class="module-card">
+        <div class="module-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <div>
+              <p class="font-bold text-primary">${m.title}</p>
+              <p class="text-xs text-charcoal/60">${(m.lessons || []).length} lessons • Order: ${m.sort_order || 0}</p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="event.stopPropagation(); openLessonModal('${m.id}')" class="text-xs bg-secondary text-primary px-3 py-1.5 rounded-full font-semibold">+ Lesson</button>
+            <button onclick='event.stopPropagation(); openModuleModal(${JSON.stringify(m).replace(/'/g, "\\'")})' class="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-semibold">Edit</button>
+            <button onclick="event.stopPropagation(); deleteModule('${m.id}')" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-full font-semibold">×</button>
+          </div>
+        </div>
+        <div>
+          ${(m.lessons || []).length ? (m.lessons || []).sort((a,b) => (a.sort_order||0)-(b.sort_order||0)).map(l => `
+            <div class="lesson-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-primary truncate">${l.title}</p>
+                  <p class="text-xs text-charcoal/60">${l.duration_min || 0} min${l.video_url ? ' • 🎥 Video' : ''}${l.pdf_url ? ' • 📄 PDF' : ''}</p>
+                </div>
+              </div>
+              <div class="flex gap-2 flex-shrink-0">
+                <button onclick='openLessonModal("${m.id}", ${JSON.stringify(l).replace(/'/g, "\\'")})' class="text-xs text-primary font-semibold">Edit</button>
+                <button onclick="deleteLesson('${l.id}')" class="text-xs text-red-600 font-semibold">Delete</button>
+              </div>
+            </div>
+          `).join('') : '<div class="lesson-row text-xs text-charcoal/50 text-center py-4">No lessons yet</div>'}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ===== Module Modal =====
+  window.openModuleModal = (m = null) => {
+    document.getElementById('moduleModal').classList.remove('hidden');
+    document.getElementById('moduleStatus').classList.add('hidden');
+    if (m) {
+      document.getElementById('moduleModalTitle').textContent = 'Edit Module';
+      document.getElementById('moduleId').value = m.id;
+      document.getElementById('moduleTitle').value = m.title || '';
+      document.getElementById('moduleOrder').value = m.sort_order || 0;
+    } else {
+      document.getElementById('moduleModalTitle').textContent = 'New Module';
+      document.getElementById('moduleForm').reset();
+      document.getElementById('moduleId').value = '';
+      document.getElementById('moduleOrder').value = allModules.length;
+    }
+  };
+
+  document.getElementById('moduleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('moduleBtn');
+    const status = document.getElementById('moduleStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const id = document.getElementById('moduleId').value;
+    const payload = {
+      course_id: currentCourse,
+      title: document.getElementById('moduleTitle').value.trim(),
+      sort_order: Number(document.getElementById('moduleOrder').value) || 0
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await db.from('modules').update(payload).eq('id', id));
+    } else {
+      ({ error } = await db.from('modules').insert(payload));
+    }
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Save Module';
+      return;
+    }
+
+    status.textContent = '✓ Saved!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    setTimeout(() => { closeModuleModal(); loadModules(currentCourse); }, 800);
+  });
+
+  window.deleteModule = async (id) => {
+    if (!confirm('Delete this module and ALL its lessons?')) return;
+    await db.from('modules').delete().eq('id', id);
+    loadModules(currentCourse);
+  };
+
+  // ===== Lesson Modal =====
+  window.openLessonModal = (moduleId, l = null) => {
+    document.getElementById('lessonModal').classList.remove('hidden');
+    document.getElementById('lessonStatus').classList.add('hidden');
+    document.getElementById('lessonModuleId').value = moduleId;
+    if (l) {
+      document.getElementById('lessonModalTitle').textContent = 'Edit Lesson';
+      document.getElementById('lessonId').value = l.id;
+      document.getElementById('lessonTitle').value = l.title || '';
+      document.getElementById('lessonVideo').value = l.video_url || '';
+      document.getElementById('lessonPdf').value = l.pdf_url || '';
+      document.getElementById('lessonDuration').value = l.duration_min || 10;
+      document.getElementById('lessonOrder').value = l.sort_order || 0;
+    } else {
+      document.getElementById('lessonModalTitle').textContent = 'New Lesson';
+      document.getElementById('lessonForm').reset();
+      document.getElementById('lessonId').value = '';
+      document.getElementById('lessonDuration').value = 10;
+      const mod = allModules.find(m => m.id === moduleId);
+      document.getElementById('lessonOrder').value = mod ? (mod.lessons || []).length : 0;
+    }
+  };
+
+  document.getElementById('lessonForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('lessonBtn');
+    const status = document.getElementById('lessonStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const id = document.getElementById('lessonId').value;
+    const payload = {
+      module_id: document.getElementById('lessonModuleId').value,
+      title: document.getElementById('lessonTitle').value.trim(),
+      video_url: document.getElementById('lessonVideo').value.trim() || null,
+      pdf_url: document.getElementById('lessonPdf').value.trim() || null,
+      duration_min: Number(document.getElementById('lessonDuration').value) || 10,
+      sort_order: Number(document.getElementById('lessonOrder').value) || 0
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await db.from('lessons').update(payload).eq('id', id));
+    } else {
+      ({ error } = await db.from('lessons').insert(payload));
+    }
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Save Lesson';
+      return;
+    }
+
+    // Notify enrolled students
+    if (!id && window.Notif) {
+      const { data: enrolled } = await db.from('enrollments').select('student_id').eq('course_id', currentCourse).eq('status', 'active');
+      const ids = (enrolled || []).map(x => x.student_id).filter(Boolean);
+      for (const sid of ids) {
+        await Notif.send(sid, 'New Lesson Added 📚', payload.title, 'info', '/student/lessons.html?course=' + currentCourse).catch(() => {});
+      }
+    }
+
+    status.textContent = '✓ Saved!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+    setTimeout(() => { closeLessonModal(); loadModules(currentCourse); }, 800);
+  });
+
+  window.deleteLesson = async (id) => {
+    if (!confirm('Delete this lesson?')) return;
+    await db.from('lessons').delete().eq('id', id);
+    loadModules(currentCourse);
+  };
+
+  // Pre-select course from URL
+  const params = new URLSearchParams(window.location.search);
+  const urlCourseId = params.get('course');
+  if (urlCourseId) {
+    document.getElementById('courseSelect').value = urlCourseId;
+    currentCourse = urlCourseId;
+    loadModules(urlCourseId);
+  }
+})();
+</script>
+
+</body>
+</html>
