@@ -192,6 +192,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   // Capture plan from URL
   const urlParams = new URLSearchParams(window.location.search);
   const selectedPlanId = urlParams.get('plan');
+  const referralCode = urlParams.get('ref');
   
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
@@ -265,6 +266,9 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   // Save plan for payment page
   if (selectedPlanId) {
     localStorage.setItem('selectedPlanId', selectedPlanId);
+  }
+  if (referralCode) {
+    localStorage.setItem('referralCode', referralCode);
   }
 
   status.className = 'text-sm text-center text-green-600';
