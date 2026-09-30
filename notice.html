@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notice | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.islamic-pattern{background-image:radial-gradient(circle at 20% 30%,rgba(212,175,55,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(10,54,34,0.05) 0%,transparent 50%)}
+.btn-primary{background:#0A3622;color:white}
+.gold-divider{height:3px;width:60px;background:linear-gradient(90deg,#D4AF37,#E8C766);border-radius:2px}
+.whatsapp-float{position:fixed;bottom:24px;right:24px;z-index:999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <img src="assets/images/logo.png" alt="Logo" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+      <div class="hidden sm:block">
+        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
+        <div class="text-xs text-primary/70">Learning Center</div>
+      </div>
+    </a>
+    <a href="index.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">← Home</a>
+  </div>
+</header>
+
+<div id="loading" class="min-h-[60vh] flex items-center justify-center">
+  <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary"></div>
+</div>
+
+<div id="notFound" class="hidden min-h-[60vh] flex items-center justify-center px-4">
+  <div class="text-center">
+    <h2 class="text-2xl font-bold text-primary mb-4">Notice Not Found</h2>
+    <a href="index.html" class="btn-primary inline-block px-6 py-3 rounded-full font-semibold">Go Home</a>
+  </div>
+</div>
+
+<main id="content" class="hidden max-w-3xl mx-auto px-4 py-12">
+  <a href="index.html" class="inline-flex items-center gap-2 text-primary/60 hover:text-secondary text-sm mb-4">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Back to Home
+  </a>
+
+  <div class="bg-white rounded-3xl p-8 md:p-10 border border-primary/5">
+    <span class="inline-block bg-secondary/20 text-primary text-xs font-bold px-3 py-1 rounded-full mb-4">ANNOUNCEMENT</span>
+    <h1 id="noticeTitle" class="text-3xl md:text-4xl font-bold text-primary mb-3"></h1>
+    <div class="gold-divider mb-5"></div>
+    <p id="noticeDate" class="text-xs text-charcoal/50 mb-6"></p>
+    <div id="noticeBody" class="text-charcoal/80 leading-relaxed whitespace-pre-line text-base"></div>
+  </div>
+
+  <div class="text-center mt-10">
+    <a href="free-assessment.html" class="btn-primary inline-block px-8 py-3.5 rounded-full font-semibold">Book Free Trial Class</a>
+  </div>
+</main>
+
+<footer class="bg-primary-dark text-white py-8">
+  <div class="max-w-7xl mx-auto px-4 text-center text-sm text-white/60">
+    <p>2026 Al-Arabiyah Learning Center. All rights reserved.</p>
+  </div>
+</footer>
+
+<a href="https://wa.me/8801737326555" target="_blank" class="whatsapp-float">
+  <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+</a>
+
+<script src="assets/js/site-loader.js"></script>
+<script>
+(async () => {
+  const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('notFound').classList.remove('hidden');
+    return;
+  }
+
+  const { data: notice } = await db.from('notices').select('*').eq('id', id).eq('is_published', true).maybeSingle();
+
+  document.getElementById('loading').classList.add('hidden');
+
+  if (!notice) {
+    document.getElementById('notFound').classList.remove('hidden');
+    return;
+  }
+
+  document.title = notice.title + ' | Al-Arabiyah Learning Center';
+  document.getElementById('noticeTitle').textContent = notice.title;
+  document.getElementById('noticeDate').textContent = new Date(notice.created_at).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  document.getElementById('noticeBody').textContent = notice.body || '';
+  document.getElementById('content').classList.remove('hidden');
+})();
+</script>
+</body>
+</html>

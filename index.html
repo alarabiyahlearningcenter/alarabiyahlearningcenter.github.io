@@ -292,14 +292,15 @@ async function loadNotices() {
   document.getElementById('noticesGrid').innerHTML = data.map(n => {
     const date = new Date(n.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     return \`
-      <div class="bg-white rounded-2xl p-5 border border-secondary/30">
+      <a href="notice.html?id=\${n.id}" class="block bg-white rounded-2xl p-5 border border-secondary/30 hover:shadow-lg transition">
         <div class="flex items-center gap-2 mb-2">
           <span class="w-2 h-2 bg-secondary rounded-full"></span>
           <p class="text-xs text-charcoal/60">\${date}</p>
         </div>
         <h3 class="font-bold text-primary mb-2">\${n.title}</h3>
         <p class="text-xs text-charcoal/70 line-clamp-3">\${n.body || ''}</p>
-      </div>
+        <p class="text-xs text-secondary font-semibold mt-3">Read More →</p>
+      </a>
     \`;
   }).join('');
 }
