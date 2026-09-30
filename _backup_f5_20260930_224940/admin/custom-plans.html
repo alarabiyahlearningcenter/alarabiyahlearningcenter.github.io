@@ -196,35 +196,6 @@ input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3p
     }).join('');
   }
 
-  // ==== FEATURE5_MATERIALIZE ====
-  async function materializeCustomPlan(reqId, payload) {
-    const { data: existing } = await db.from('custom_plan_requests')
-      .select('materialized_plan_id, student_name, course_interest, duration_min, classes_per_week')
-      .eq('id', reqId).single();
-    if (existing?.materialized_plan_id) return existing.materialized_plan_id;
-
-    const classesPerMonth = Math.max(1, Math.round((Number(existing?.classes_per_week) || 2) * 4.33));
-    const durationMin = Number(existing?.duration_min) || 60;
-
-    const { data: plan, error: pErr } = await db.from('pricing_plans').insert({
-      name: 'Custom Plan — ' + (existing?.student_name || 'Student'),
-      price_bdt: Number(payload.quoted_price_bdt) || 0,
-      price_usd: payload.quoted_price_usd || null,
-      classes_per_month: classesPerMonth,
-      duration_min: durationMin,
-      is_active: false,
-      is_custom: true,
-      custom_request_id: reqId
-    }).select('id').single();
-
-    if (pErr) { console.error('[FEATURE5] materialize:', pErr); return null; }
-
-    await db.from('custom_plan_requests')
-      .update({ materialized_plan_id: plan.id }).eq('id', reqId);
-    return plan.id;
-  }
-  // ==== END FEATURE5_MATERIALIZE ====
-
   window.rejectRequest = async (id) => {
     if (!confirm('Reject this custom plan request?')) return;
     const { error } = await db.from('custom_plan_requests').update({ 
@@ -256,12 +227,6 @@ input:focus,textarea:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3p
     const { data: req } = await db.from('custom_plan_requests').select('student_id, student_name').eq('id', id).single();
 
     const { error } = await db.from('custom_plan_requests').update(payload).eq('id', id);
-
-    // FEATURE5: Materialize
-    if (!error) {
-      const pid = await materializeCustomPlan(id, payload);
-      if (!pid) console.warn('[FEATURE5] materialize failed', id);
-    }
 
     if (error) {
       status.textContent = '❌ ' + error.message;

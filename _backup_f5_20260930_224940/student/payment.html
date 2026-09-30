@@ -183,13 +183,6 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   document.getElementById('userEmail').textContent = user.email;
   document.getElementById('avatar').textContent = fullName.charAt(0).toUpperCase();
 
-  // ==== FEATURE5_PAYMENT ====
-  const _urlParams = new URLSearchParams(location.search);
-  const _planId = _urlParams.get('plan_id') || null;
-  const _customReq = _urlParams.get('custom') || null;
-  console.log('[FEATURE5] plan_id:', _planId, '| custom:', _customReq);
-  // ==== END FEATURE5_PAYMENT ====
-
   // Load pending payments
   const { data: payments } = await db.from('payments').select('*').eq('student_id', user.id).order('created_at', { ascending: false });
   const { data: courses } = await db.from('courses').select('id, title, price_bdt').eq('is_active', true);
@@ -437,9 +430,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       amount: Number(document.getElementById('amount').value),
       method: document.getElementById('method').value,
       transaction_id: document.getElementById('transactionId').value.trim().toUpperCase(),
-      status: 'pending',
-      plan_id: _planId,
-      custom_request_id: _customReq
+      status: 'pending'
     };
 
     const { error } = await db.from('payments').insert(payload);

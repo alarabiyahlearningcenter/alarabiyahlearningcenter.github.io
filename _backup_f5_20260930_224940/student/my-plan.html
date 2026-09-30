@@ -431,18 +431,6 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     status.className = 'text-sm text-center text-primary mt-3';
     status.classList.remove('hidden');
 
-    // FEATURE5_ACCEPT
-    const { data: reqData } = await db.from('custom_plan_requests')
-      .select('id, materialized_plan_id')
-      .eq('id', quoteId).single();
-
-    if (!reqData?.materialized_plan_id) {
-      status.textContent = '⏳ Plan not ready yet. Please wait for admin to finalize.';
-      status.className = 'text-sm text-center text-amber-600 mt-3';
-      status.classList.remove('hidden');
-      return;
-    }
-
     const { error } = await db.from('custom_plan_requests').update({
       status: 'accepted',
       processed_at: new Date().toISOString()
@@ -453,14 +441,6 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       status.className = 'text-sm text-center text-red-600 mt-3';
       return;
     }
-
-    const { error: enrErr } = await db.from('enrollments').insert({
-      student_id: session.user.id,
-      plan_id: reqData.materialized_plan_id,
-      status: 'active',
-      started_at: new Date().toISOString()
-    });
-    if (enrErr) console.warn('[FEATURE5] enrollment:', enrErr);
 
     // Notify admins
     if (window.Notif) {
@@ -476,7 +456,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     status.className = 'text-sm text-center text-green-600 mt-3';
 
     setTimeout(() => {
-      window.location.href = 'payment.html?custom=' + quoteId + '&plan_id=' + reqData.materialized_plan_id;
+      window.location.href = 'payment.html?custom=' + quoteId;
     }, 1500);
   };
 
