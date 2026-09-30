@@ -271,6 +271,17 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 
       if (error) { alert('Error saving result: ' + error.message); return; }
 
+      // If passed and quiz has a lesson_id, mark that lesson complete
+      if (passed && quiz.lesson_id && quiz.course_id) {
+        await db.from('progress').upsert({
+          student_id: user.id,
+          lesson_id: quiz.lesson_id,
+          course_id: quiz.course_id,
+          is_completed: true,
+          completed_at: new Date().toISOString()
+        }, { onConflict: 'student_id,lesson_id' }).catch(() => {});
+      }
+
       // Notify student if passed
       if (passed && window.Notif) {
         await Notif.send(user.id, 'Quiz Passed! 🎉', 'You scored ' + percentage + '% on "' + quiz.title + '"', 'success', '/student/quizzes.html').catch(() => {});
