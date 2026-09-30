@@ -1,0 +1,361 @@
+]633;E;echo "=== FEATURE 5 DIAGNOSTIC DUMP ===";49566222-a4d1-4c2e-8db1-523f6f9b2766]633;C=== FEATURE 5 DIAGNOSTIC DUMP ===
+Generated: Wed Sep 30 22:34:54 UTC 2026
+
+########## FILE: student/my-plan.html ##########
+--- Lines 280-500 (accept flow) ---
+        </div>
+        <h3 class="text-xl font-bold text-primary mb-2">No Active Plan</h3>
+        <p class="text-charcoal/60 text-sm mb-6 max-w-md mx-auto">You don't have an active subscription yet. Choose a plan to start your Qur'an learning journey.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="../pricing.html" class="btn-primary px-6 py-3 rounded-full font-semibold">View Plans</a>
+          <a href="../free-assessment.html" class="border-2 border-primary text-primary px-6 py-3 rounded-full font-semibold hover:bg-primary hover:text-white transition">Free Trial</a>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Load plan details
+  let plan = null;
+  if (enrollment.plan_id) {
+    const { data: p } = await db.from('pricing_plans').select('*').eq('id', enrollment.plan_id).single();
+    plan = p;
+  }
+  const { data: course } = enrollment.course_id
+    ? await db.from('courses').select('title').eq('id', enrollment.course_id).single()
+    : { data: null };
+
+  const startDate = new Date(enrollment.started_at);
+  const nextBilling = new Date(startDate);
+  nextBilling.setMonth(nextBilling.getMonth() + 1);
+  const daysLeft = Math.max(0, Math.ceil((nextBilling - new Date()) / (1000 * 60 * 60 * 24)));
+
+  const planName = plan?.name || 'Custom Plan';
+  const duration = plan?.duration_min || '?';
+  const classes = plan?.classes_per_month || 12;
+  const priceBdt = plan?.price_bdt || 0;
+  const priceUsd = plan?.price_usd || 0;
+
+  content.innerHTML = quoteHtml + `
+    <div class="max-w-3xl space-y-6">
+
+      <!-- Active Plan Card -->
+      <div class="plan-active rounded-3xl p-6 md:p-8 relative overflow-hidden">
+        <div class="flex items-start justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <span class="badge" style="background:#D4AF37;color:#0A3622;">ACTIVE</span>
+            <h2 class="text-3xl font-bold mt-3" style="color:#D4AF37;">${planName}</h2>
+            <p class="text-white/70 text-sm mt-1">${course?.title || 'General Qur\'an Learning'}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-3xl font-bold" style="color:#D4AF37;">৳${Number(priceBdt).toLocaleString()}</p>
+            ${priceUsd ? `<p class="text-white/60 text-sm">$${priceUsd}</p>` : ''}
+            <p class="text-white/60 text-xs mt-1">per month</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 pt-6 border-t border-white/20">
+          <div>
+            <p class="text-white/60 text-xs mb-1">Duration</p>
+            <p class="text-white font-bold">${duration} min</p>
+          </div>
+          <div>
+            <p class="text-white/60 text-xs mb-1">Classes / Month</p>
+            <p class="text-white font-bold">${classes}</p>
+          </div>
+          <div>
+            <p class="text-white/60 text-xs mb-1">Started</p>
+            <p class="text-white font-bold">${startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing Status -->
+      <div class="bg-white rounded-2xl p-6 border border-primary/5">
+        <h3 class="font-bold text-primary mb-4">Billing Status</h3>
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm text-charcoal/70">Next billing date</p>
+          <p class="text-sm font-semibold text-primary">${nextBilling.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+        </div>
+        <div class="w-full bg-cream rounded-full h-2 mb-2">
+          <div class="h-2 rounded-full transition-all ${daysLeft < 7 ? 'bg-red-500' : 'bg-secondary'}" style="width:${Math.min(100, Math.max(0, (30 - daysLeft) / 30 * 100))}%"></div>
+        </div>
+        <p class="text-xs text-charcoal/60">${daysLeft > 0 ? `${daysLeft} days remaining in current cycle` : 'Renewal due today'}</p>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <a href="book-class.html" class="bg-white p-4 rounded-2xl text-center border border-primary/5 card-hover">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <p class="text-xs font-semibold text-primary">Book Class</p>
+        </a>
+        <a href="live-class.html" class="bg-white p-4 rounded-2xl text-center border border-primary/5 card-hover">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <p class="text-xs font-semibold text-primary">Live Class</p>
+        </a>
+        <a href="payment.html" class="bg-white p-4 rounded-2xl text-center border border-primary/5 card-hover">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          <p class="text-xs font-semibold text-primary">Pay Now</p>
+        </a>
+        <a href="../pricing.html" class="bg-white p-4 rounded-2xl text-center border border-primary/5 card-hover">
+          <svg class="w-6 h-6 text-primary mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <p class="text-xs font-semibold text-primary">Upgrade</p>
+        </a>
+      </div>
+
+      <!-- Custom Plan Requests History -->
+      <div id="myCustomRequests" class="bg-white rounded-2xl p-6 border border-primary/5 hidden">
+        <h3 class="font-bold text-primary mb-4">My Custom Plan Requests</h3>
+        <div id="customRequestsList" class="space-y-3"></div>
+      </div>
+
+      <!-- Change Plan -->
+      <div class="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 text-white">
+        <h3 class="font-bold mb-2">Want to change your plan?</h3>
+        <p class="text-white/70 text-sm mb-4">Upgrade to a longer duration, add more classes, or switch to a custom plan anytime.</p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a href="../pricing.html" class="bg-secondary text-primary px-6 py-2.5 rounded-full font-semibold text-sm text-center">View All Plans</a>
+          <a href="../pricing.html#custom" class="border-2 border-white text-white px-6 py-2.5 rounded-full font-semibold text-sm text-center hover:bg-white hover:text-primary transition">Request Custom Plan</a>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Load custom plan request history
+  const { data: myRequests } = await db.from('custom_plan_requests')
+    .select('*')
+    .eq('student_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (myRequests && myRequests.length > 0) {
+    document.getElementById('myCustomRequests').classList.remove('hidden');
+    document.getElementById('customRequestsList').innerHTML = myRequests.map(r => {
+      const statusColor = r.status === 'pending' ? 'background:#fef3c7;color:#92400e' :
+                        r.status === 'quoted' ? 'background:#dbeafe;color:#1e40af' :
+                        r.status === 'accepted' ? 'background:#dcfce7;color:#166534' :
+                        'background:#fee2e2;color:#991b1b';
+      const date = new Date(r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+        <div class="bg-cream rounded-xl p-4 border border-primary/5">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-semibold text-primary">${r.duration_min} min × ${r.classes_per_week}/week</p>
+            <span class="badge" style="${statusColor}">${r.status.toUpperCase()}</span>
+          </div>
+          <p class="text-xs text-charcoal/60">${r.course_interest || 'General'} • Requested ${date}</p>
+          ${r.quoted_price_bdt ? `<p class="text-sm font-bold text-primary mt-2">Quote: ৳${r.quoted_price_bdt}${r.quoted_price_usd ? ' / $' + r.quoted_price_usd : ''}</p>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== Custom Quote Accept / Reject =====
+  window.acceptQuote = async (quoteId, price) => {
+    const status = document.getElementById('quoteStatus');
+    if (!confirm('Accept this custom plan and proceed to enrollment?')) return;
+
+    status.textContent = 'Processing...';
+    status.className = 'text-sm text-center text-primary mt-3';
+    status.classList.remove('hidden');
+
+    const { error } = await db.from('custom_plan_requests').update({
+      status: 'accepted',
+      processed_at: new Date().toISOString()
+    }).eq('id', quoteId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+      return;
+    }
+
+    // Notify admins
+    if (window.Notif) {
+      window.Notif.toAdmins(
+        'Custom Plan Accepted 🎉',
+        fullName + ' accepted the custom quote of ৳' + price + '. Please send payment link.',
+        'success',
+        '/admin/custom-plans.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = '✓ Accepted! Redirecting to payment...';
+    status.className = 'text-sm text-center text-green-600 mt-3';
+
+    setTimeout(() => {
+      window.location.href = 'payment.html?custom=' + quoteId;
+    }, 1500);
+  };
+
+  window.rejectQuote = async (quoteId) => {
+    if (!confirm('Decline this custom quote? You can request a new one anytime.')) return;
+    const status = document.getElementById('quoteStatus');
+
+    const { error } = await db.from('custom_plan_requests').update({
+      status: 'rejected',
+      processed_at: new Date().toISOString()
+    }).eq('id', quoteId);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600 mt-3';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    // Notify admins
+    if (window.Notif) {
+      window.Notif.toAdmins(
+        'Custom Plan Declined',
+        fullName + ' declined the custom quote.',
+        'warning',
+        '/admin/custom-plans.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = 'Quote declined.';
+    status.className = 'text-sm text-center text-charcoal/60 mt-3';
+    setTimeout(() => location.reload(), 1200);
+  };
+
+})();
+</script>
+
+</body>
+</html>
+
+--- grep markers ---
+201:    .from('custom_plan_requests')
+211:    .from('enrollments')
+266:            <button onclick="acceptQuote('${pendingQuote.id}', ${pendingQuote.quoted_price_bdt})" class="flex-1 btn-primary py-3 rounded-xl font-semibold">✓ Accept & Enroll</button>
+399:  const { data: myRequests } = await db.from('custom_plan_requests')
+409:                        r.status === 'accepted' ? 'background:#dcfce7;color:#166534' :
+425:  // ===== Custom Quote Accept / Reject =====
+426:  window.acceptQuote = async (quoteId, price) => {
+428:    if (!confirm('Accept this custom plan and proceed to enrollment?')) return;
+434:    const { error } = await db.from('custom_plan_requests').update({
+435:      status: 'accepted',
+448:        'Custom Plan Accepted 🎉',
+449:        fullName + ' accepted the custom quote of ৳' + price + '. Please send payment link.',
+455:    status.textContent = '✓ Accepted! Redirecting to payment...';
+467:    const { error } = await db.from('custom_plan_requests').update({
+
+########## FILE: student/payment.html ##########
+--- grep markers ---
+140:      <p class="text-charcoal/60 text-sm">Make payments and view history</p>
+186:  // Load pending payments
+187:  const { data: payments } = await db.from('payments').select('*').eq('student_id', user.id).order('created_at', { ascending: false });
+192:  const pendingCount = (payments || []).filter(p => p.status === 'pending').length;
+193:  const verifiedCount = (payments || []).filter(p => p.status === 'verified').length;
+200:        <p class="text-xl font-bold text-primary">৳${(payments || []).filter(p => p.status === 'verified').reduce((sum, p) => sum + Number(p.amount || 0), 0)}</p>
+284:        ${(!payments || payments.length === 0) ? '<p class="text-charcoal/60 text-sm text-center py-6">No payments yet</p>' : payments.map(p => {
+417:      const { error: upErr } = await db.storage.from('payments').upload(path, screenshotFile);
+419:        const { data: urlData } = db.storage.from('payments').getPublicUrl(path);
+436:    const { error } = await db.from('payments').insert(payload);
+443:        '/admin/payments.html'
+458:      await db.from('coupon_usages').insert({
+
+--- Lines around payment insert ---
+187:  const { data: payments } = await db.from('payments').select('*').eq('student_id', user.id).order('created_at', { ascending: false });
+417:      const { error: upErr } = await db.storage.from('payments').upload(path, screenshotFile);
+419:        const { data: urlData } = db.storage.from('payments').getPublicUrl(path);
+436:    const { error } = await db.from('payments').insert(payload);
+
+########## FILE: admin/custom-plans.html ##########
+--- grep markers ---
+120:    document.getElementById('quoteBdt').value = req.quoted_price_bdt || '';
+121:    document.getElementById('quoteUsd').value = req.quoted_price_usd || '';
+130:      quoted: 'background:#dbeafe;color:#1e40af',
+156:              ${r.quoted_price_bdt ? `<p class="font-bold text-primary text-lg">৳${r.quoted_price_bdt}</p><p class="text-xs text-charcoal/50">${r.quoted_price_usd ? '$' + r.quoted_price_usd : ''}</p>` : ''}
+176:            ${r.status === 'quoted' ? `
+186:            ${r.status === 'rejected' && r.quoted_price_bdt ? `
+201:    const { error } = await db.from('custom_plan_requests').update({ 
+219:      quoted_price_bdt: Number(document.getElementById('quoteBdt').value),
+220:      quoted_price_usd: document.getElementById('quoteUsd').value ? Number(document.getElementById('quoteUsd').value) : null,
+222:      status: 'quoted',
+227:    const { data: req } = await db.from('custom_plan_requests').select('student_id, student_name').eq('id', id).single();
+229:    const { error } = await db.from('custom_plan_requests').update(payload).eq('id', id);
+245:        'We have prepared a custom plan for you: ৳' + payload.quoted_price_bdt + '. Check details and confirm.',
+265:    const { data } = await db.from('custom_plan_requests').select('*').order('created_at', { ascending: false });
+269:    document.getElementById('statQuoted').textContent = allRequests.filter(r => r.status === 'quoted').length;
+
+--- Lines 190-260 (quote submit) ---
+              </div>
+            ` : ''}
+            <a href="https://wa.me/${(r.phone || '').replace(/[^0-9]/g, '')}" target="_blank" class="text-xs bg-green-50 text-green-700 px-4 py-2 rounded-full font-semibold hover:bg-green-100">WhatsApp</a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.rejectRequest = async (id) => {
+    if (!confirm('Reject this custom plan request?')) return;
+    const { error } = await db.from('custom_plan_requests').update({ 
+      status: 'rejected',
+      processed_at: new Date().toISOString(),
+      processed_by: ctx.session.user.id
+    }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadRequests();
+  };
+
+  document.getElementById('quoteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('quoteSubmitBtn');
+    const status = document.getElementById('quoteStatus');
+    const id = document.getElementById('requestId').value;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const payload = {
+      quoted_price_bdt: Number(document.getElementById('quoteBdt').value),
+      quoted_price_usd: document.getElementById('quoteUsd').value ? Number(document.getElementById('quoteUsd').value) : null,
+      admin_note: document.getElementById('adminNote').value.trim(),
+      status: 'quoted',
+      processed_at: new Date().toISOString(),
+      processed_by: ctx.session.user.id
+    };
+
+    const { data: req } = await db.from('custom_plan_requests').select('student_id, student_name').eq('id', id).single();
+
+    const { error } = await db.from('custom_plan_requests').update(payload).eq('id', id);
+
+    if (error) {
+      status.textContent = '❌ ' + error.message;
+      status.className = 'text-sm text-center text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Send Quote';
+      return;
+    }
+
+    // Notify student if logged in
+    if (req?.student_id && window.Notif) {
+      await Notif.send(
+        req.student_id,
+        'Custom Quote Received 💰',
+        'We have prepared a custom plan for you: ৳' + payload.quoted_price_bdt + '. Check details and confirm.',
+        'success',
+        '/student/payment.html'
+      ).catch(() => {});
+    }
+
+    status.textContent = '✓ Quote sent!';
+    status.className = 'text-sm text-center text-green-600';
+    status.classList.remove('hidden');
+
+    setTimeout(() => {
+      closeQuoteModal();
+      btn.disabled = false;
+      btn.textContent = 'Send Quote';
+      loadRequests();
+    }, 1200);
+
+########## SQL SCHEMA (run separately) ##########
+custom_plan_requests columns:
+  → Supabase SQL Editor-এ চালান:
+    SELECT column_name, data_type FROM information_schema.columns
+    WHERE table_name='custom_plan_requests' ORDER BY ordinal_position;
+    SELECT column_name, data_type FROM information_schema.columns
+    WHERE table_name='payments' ORDER BY ordinal_position;
+    SELECT * FROM custom_plan_requests LIMIT 2;
