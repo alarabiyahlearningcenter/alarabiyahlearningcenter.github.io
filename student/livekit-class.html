@@ -7226,3 +7226,45 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
 // ============================================
 window.openWhiteboard = window.openWhiteboard || openWhiteboard;
 </script>
+
+<script>
+// ============================================
+// FORCE REBIND WHITEBOARD BUTTON
+// ============================================
+(function fixWhiteboardButton() {
+  function bind() {
+    const oldBtn = document.getElementById('whiteboardBtn');
+    if (!oldBtn) {
+      setTimeout(bind, 500);
+      return;
+    }
+    // Clone করলে সব পুরনো listener মুছে যায়
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+    
+    // নতুন listener
+    newBtn.addEventListener('click', () => {
+      if (typeof window.whiteboardVisible !== 'undefined' && window.whiteboardVisible) {
+        closeWhiteboard();
+      } else {
+        openWhiteboard();
+      }
+    });
+    
+    // aria for accessibility
+    newBtn.setAttribute('aria-label', 'Open whiteboard');
+    console.log('✅ Whiteboard button rebound');
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(bind, 1000));
+  } else {
+    setTimeout(bind, 1000);
+  }
+})();
+
+// ============================================
+// Also fix the modal openWhiteboard reference (line 845)
+// ============================================
+window.openWhiteboard = window.openWhiteboard || openWhiteboard;
+</script>
