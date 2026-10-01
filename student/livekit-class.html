@@ -7484,3 +7484,243 @@ if (document.readyState === 'loading') {
   setTimeout(forceGridFix, 800);
 }
 </script>
+
+<script>
+// ============================================
+// UNIVERSAL FIX — WHITEBOARD + SCREEN SHARE
+// ============================================
+(function() {
+  'use strict';
+  
+  function getRoom() {
+    try { if (typeof room !== 'undefined' && room) return room; } catch(e) {}
+    if (window.room) return window.room;
+    return null;
+  }
+  
+  // ---------- WHITEBOARD ----------
+  window.openWhiteboard = function() {
+    document.querySelectorAll('[id$="Modal"]').forEach(function(m){ m.classList.add('hidden'); });
+    var old = document.getElementById('whiteboardOverlay');
+    if (old) old.remove();
+    
+    var wb = document.createElement('div');
+    wb.id = 'whiteboardOverlay';
+    wb.style.cssText = 'position:fixed;inset:0;background:#051008;z-index:99999;display:flex;flex-direction:column';
+    wb.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(10,31,20,.98);border-bottom:1px solid rgba(212,175,55,.2);flex-wrap:wrap;gap:6px">'
+      + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+      + '<button data-c="#D4AF37" class="wbc" style="width:26px;height:26px;border-radius:50%;background:#D4AF37;border:2px solid #fff;cursor:pointer"></button>'
+      + '<button data-c="#ffffff" class="wbc" style="width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid rgba(255,255,255,.3);cursor:pointer"></button>'
+      + '<button data-c="#22c55e" class="wbc" style="width:26px;height:26px;border-radius:50%;background:#22c55e;border:2px solid rgba(255,255,255,.3);cursor:pointer"></button>'
+      + '<button data-c="#ef4444" class="wbc" style="width:26px;height:26px;border-radius:50%;background:#ef4444;border:2px solid rgba(255,255,255,.3);cursor:pointer"></button>'
+      + '<button data-c="#3b82f6" class="wbc" style="width:26px;height:26px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,.3);cursor:pointer"></button>'
+      + '<span style="width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 4px"></span>'
+      + '<button id="wbErase" style="padding:4px 10px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer;font-size:12px">🧽 Eraser</button>'
+      + '<button id="wbClear" style="padding:4px 10px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer;font-size:12px">Clear</button>'
+      + '<button id="wbSave" style="padding:4px 10px;background:rgba(212,175,55,.2);color:#D4AF37;border:1px solid #D4AF37;border-radius:6px;cursor:pointer;font-size:12px">Save</button>'
+      + '</div>'
+      + '<button id="wbClose" style="padding:6px 14px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✕ Close</button>'
+      + '</div>'
+      + '<canvas id="whiteboardCanvas" style="flex:1;width:100%;display:block;cursor:crosshair;background:#062014"></canvas>';
+    document.body.appendChild(wb);
+    
+    var canvas = document.getElementById('whiteboardCanvas');
+    var ctx = canvas.getContext('2d');
+    var drawing = false, erasing = false, color = '#D4AF37', size = 4;
+    
+    function resize() {
+      var r = canvas.getBoundingClientRect();
+      try {
+        var img = ctx.getImageData(0, 0, canvas.width || 1, canvas.height || 1);
+        canvas.width = r.width; canvas.height = r.height;
+        ctx.putImageData(img, 0, 0);
+      } catch(e) { canvas.width = r.width; canvas.height = r.height; }
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    
+    function pos(e) {
+      var r = canvas.getBoundingClientRect();
+      var t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX - r.left, y: t.clientY - r.top };
+    }
+    function start(e) { e.preventDefault(); drawing = true; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function move(e) { if (!drawing) return; e.preventDefault(); var p = pos(e); ctx.strokeStyle = erasing ? '#062014' : color; ctx.lineWidth = erasing ? size*5 : size; ctx.lineTo(p.x, p.y); ctx.stroke(); }
+    function end() { drawing = false; }
+    
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+    
+    wb.querySelectorAll('.wbc').forEach(function(b) {
+      b.addEventListener('click', function() {
+        color = b.getAttribute('data-c');
+        erasing = false;
+        var ebtn = document.getElementById('wbErase');
+        if (ebtn) ebtn.style.background = 'rgba(255,255,255,.1)';
+      });
+    });
+    document.getElementById('wbErase').addEventListener('click', function() {
+      erasing = !erasing;
+      this.style.background = erasing ? 'rgba(212,175,55,.3)' : 'rgba(255,255,255,.1)';
+    });
+    document.getElementById('wbClear').addEventListener('click', function() { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+    document.getElementById('wbSave').addEventListener('click', function() {
+      var a = document.createElement('a');
+      a.download = 'whiteboard-' + Date.now() + '.png';
+      a.href = canvas.toDataURL();
+      a.click();
+    });
+    document.getElementById('wbClose').addEventListener('click', function() {
+      wb.remove(); window.removeEventListener('resize', resize);
+    });
+    
+    if (typeof showToast === 'function') showToast('✏️ Whiteboard opened');
+  };
+  
+  // ---------- SCREEN SHARE ----------
+  window.startScreenShare = function(type) {
+    document.querySelectorAll('[id$="Modal"]').forEach(function(m){ m.classList.add('hidden'); });
+    
+    if (type === 'whiteboard') { window.openWhiteboard(); return; }
+    
+    var r = getRoom();
+    if (!r) {
+      alert('Not connected to room yet');
+      return;
+    }
+    
+    var qEl = document.getElementById('shareQualitySelect');
+    var quality = qEl ? parseInt(qEl.value, 10) : 720;
+    var audioEl = document.getElementById('shareAudioCheck');
+    var withAudio = audioEl ? audioEl.checked : true;
+    
+    var resMap = {
+      1080: { width: 1920, height: 1080 },
+      720:  { width: 1280, height: 720 },
+      480:  { width: 854,  height: 480 }
+    };
+    var res = resMap[quality] || resMap[720];
+    
+    if (typeof showToast === 'function') showToast('🖥️ Starting screen share...');
+    
+    r.localParticipant.setScreenShareEnabled(true, {
+      audio: withAudio,
+      video: { resolution: { width: res.width, height: res.height, frameRate: 30 } }
+    }).then(function() {
+      window.isScreenSharing = true;
+      var btn = document.getElementById('screenBtn');
+      if (btn) btn.classList.add('active');
+      if (typeof showToast === 'function') showToast('🖥️ Screen sharing started');
+    }).catch(function(err) {
+      console.error('Screen share error:', err);
+      if (typeof showToast === 'function') showToast('❌ ' + (err.message || 'Cancelled'));
+    });
+  };
+  
+  window.confirmScreenShare = function() { window.startScreenShare('screen'); };
+  
+  window.stopScreenShare = function() {
+    var r = getRoom();
+    if (!r) return;
+    r.localParticipant.setScreenShareEnabled(false).then(function() {
+      window.isScreenSharing = false;
+      var btn = document.getElementById('screenBtn');
+      if (btn) btn.classList.remove('active');
+      var ssTile = document.querySelector('.video-tile.screen-sharing');
+      if (ssTile) ssTile.remove();
+      if (typeof updateGridLayout === 'function') updateGridLayout();
+      if (typeof showToast === 'function') showToast('🖥️ Screen sharing stopped');
+    }).catch(function(e){ console.error(e); });
+  };
+  
+  window.toggleWhiteboard = function() {
+    if (document.getElementById('whiteboardOverlay')) {
+      document.getElementById('whiteboardOverlay').remove();
+    } else {
+      window.openWhiteboard();
+    }
+  };
+  
+  // ---------- CAPTURE-PHASE INTERCEPTOR ----------
+  document.addEventListener('click', function(e) {
+    var el = e.target;
+    var depth = 0;
+    while (el && el !== document && depth < 10) {
+      if (el.getAttribute) {
+        var code = el.getAttribute('onclick') || '';
+        if (code.indexOf('openWhiteboard') !== -1) {
+          e.preventDefault(); e.stopImmediatePropagation();
+          window.openWhiteboard();
+          return false;
+        }
+        if (code.indexOf('confirmScreenShare') !== -1) {
+          e.preventDefault(); e.stopImmediatePropagation();
+          window.confirmScreenShare();
+          return false;
+        }
+        if (code.indexOf('stopScreenShare') !== -1) {
+          e.preventDefault(); e.stopImmediatePropagation();
+          window.stopScreenShare();
+          return false;
+        }
+        if (code.indexOf('startScreenShare') !== -1) {
+          e.preventDefault(); e.stopImmediatePropagation();
+          var m = code.match(/startScreenShare\s*\(\s*['"]([^'"]*)['"]/);
+          window.startScreenShare(m ? m[1] : 'screen');
+          return false;
+        }
+      }
+      el = el.parentElement;
+      depth++;
+    }
+  }, true);
+  
+  // ---------- DIRECT BINDING TO SCREEN SHARE MODAL ----------
+  function bindScreenModal() {
+    var modal = document.getElementById('screenShareModal');
+    if (!modal) { setTimeout(bindScreenModal, 1200); return; }
+    
+    var buttons = modal.querySelectorAll('button, [role="button"]');
+    buttons.forEach(function(btn) {
+      if (btn.dataset.__fixed) return;
+      var text = (btn.textContent || '').toLowerCase();
+      var action = null;
+      
+      if (text.indexOf('entire screen') !== -1) action = function(){ window.startScreenShare('screen'); };
+      else if (text.indexOf('app window') !== -1) action = function(){ window.startScreenShare('window'); };
+      else if (text.indexOf('browser tab') !== -1) action = function(){ window.startScreenShare('tab'); };
+      else if (text.indexOf('whiteboard') !== -1) action = function(){ window.openWhiteboard(); };
+      else if (text.indexOf('start sharing') !== -1) action = function(){ window.confirmScreenShare(); };
+      
+      if (action) {
+        btn.dataset.__fixed = '1';
+        btn.addEventListener('click', function(ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          action();
+        }, true);
+      }
+    });
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(bindScreenModal, 1500); });
+  } else {
+    setTimeout(bindScreenModal, 1500);
+  }
+  
+  // Re-bind when modal opens
+  var obs = new MutationObserver(function() {
+    var m = document.getElementById('screenShareModal');
+    if (m && !m.classList.contains('hidden')) bindScreenModal();
+  });
+  obs.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  
+  console.log('✅ Universal whiteboard + screen share fix loaded');
+})();
+</script>
