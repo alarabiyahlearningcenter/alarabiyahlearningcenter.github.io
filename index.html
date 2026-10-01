@@ -30,6 +30,17 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
 .gold-divider { height: 3px; width: 60px; background: linear-gradient(90deg, #D4AF37, #E8C766); border-radius: 2px; }
 .whatsapp-float { position: fixed; bottom: 24px; right: 24px; z-index: 999; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(37,211,102,0.4); }
 </style>
+<script>
+// EARLY MENU FIX — capture phase, crash-proof
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest && e.target.closest('#menuBtn');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  var menu = document.getElementById('mobileMenu');
+  if (menu) menu.classList.toggle('hidden');
+}, true);
+</script>
 </head>
 <body class="bg-cream text-charcoal">
 
