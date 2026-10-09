@@ -247,3 +247,25 @@ input:focus,select:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px 
 
 </body>
 </html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // পেজ লোড হওয়ার পর প্রতি ৫০০ মিলিসেকেন্ডে চেক করবে বাটন তৈরি হয়েছে কি না
+    const checkRole = setInterval(async () => {
+        const buttons = document.querySelectorAll('button[onclick^="openRoleModal"]');
+        if (buttons.length > 0) {
+            // বর্তমান লগইন করা ইউজারের তথ্য নিন
+            const { data: { user } } = await db.auth.getUser();
+            if (user) {
+                // ডেটাবেস থেকে ইউজারের রোল চেক করুন
+                const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
+                // যদি সুপার অ্যাডমিন না হন, তবে সব "Change Role" বাটন লুকিয়ে ফেলুন
+                if (profile && profile.role !== "super_admin") {
+                    buttons.forEach(btn => btn.style.display = "none");
+                }
+            }
+            clearInterval(checkRole); // কাজ শেষ হলে লুপ বন্ধ করুন
+        }
+    }, 500);
+});
+</script>
