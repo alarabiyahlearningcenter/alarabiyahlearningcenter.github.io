@@ -12,5 +12,5 @@
 // bypasses RLS and must never be exposed in a browser or public repo.
 // ============================================================
 
-window.ALC_SUPABASE_URL = "https://nptuftkvsfrbhekmwcob.supabase.co";
+window.ALC_SUPABASE_URL = "https://vgsgisyneymtszuslftb.supabase.co";
 window.ALC_SUPABASE_KEY = "sb_publishable_bJ_nHCskPuW4c_32wkOD7w_FEYsQVPS";
