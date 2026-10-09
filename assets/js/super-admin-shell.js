@@ -133,11 +133,15 @@ async function initSuperAdminShell() {
 
   const { data: profile } = await window.db.from('profiles').select('*').eq('id', session.user.id).single();
   if (!profile || profile.role !== 'super_admin') {
-    alert('Access Denied: Super Admin account required');
-    await window.db.auth.signOut();
-    window.location.href = '../auth/login.html';
-    return null;
-  }
+            if (profile && profile.role === 'admin') {
+                window.location.href = '../admin/dashboard.html';
+            } else {
+                alert('Access Denied: Super Admin account required');
+                await window.db.auth.signOut();
+                window.location.href = '../auth/login.html';
+            }
+            return null;
+        }
 
   const fullName = profile.full_name || session.user.email.split('@')[0];
   document.getElementById('userName').textContent = fullName;
