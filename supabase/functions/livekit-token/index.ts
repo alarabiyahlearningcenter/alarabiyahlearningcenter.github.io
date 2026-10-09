@@ -16,7 +16,8 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing auth" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -29,16 +30,35 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { roomName, participantName, isTeacher } = await req.json();
+    // SECURITY FIX: Do NOT trust 'isTeacher' from client. Fetch it from DB.
+    const { roomName, participantName } = await req.json();
     if (!roomName) {
       return new Response(JSON.stringify({ error: "roomName required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Fetch the user's trusted role from the database
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: "User profile not found" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const isTrustedTeacher = profile.role === "teacher" || profile.role === "admin";
 
     const API_KEY = Deno.env.get("LIVEKIT_API_KEY")!;
     const API_SECRET = Deno.env.get("LIVEKIT_API_SECRET")!;
@@ -55,8 +75,8 @@ Deno.serve(async (req) => {
       canPublish: true,
       canSubscribe: true,
       canPublishData: true,
-      roomAdmin: isTeacher === true,
-      roomCreate: isTeacher === true,
+      roomAdmin: isTrustedTeacher,
+      roomCreate: isTrustedTeacher,
     });
 
     const token = await at.toJwt();
@@ -69,10 +89,10 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
