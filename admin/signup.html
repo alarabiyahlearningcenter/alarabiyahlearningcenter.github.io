@@ -78,7 +78,7 @@ input:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34
               </button>
             </div>
           </div>
-          <button type="submit" id="submitBtn" class="btn-primary w-full py-3.5 rounded-xl font-semibold">Create Admin Account</button>
+          <button type="submit" id="submitBtn" disabled class="btn-primary w-full py-3.5 rounded-xl font-semibold">Create Admin Account</button>
           <p id="status" class="text-sm text-center hidden"></p>
         </form>
 
@@ -97,7 +97,6 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // 🔑 SECRET CODE — পরে Supabase site_settings থেকেও পরিবর্তন করা যাবে
-const ADMIN_SECRET = 'ALC-ADMIN-2026';
 
 document.getElementById('togglePw').addEventListener('click', () => {
   const pw = document.getElementById('password');
@@ -155,7 +154,6 @@ document.getElementById('adminSignupForm').addEventListener('submit', async (e) 
 
   // Step 3: Update profile with admin role
   const { error: profileError } = await db.from('profiles').update({
-    role: 'admin',
     full_name: fullName,
     phone: phone
   }).eq('id', data.user.id);
