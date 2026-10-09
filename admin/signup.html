@@ -118,7 +118,6 @@ document.getElementById('adminSignupForm').addEventListener('submit', async (e) 
   const phone = document.getElementById('phone').value.trim();
 
   // Step 1: Check secret code
-  if (code !== ADMIN_SECRET) {
     status.textContent = '❌ Invalid secret code.';
     status.className = 'text-sm text-center text-red-600';
     status.classList.remove('hidden');
