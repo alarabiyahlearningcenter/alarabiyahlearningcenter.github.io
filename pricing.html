@@ -494,157 +494,55 @@ window.addEventListener('load', function() {
 </script>
 
 
-<script>
-/* PLAN-ROUTER-V1 */
-(function() {
-    function rewriteSignupLinks() {
-        // Find all links that point to signup.html with a plan parameter
-        var links = document.querySelectorAll('a[href*="auth/signup.html?plan="]');
-        for (var i = 0; i < links.length; i++) {
-            var href = links[i].getAttribute('href');
-            var match = href.match(/plan=([^&]+)/);
-            if (!match) continue;
-            var planId = match[1];
-            // Store the plan id on the element for the click handler
-            links[i].setAttribute('data-plan-id', planId);
-        }
-    }
-    
-    function setup() {
-        if (!window.db || !window.db.auth) {
-            // Supabase client not ready yet, try again
-            setTimeout(setup, 300);
-            return;
-        }
-        
-        window.db.auth.getUser().then(function(res) {
-            var user = res.data && res.data.user;
-            var isLoggedIn = !!user;
-            
-            // Rewrite the "Start Learning" / primary CTA in the header
-            var ctaLinks = document.querySelectorAll('a[href*="auth/signup.html"]');
-            for (var i = 0; i < ctaLinks.length; i++) {
-                var href = ctaLinks[i].getAttribute('href');
-                if (href.indexOf('?plan=') === -1) {
-                    ctaLinks[i].setAttribute('href', isLoggedIn ? 'student/dashboard.html' : 'auth/signup.html');
-                }
-            }
-            
-            // Intercept clicks on plan buttons using event delegation
-            document.body.addEventListener('click', function(e) {
-                var el = e.target;
-                while (el && el !== document.body) {
-                    if (el.tagName === 'A') {
-                        var href = el.getAttribute('href') || '';
-                        var planMatch = href.match(/auth\/signup\.html\?plan=([^&]+)/);
-                        if (planMatch) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            var planId = planMatch[1];
-                            if (isLoggedIn) {
-                                window.location.href = 'student/payment.html?plan=' + planId;
-                            } else {
-                                window.location.href = 'auth/signup.html?plan=' + planId;
-                            }
-                            return false;
-                        }
-                    }
-                    el = el.parentElement;
-                }
-            }, true);
-        });
-    }
-    
-    // Start trying to setup once DOM is loaded
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setup);
-    } else {
-        setup();
-    }
-})();
-</script>
+
+
+
+
 
 
 
 
 
 <script>
-/* PLAN-ROUTER-V3-DIAGNOSTIC */
+/* PLAN-ROUTER-V4 */
 (function() {
-    function getAllSupabaseTokens() {
-        var tokens = [];
-        try {
-            for (var i = 0; i < localStorage.length; i++) {
-                var key = localStorage.key(i);
-                if (key && key.indexOf('sb-') === 0 && key.indexOf('-auth-token') !== -1) {
-                    try {
-                        var val = JSON.parse(localStorage.getItem(key));
-                        tokens.push({key: key, hasAccess: !!(val && val.access_token), user: val && val.user && val.user.email});
-                    } catch (e) {
-                        tokens.push({key: key, error: 'parse failed'});
-                    }
-                }
-            }
-        } catch (e) {}
-        return tokens;
-    }
+    var PROJECT_REF = 'vgsgjsneymetzsuzl1fb';
     
     function isLoggedIn() {
-        var tokens = getAllSupabaseTokens();
-        for (var i = 0; i < tokens.length; i++) {
-            if (tokens[i].hasAccess) return true;
-        }
-        return false;
+        try {
+            var token = localStorage.getItem('sb-' + PROJECT_REF + '-auth-token');
+            if (!token) return false;
+            var parsed = JSON.parse(token);
+            return !!(parsed && parsed.access_token && parsed.user);
+        } catch (e) { return false; }
     }
     
-    function setup() {
-        var loggedIn = isLoggedIn();
-        var tokens = getAllSupabaseTokens();
-        
-        // Debug badge
-        var badge = document.createElement('div');
-        badge.id = 'planRouterDebug';
-        badge.style.cssText = 'position:fixed;top:5px;left:5px;background:black;color:#0f0;padding:6px 10px;border-radius:6px;font-size:11px;z-index:999999;font-family:monospace;max-width:95%;word-break:break-all;line-height:1.4;';
-        var info = 'LOGGED:' + (loggedIn ? 'YES' : 'NO') + '<br>TOKENS: ' + tokens.length + '<br>';
-        tokens.forEach(function(t) {
-            info += t.key + '<br>  access:' + t.hasAccess + ' user:' + (t.user || 'n/a') + '<br>';
-        });
-        badge.innerHTML = info;
-        document.body.appendChild(badge);
-        
-        // Event delegation
-        document.body.addEventListener('click', function(e) {
-            var el = e.target;
-            while (el && el !== document.body) {
-                if (el.tagName === 'A') {
-                    var href = el.getAttribute('href') || '';
-                    var planMatch = href.match(/auth\/signup\.html\?plan=([^&]+)/);
-                    if (planMatch) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        var planId = planMatch[1];
-                        window.location.href = loggedIn
-                            ? 'student/payment.html?plan=' + planId
-                            : 'auth/signup.html?plan=' + planId;
-                        return false;
-                    }
-                    if (href === 'auth/signup.html' && loggedIn) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        window.location.href = 'student/dashboard.html';
-                        return false;
-                    }
-                }
-                el = el.parentElement;
+    function rewriteLinks() {
+        if (!isLoggedIn()) return;
+        // Rewrite plan card links
+        var planLinks = document.querySelectorAll('a[href*="auth/signup.html?plan="]');
+        for (var i = 0; i < planLinks.length; i++) {
+            var href = planLinks[i].getAttribute('href');
+            if (href && href.indexOf('student/payment.html') === -1) {
+                planLinks[i].setAttribute('href', href.replace('auth/signup.html?plan=', 'student/payment.html?plan='));
             }
-        }, true);
+        }
+        // Rewrite header CTA (Start Learning without plan param)
+        var ctaLinks = document.querySelectorAll('a[href="auth/signup.html"]');
+        for (var j = 0; j < ctaLinks.length; j++) {
+            ctaLinks[j].setAttribute('href', 'student/dashboard.html');
+        }
     }
     
+    // Run on load
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setup);
+        document.addEventListener('DOMContentLoaded', rewriteLinks);
     } else {
-        setup();
+        rewriteLinks();
     }
+    
+    // Keep rewriting every 500ms to catch dynamically re-rendered cards
+    setInterval(rewriteLinks, 500);
 })();
 </script>
 
