@@ -428,19 +428,18 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       }
     }
 
-    const payload = {
-      student_id: user.id,
-      coupon_id: appliedCoupon ? appliedCoupon.coupon.id : null,
-      discount_amount: appliedCoupon ? appliedCoupon.discount : 0,
-      screenshot_url: screenshotUrl,
-      course_id: document.getElementById('courseSelect').value,
-      amount: Number(document.getElementById('amount').value),
-      method: document.getElementById('method').value,
-      transaction_id: document.getElementById('transactionId').value.trim().toUpperCase(),
-      status: 'pending',
-      plan_id: _planId,
-      custom_request_id: _customReq
-    };
+const payload = {
+                student_id: user.id,
+                coupon_id: appliedCoupon ? appliedCoupon.coupon_id : null,
+                discount_amount: appliedCoupon ? appliedCoupon.discount : 0,
+                screenshot_url: screenshotUrl,
+                course_id: (document.getElementById("courseSelect") && document.getElementById("courseSelect").value) || null,
+                amount: Number(document.getElementById("amount").value),
+                method: document.getElementById("method").value,
+                transaction_id: document.getElementById("transactionId").value.trim().toUpperCase(),
+                status: "pending",
+                plan_id: _planId
+            };
 
     const { error } = await db.from('payments').insert(payload);
 
