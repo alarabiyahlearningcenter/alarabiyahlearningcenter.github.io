@@ -478,14 +478,35 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     btn.textContent = 'Submitted!';
     setTimeout(() => location.reload(), 2000);
   });
-  // Auto-load plan from signup
-  const signupPlanId = localStorage.getItem('selectedPlanId');
-  if (signupPlanId) {
-    const { data: signupPlan } = await db.from('pricing_plans').select('*').eq('id', signupPlanId).single();
-    if (signupPlan) {
-      document.getElementById('amount').value = signupPlan.price_bdt;
+    // PLAN-AUTO-LOAD-V6 - reads URL param, hides course dropdown, shows banner
+    const planUrlParams = new URLSearchParams(location.search);
+    const signupPlanId = planUrlParams.get("plan") || localStorage.getItem("selectedPlanId");
+    if (signupPlanId) {
+        const { data: signupPlan } = await db.from("pricing_plans").select("*").eq("id", signupPlanId).single();
+        if (signupPlan) {
+            localStorage.setItem("selectedPlanId", signupPlanId);
+            const planPrice = signupPlan.plan_bdt || signupPlan.price_bdt || signupPlan.price || 0;
+            const amtEl = document.getElementById("amount");
+            if (amtEl) { amtEl.value = planPrice; amtEl.readOnly = true; amtEl.style.background = "#f5f5f5"; }
+            const cs = document.getElementById("courseSelect");
+            if (cs) { cs.removeAttribute("required"); const cw = cs.closest("div"); if (cw) cw.style.display = "none"; }
+            setTimeout(function() {
+                const planName = signupPlan.name || signupPlan.plan_name || "Selected Plan";
+                const dur = signupPlan.duration_min ? signupPlan.duration_min + " min" : "";
+                const cls = signupPlan.classes_per_month ? signupPlan.classes_per_month + " classes/month" : "";
+                const banner = document.createElement("div");
+                banner.style.cssText = "background:linear-gradient(135deg,#0a3622,#062418);color:#fff;padding:20px;border-radius:16px;margin-bottom:20px;border:2px solid #d4af37;";
+                banner.innerHTML = "<div style=\"font-size:12px;letter-spacing:2px;color:#d4af37;font-weight:bold;text-transform:uppercase;margin-bottom:6px;\">SELECTED PLAN</div><div style=\"font-size:24px;font-weight:bold;margin-bottom:6px;\">" + planName + "</div><div style=\"font-size:14px;opacity:0.85;margin-bottom:12px;\">" + dur + (dur && cls ? " &middot; " : "") + cls + "</div><div style=\"font-size:28px;font-weight:bold;color:#d4af37;\">৳" + planPrice + "</div>";
+                const headings = document.querySelectorAll("h1, h2, h3, h4");
+                for (let h of headings) {
+                    if (h.textContent.trim().toLowerCase().includes("make a payment")) {
+                        h.parentNode.insertBefore(banner, h);
+                        break;
+                    }
+                }
+            }, 500);
+        }
     }
-  }
 })();
 </script>
 
