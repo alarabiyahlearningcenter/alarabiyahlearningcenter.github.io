@@ -564,5 +564,66 @@ window.addEventListener('load', function() {
 })();
 </script>
 
+
+<script>
+/* PLAN-ROUTER-V2 - Works without Supabase client access */
+(function() {
+    var PROJECT_REF = 'vgsgjsneymetzsuzl1fb';
+    
+    function isLoggedIn() {
+        try {
+            // Supabase v2 stores auth token in localStorage
+            var token = localStorage.getItem('sb-' + PROJECT_REF + '-auth-token');
+            if (!token) return false;
+            var parsed = JSON.parse(token);
+            return !!(parsed && parsed.access_token && parsed.user);
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    function setup() {
+        var loggedIn = isLoggedIn();
+        
+        // Event delegation for plan button clicks
+        document.body.addEventListener('click', function(e) {
+            var el = e.target;
+            while (el && el !== document.body) {
+                if (el.tagName === 'A') {
+                    var href = el.getAttribute('href') || '';
+                    
+                    // Plan card with signup?plan=xxx
+                    var planMatch = href.match(/auth\/signup\.html\?plan=([^&]+)/);
+                    if (planMatch) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var planId = planMatch[1];
+                        window.location.href = loggedIn
+                            ? 'student/payment.html?plan=' + planId
+                            : 'auth/signup.html?plan=' + planId;
+                        return false;
+                    }
+                    
+                    // Header CTA "Start Learning"
+                    if (href === 'auth/signup.html' && loggedIn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = 'student/dashboard.html';
+                        return false;
+                    }
+                }
+                el = el.parentElement;
+            }
+        }, true);
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    } else {
+        setup();
+    }
+})();
+</script>
+
 </body>
 </html>
