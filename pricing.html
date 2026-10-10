@@ -534,17 +534,7 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
                 reason = 'error: ' + e.message;
             }
             
-            // Debug badge
-            var badge = document.createElement('div');
-            badge.style.cssText = 'position:fixed;top:60px;left:5px;padding:8px;font-size:10px;z-index:999999;font-family:monospace;color:#fff;max-width:95%;word-break:break-all;line-height:1.4;border-radius:6px;';
-            if (sessionOk) {
-                badge.style.background = '#062';
-                badge.innerHTML = 'CLIENT-SESSION: VALID<br>User: ' + userEmail;
-            } else {
-                badge.style.background = '#600';
-                badge.innerHTML = 'CLIENT-SESSION: NONE<br>Reason: ' + reason + '<br>⚠️ Please login first';
-            }
-            document.body.appendChild(badge);
+            // Debug badge removed (V8 cleanup)
             
             rewriteLinks(sessionOk);
             setInterval(function() { rewriteLinks(sessionOk); }, 300);
