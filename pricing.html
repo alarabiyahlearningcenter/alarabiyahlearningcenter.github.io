@@ -292,7 +292,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
 const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.db = window.db || createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentCurrency = 'BDT';
 let allPlans = [];
@@ -477,31 +477,29 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
 
 
 
+
+
+
 <script>
-/* PLAN-ROUTER-V7-FINAL */
+/* PLAN-ROUTER-V8-CLIENT */
 (function() {
-    var PROJECT_REF = 'vgsgjsneymetzsuzl1fb';
+    var MAX_WAIT = 30;
+    var waits = 0;
     
-    function checkSession() {
-        try {
-            var tokenStr = localStorage.getItem('sb-' + PROJECT_REF + '-auth-token');
-            if (!tokenStr) return { ok: false, reason: 'no-token' };
-            var parsed = JSON.parse(tokenStr);
-            if (!parsed || !parsed.access_token) return { ok: false, reason: 'no-access-token' };
-            var now = Math.floor(Date.now() / 1000);
-            var exp = parsed.expires_at || 0;
-            var remaining = exp - now;
-            if (exp > 0 && remaining <= 0) {
-                return { ok: false, reason: 'expired', expired_secs: -remaining, expires_at: exp, now: now };
-            }
-            return { ok: true, remaining: remaining, expires_at: exp, user: parsed.user && parsed.user.email };
-        } catch (e) {
-            return { ok: false, reason: 'parse-error: ' + e.message };
+    function waitForDb(cb) {
+        if (window.db && window.db.auth) {
+            cb();
+            return;
         }
+        if (waits++ > MAX_WAIT) {
+            console.warn('Supabase client never became available');
+            return;
+        }
+        setTimeout(function() { waitForDb(cb); }, 200);
     }
     
-    function rewriteAllLinks(session) {
-        if (!session.ok) return;
+    function rewriteLinks(isLoggedIn) {
+        if (!isLoggedIn) return;
         var links = document.querySelectorAll('a[href*="auth/signup.html"]');
         for (var i = 0; i < links.length; i++) {
             var a = links[i];
@@ -518,20 +516,39 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
     }
     
     function setup() {
-        var session = checkSession();
-        var badge = document.createElement('div');
-        badge.style.cssText = 'position:fixed;top:60px;left:5px;background:black;color:#0f0;padding:8px;font-size:10px;z-index:999999;font-family:monospace;max-width:95%;word-break:break-all;line-height:1.4;';
-        if (session.ok) {
-            badge.innerHTML = 'SESSION: VALID<br>Email: ' + session.user + '<br>Expires in: ' + Math.round(session.remaining/60) + ' minutes';
-            badge.style.background = '#062';
-        } else {
-            badge.innerHTML = 'SESSION: INVALID<br>Reason: ' + session.reason + (session.expired_secs ? '<br>Expired ' + Math.round(session.expired_secs/60) + ' minutes ago' : '') + '<br>⚠️ PLEASE RE-LOGIN';
-            badge.style.background = '#600';
-        }
-        document.body.appendChild(badge);
-        
-        rewriteAllLinks(session);
-        setInterval(function() { rewriteAllLinks(checkSession()); }, 300);
+        waitForDb(async function() {
+            var sessionOk = false;
+            var userEmail = 'none';
+            var reason = 'unknown';
+            
+            try {
+                var result = await window.db.auth.getSession();
+                var session = result.data && result.data.session;
+                if (session && session.user) {
+                    sessionOk = true;
+                    userEmail = session.user.email;
+                } else {
+                    reason = 'no-session-returned';
+                }
+            } catch (e) {
+                reason = 'error: ' + e.message;
+            }
+            
+            // Debug badge
+            var badge = document.createElement('div');
+            badge.style.cssText = 'position:fixed;top:60px;left:5px;padding:8px;font-size:10px;z-index:999999;font-family:monospace;color:#fff;max-width:95%;word-break:break-all;line-height:1.4;border-radius:6px;';
+            if (sessionOk) {
+                badge.style.background = '#062';
+                badge.innerHTML = 'CLIENT-SESSION: VALID<br>User: ' + userEmail;
+            } else {
+                badge.style.background = '#600';
+                badge.innerHTML = 'CLIENT-SESSION: NONE<br>Reason: ' + reason + '<br>⚠️ Please login first';
+            }
+            document.body.appendChild(badge);
+            
+            rewriteLinks(sessionOk);
+            setInterval(function() { rewriteLinks(sessionOk); }, 300);
+        });
     }
     
     if (document.readyState === 'loading') {
