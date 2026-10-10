@@ -8,85 +8,89 @@
 <link rel="manifest" href="../manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+
+
+
+
+
+<!-- PLAN-AUTO-LOAD-V5 (separate script, won't block main IIFE) -->
 <script>
-// PLAN-AUTO-LOAD-V4 - hides course dropdown when plan is selected
-(async function() {
-    const planUrlParams = new URLSearchParams(location.search);
-    const planIdFromUrl = planUrlParams.get('plan');
-    const planIdFromStorage = localStorage.getItem('selectedPlanId');
-    const selectedPlanId = planIdFromUrl || planIdFromStorage;
-    
-    if (!selectedPlanId) return;
-    if (typeof db === 'undefined') return;
-    
-    try {
-        const { data: planData, error: planErr } = await db.from('pricing_plans').select('*').eq('id', selectedPlanId).single();
-        if (!planData || planErr) {
-            console.warn('Plan load failed:', planErr);
-            return;
-        }
+(function() {
+    function whenReady() {
+        const planUrlParams = new URLSearchParams(location.search);
+        const planIdFromUrl = planUrlParams.get('plan');
+        const planIdFromStorage = localStorage.getItem('selectedPlanId');
+        const selectedPlanId = planIdFromUrl || planIdFromStorage;
         
-        localStorage.setItem('selectedPlanId', selectedPlanId);
-        const price = planData.plan_bdt || planData.price_bdt || planData.price || planData.amount || '';
+        if (!selectedPlanId) return;
+        if (typeof window.db === 'undefined' || !window.db) return;
         
-        // === Hide Course dropdown completely ===
-        const courseSelect = document.getElementById('courseSelect');
-        if (courseSelect) {
-            courseSelect.removeAttribute('required');
-            // Find the parent div containing this label and select
-            let parent = courseSelect.parentElement;
-            while (parent && parent.tagName !== 'FORM' && !parent.querySelector('label')) {
-                parent = parent.parentElement;
-            }
-            // Hide the immediate wrapper (label + select)
-            if (parent) {
-                // Try to find the specific wrapper that contains both label and select
+        window.db.from('pricing_plans').select('*').eq('id', selectedPlanId).single().then(function(res) {
+            const planData = res.data;
+            if (!planData) return;
+            
+            localStorage.setItem('selectedPlanId', selectedPlanId);
+            const price = planData.plan_bdt || planData.price_bdt || planData.price || planData.amount || '';
+            
+            // Hide course dropdown
+            const courseSelect = document.getElementById('courseSelect');
+            if (courseSelect) {
+                courseSelect.removeAttribute('required');
                 const wrapper = courseSelect.closest('div');
                 if (wrapper) wrapper.style.display = 'none';
             }
-        }
-        
-        // === Auto-fill amount ===
-        const amountField = document.getElementById('amount');
-        if (amountField && price) {
-            amountField.value = price;
-            amountField.readOnly = true;
-            amountField.style.background = '#f5f5f5';
-        }
-        
-        // === Build the plan banner ===
-        const planName = planData.name || planData.plan_name || 'Selected Plan';
-        const duration = planData.duration_min ? planData.duration_min + ' min' : '';
-        const classes = planData.classes_per_month ? planData.classes_per_month + ' classes/month' : '';
-        
-        const banner = document.createElement('div');
-        banner.id = 'selectedPlanBanner';
-        banner.style.cssText = 'background:linear-gradient(135deg,#0a3622,#062418);color:#fff;padding:20px;border-radius:16px;margin-bottom:20px;border:2px solid #d4af37;';
-        banner.innerHTML = '<div style="font-size:12px;letter-spacing:2px;color:#d4af37;font-weight:bold;text-transform:uppercase;margin-bottom:6px;">SELECTED PLAN</div>' +
-            '<div style="font-size:24px;font-weight:bold;margin-bottom:6px;">' + planName + '</div>' +
-            '<div style="font-size:14px;opacity:0.85;margin-bottom:12px;">' + duration + (duration && classes ? ' &middot; ' : '') + classes + '</div>' +
-            '<div style="font-size:28px;font-weight:bold;color:#d4af37;">৳' + price + '</div>' +
-            '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2);font-size:12px;opacity:0.9;">Your plan will be activated <b>after admin verifies your payment</b>.</div>';
-        
-        function insertBanner() {
-            const headings = document.querySelectorAll('h1, h2, h3, h4');
-            for (let h of headings) {
-                if (h.textContent.trim().toLowerCase().includes('make a payment')) {
-                    h.parentNode.insertBefore(banner, h);
-                    return true;
-                }
+            
+            // Auto-fill amount
+            const amountField = document.getElementById('amount');
+            if (amountField && price) {
+                amountField.value = price;
+                amountField.readOnly = true;
+                amountField.style.background = '#f5f5f5';
             }
-            return false;
-        }
-        if (!insertBanner()) setTimeout(insertBanner, 500);
-        
-    } catch (e) {
-        console.error('Plan auto-load error:', e);
+            
+            // Build banner
+            const planName = planData.name || planData.plan_name || 'Selected Plan';
+            const duration = planData.duration_min ? planData.duration_min + ' min' : '';
+            const classes = planData.classes_per_month ? planData.classes_per_month + ' classes/month' : '';
+            
+            const banner = document.createElement('div');
+            banner.id = 'selectedPlanBanner';
+            banner.style.cssText = 'background:linear-gradient(135deg,#0a3622,#062418);color:#fff;padding:20px;border-radius:16px;margin-bottom:20px;border:2px solid #d4af37;';
+            banner.innerHTML = '<div style="font-size:12px;letter-spacing:2px;color:#d4af37;font-weight:bold;text-transform:uppercase;margin-bottom:6px;">SELECTED PLAN</div>' +
+                '<div style="font-size:24px;font-weight:bold;margin-bottom:6px;">' + planName + '</div>' +
+                '<div style="font-size:14px;opacity:0.85;margin-bottom:12px;">' + duration + (duration && classes ? ' &middot; ' : '') + classes + '</div>' +
+                '<div style="font-size:28px;font-weight:bold;color:#d4af37;">৳' + price + '</div>' +
+                '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2);font-size:12px;opacity:0.9;">Your plan will be activated <b>after admin verifies your payment</b>.</div>';
+            
+            function insertBanner() {
+                const headings = document.querySelectorAll('h1, h2, h3, h4');
+                for (let h of headings) {
+                    if (h.textContent.trim().toLowerCase().includes('make a payment')) {
+                        h.parentNode.insertBefore(banner, h);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (!insertBanner()) setTimeout(insertBanner, 300);
+        }).catch(function(e) {
+            console.error('Plan auto-load error:', e);
+        });
     }
+    
+    // Wait for db client to be available (main script creates it as window.db)
+    var attempts = 0;
+    var check = setInterval(function() {
+        attempts++;
+        if (typeof window.db !== 'undefined' && window.db) {
+            clearInterval(check);
+            whenReady();
+        } else if (attempts > 40) {
+            clearInterval(check);
+        }
+    }, 250);
 })();
 </script>
-
-
 
 </body>
 </html>
