@@ -236,16 +236,22 @@ loadCourses();
 
 
 
+
+
+
 <script>
+/* MENU-FIX-V8 */
 window.addEventListener('load', function() {
-    var btn = document.getElementById('menuBtn');
+    var oldBtn = document.getElementById('menuBtn');
     var menu = document.getElementById('mobileMenu');
-    if (!btn || !menu) return;
+    if (!oldBtn || !menu) return;
     
-    // Remove any inline onclick attribute
+    // Clone the button to remove ALL previously attached event listeners
+    var btn = oldBtn.cloneNode(true);
     btn.removeAttribute('onclick');
+    oldBtn.parentNode.replaceChild(btn, oldBtn);
     
-    // Overwrite ALL handlers with one clean handler
+    // Attach single clean handler to the cloned button
     btn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -259,7 +265,7 @@ window.addEventListener('load', function() {
         return false;
     };
     
-    // Close menu when any link inside is clicked
+    // Close menu when a link is clicked
     var links = menu.querySelectorAll('a');
     for (var i = 0; i < links.length; i++) {
         links[i].addEventListener('click', function() {

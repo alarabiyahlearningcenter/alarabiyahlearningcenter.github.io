@@ -447,74 +447,28 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
 
 
 
-<script>
-(function() {
-    function setupMenu() {
-        var btn = document.getElementById('menuBtn');
-        var menu = document.getElementById('mobileMenu');
-        if (!btn || !menu) {
-            console.log('menuBtn or mobileMenu NOT FOUND');
-            return;
-        }
-        
-        // Remove existing handlers
-        var newBtn = btn.cloneNode(true);
-        newBtn.removeAttribute('onclick');
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.style.position = 'relative';
-        newBtn.style.zIndex = '9999';
-        newBtn.style.cursor = 'pointer';
-        
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var isHidden = menu.classList.contains('hidden');
-            if (isHidden) {
-                menu.classList.remove('hidden');
-                menu.style.display = 'block';
-                console.log('MENU OPENED');
-            } else {
-                menu.classList.add('hidden');
-                menu.style.display = 'none';
-                console.log('MENU CLOSED');
-            }
-        }, true);
-        
-        // Close menu when a link is clicked
-        var links = menu.querySelectorAll('a');
-        for (var i = 0; i < links.length; i++) {
-            links[i].addEventListener('click', function() {
-                menu.classList.add('hidden');
-                menu.style.display = 'none';
-            });
-        }
-        
-        console.log('MENU SETUP COMPLETE');
-    }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupMenu);
-    } else {
-        setupMenu();
-    }
-})();
-</script>
+
+
+
+
 
 
 
 
 
 <script>
+/* MENU-FIX-V8 */
 window.addEventListener('load', function() {
-    var btn = document.getElementById('menuBtn');
+    var oldBtn = document.getElementById('menuBtn');
     var menu = document.getElementById('mobileMenu');
-    if (!btn || !menu) return;
+    if (!oldBtn || !menu) return;
     
-    // Remove any inline onclick attribute
+    // Clone the button to remove ALL previously attached event listeners
+    var btn = oldBtn.cloneNode(true);
     btn.removeAttribute('onclick');
+    oldBtn.parentNode.replaceChild(btn, oldBtn);
     
-    // Overwrite ALL handlers with one clean handler
+    // Attach single clean handler to the cloned button
     btn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -528,7 +482,7 @@ window.addEventListener('load', function() {
         return false;
     };
     
-    // Close menu when any link inside is clicked
+    // Close menu when a link is clicked
     var links = menu.querySelectorAll('a');
     for (var i = 0; i < links.length; i++) {
         links[i].addEventListener('click', function() {
