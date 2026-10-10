@@ -467,33 +467,61 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
+
+
+
+<div id="debugBanner" style="position:fixed;top:0;left:0;right:0;background:red;color:white;text-align:center;padding:10px;z-index:99999;font-weight:bold;">DEBUG V3 - If you see this, cache is CLEARED</div>
+
 <script>
 (function() {
-    function attachMenuHandler() {
+    function setupMenu() {
         var btn = document.getElementById('menuBtn');
         var menu = document.getElementById('mobileMenu');
-        if (!btn || !menu) return;
+        if (!btn || !menu) {
+            console.log('menuBtn or mobileMenu NOT FOUND');
+            return;
+        }
         
+        // Remove existing handlers
         var newBtn = btn.cloneNode(true);
+        newBtn.removeAttribute('onclick');
         btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.style.position = 'relative';
+        newBtn.style.zIndex = '9999';
+        newBtn.style.cursor = 'pointer';
         
         newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (menu.classList.contains('hidden')) {
+            var isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
                 menu.classList.remove('hidden');
                 menu.style.display = 'block';
+                console.log('MENU OPENED');
             } else {
                 menu.classList.add('hidden');
                 menu.style.display = 'none';
+                console.log('MENU CLOSED');
             }
-        });
+        }, true);
+        
+        // Close menu when a link is clicked
+        var links = menu.querySelectorAll('a');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                menu.classList.add('hidden');
+                menu.style.display = 'none';
+            });
+        }
+        
+        console.log('MENU SETUP COMPLETE');
     }
     
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', attachMenuHandler);
+        document.addEventListener('DOMContentLoaded', setupMenu);
     } else {
-        attachMenuHandler();
+        setupMenu();
     }
 })();
 </script>
