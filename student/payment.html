@@ -533,5 +533,54 @@ if (selectedPlanId) {
 
 <script src="../assets/js/notifications.js"></script>
 <script src="../assets/js/inject-bell.js"></script>
+
+<script>
+/* DIAG-PANEL */
+(function() {
+    function showPanel() {
+        if (!document.body) { setTimeout(showPanel, 50); return; }
+        if (document.getElementById('diagPanel')) return;
+        var p = document.createElement('div');
+        p.id = 'diagPanel';
+        p.style.cssText = 'position:fixed;bottom:80px;left:5px;right:5px;background:rgba(0,0,0,0.95);color:#0f0;padding:10px;font-size:11px;z-index:9999999;font-family:monospace;border-radius:8px;max-height:230px;overflow-y:auto;line-height:1.5;';
+        p.innerHTML = '<b style="color:#ff0;">🔍 DIAGNOSTIC PANEL</b><br>';
+        document.body.appendChild(p);
+        
+        window.onerror = function(msg, url, line, col) {
+            p.innerHTML += '<div style="color:#f66;">❌ ERROR: ' + msg + ' (line ' + line + ')</div>';
+        };
+        
+        var urlParams = new URLSearchParams(location.search);
+        var planId = urlParams.get('plan');
+        p.innerHTML += 'Plan ID from URL: ' + (planId ? planId.substring(0, 12) + '...' : 'NONE') + '<br>';
+        
+        setTimeout(function() {
+            p.innerHTML += 'document.readyState: ' + document.readyState + '<br>';
+            p.innerHTML += 'body children: ' + (document.body ? document.body.children.length : 'no body') + '<br>';
+            p.innerHTML += 'db exists: ' + (!!window.db) + '<br>';
+            p.innerHTML += 'amount field: ' + (!!document.getElementById('amount')) + '<br>';
+            
+            if (window.db && planId) {
+                try {
+                    window.db.from('pricing_plans').select('*').eq('id', planId).single().then(function(res) {
+                        if (res.error) {
+                            p.innerHTML += '<span style="color:#f66;">Plan fetch error: ' + res.error.message + '</span><br>';
+                        } else if (res.data) {
+                            p.innerHTML += '<span style="color:#0f0;">✓ Plan found: ' + JSON.stringify(Object.keys(res.data)) + '</span><br>';
+                            p.innerHTML += 'plan_bdt: ' + res.data.plan_bdt + '<br>';
+                        } else {
+                            p.innerHTML += 'Plan data: EMPTY<br>';
+                        }
+                    });
+                } catch(e) {
+                    p.innerHTML += '<span style="color:#f66;">Exception: ' + e.message + '</span><br>';
+                }
+            }
+        }, 2000);
+    }
+    showPanel();
+})();
+</script>
+
 </body>
 </html>
