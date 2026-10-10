@@ -456,42 +456,10 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
 
 
 
-<script>
-/* MENU-FIX-V8 */
-window.addEventListener('load', function() {
-    var oldBtn = document.getElementById('menuBtn');
-    var menu = document.getElementById('mobileMenu');
-    if (!oldBtn || !menu) return;
-    
-    // Clone the button to remove ALL previously attached event listeners
-    var btn = oldBtn.cloneNode(true);
-    btn.removeAttribute('onclick');
-    oldBtn.parentNode.replaceChild(btn, oldBtn);
-    
-    // Attach single clean handler to the cloned button
-    btn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (menu.classList.contains('hidden')) {
-            menu.classList.remove('hidden');
-            menu.style.display = 'block';
-        } else {
-            menu.classList.add('hidden');
-            menu.style.display = 'none';
-        }
-        return false;
-    };
-    
-    // Close menu when a link is clicked
-    var links = menu.querySelectorAll('a');
-    for (var i = 0; i < links.length; i++) {
-        links[i].addEventListener('click', function() {
-            menu.classList.add('hidden');
-            menu.style.display = 'none';
-        });
-    }
-});
-</script>
+
+
+
+
 
 
 
@@ -507,81 +475,58 @@ window.addEventListener('load', function() {
 
 
 <script>
-/* PLAN-ROUTER-V5-FINAL */
+/* PLAN-ROUTER-V6-DIRECT */
 (function() {
-    var PROJECT_REF = 'vgsgjsneymetzsuzl1fb';
-    var PAYMENT_PATH = 'student/payment.html';
-    var DASHBOARD_PATH = 'student/dashboard.html';
-    var SIGNUP_PATH = 'auth/signup.html';
+    function scanLocalStorage() {
+        var result = [];
+        try {
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (key && key.indexOf('sb-') === 0) {
+                    var val = localStorage.getItem(key);
+                    var snippet = val ? val.substring(0, 80) : 'null';
+                    result.push(key + ' => ' + snippet);
+                }
+            }
+        } catch(e) {}
+        return result;
+    }
     
     function isLoggedIn() {
-        try {
-            var token = localStorage.getItem('sb-' + PROJECT_REF + '-auth-token');
-            if (!token) return false;
-            var parsed = JSON.parse(token);
-            return !!(parsed && parsed.access_token && parsed.user);
-        } catch (e) { return false; }
+        var keys = scanLocalStorage();
+        for (var i = 0; i < keys.length; i++) {
+            if (keys[i].indexOf('-auth-token') !== -1 && keys[i].indexOf('access_token') === -1) {
+                return true;
+            }
+        }
+        return false;
     }
     
-    function rewriteHref(href) {
-        if (!href) return href;
-        if (href.indexOf('auth/signup.html?plan=') !== -1) {
-            return href.replace('auth/signup.html?plan=', PAYMENT_PATH + '?plan=');
-        }
-        if (href.indexOf('auth/signup.html') !== -1) {
-            return href.replace('auth/signup.html', DASHBOARD_PATH);
-        }
-        return href;
-    }
-    
-    function rewriteAllLinks() {
+    function rewriteLinks() {
         if (!isLoggedIn()) return;
         var links = document.querySelectorAll('a[href*="auth/signup.html"]');
         for (var i = 0; i < links.length; i++) {
             var a = links[i];
             var href = a.getAttribute('href');
             if (!href) continue;
-            var newHref = rewriteHref(href);
-            if (newHref === href) continue;
-            
-            // Clone and replace to strip any onclick / event handlers
-            var clone = a.cloneNode(true);
-            clone.setAttribute('href', newHref);
-            clone.removeAttribute('onclick');
-            clone.removeAttribute('data-plan-id');
-            a.parentNode.replaceChild(clone, a);
+            var newHref = href.replace('auth/signup.html?plan=', 'student/payment.html?plan=').replace('auth/signup.html', 'student/dashboard.html');
+            if (newHref !== href) {
+                a.setAttribute('href', newHref);
+                a.removeAttribute('onclick');
+            }
         }
     }
     
     function setup() {
-        rewriteAllLinks();
-        // Repeat to catch dynamically rendered cards
-        setInterval(rewriteAllLinks, 300);
+        // Debug badge to show localStorage state
+        var badge = document.createElement('div');
+        badge.style.cssText = 'position:fixed;top:60px;left:5px;background:black;color:#0f0;padding:6px;font-size:10px;z-index:999999;font-family:monospace;max-width:95%;word-break:break-all;';
+        var keys = scanLocalStorage();
+        badge.innerHTML = 'LOGGED:' + (isLoggedIn() ? 'YES' : 'NO') + '<br>' + keys.join('<br>');
+        document.body.appendChild(badge);
         
-        // MutationObserver for immediate response on DOM changes
-        if (window.MutationObserver) {
-            try {
-                new MutationObserver(rewriteAllLinks).observe(document.body, {childList: true, subtree: true});
-            } catch(e) {}
-        }
-        
-        // Capture-phase click interception as double safety
-        document.addEventListener('click', function(e) {
-            if (!isLoggedIn()) return;
-            var el = e.target;
-            while (el && el !== document.body) {
-                if (el.tagName === 'A') {
-                    var href = el.getAttribute('href') || '';
-                    if (href.indexOf('auth/signup.html') !== -1) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        window.location.href = rewriteHref(href);
-                        return false;
-                    }
-                }
-                el = el.parentElement;
-            }
-        }, true);
+        rewriteLinks();
+        setInterval(rewriteLinks, 200);
     }
     
     if (document.readyState === 'loading') {
