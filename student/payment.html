@@ -478,15 +478,57 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     btn.textContent = 'Submitted!';
     setTimeout(() => location.reload(), 2000);
   });
-  // Auto-load plan from signup
-  const signupPlanId = localStorage.getItem('selectedPlanId');
-  if (signupPlanId) {
-    const { data: signupPlan } = await db.from('pricing_plans').select('*').eq('id', signupPlanId).single();
-    if (signupPlan) {
-      document.getElementById('amount').value = signupPlan.price_bdt;
+  // PLAN-AUTO-LOAD-V2 - reads URL param + localStorage, fixes bug
+const planUrlParams = new URLSearchParams(location.search);
+const planIdFromUrl = planUrlParams.get('plan');
+const planIdFromStorage = localStorage.getItem('selectedPlanId');
+const selectedPlanId = planIdFromUrl || planIdFromStorage;
+
+if (selectedPlanId) {
+    try {
+        const { data: planData, error: planErr } = await db.from('pricing_plans').select('*').eq('id', selectedPlanId).single();
+        if (planData && !planErr) {
+            localStorage.setItem('selectedPlanId', selectedPlanId);
+            
+            const price = planData.plan_bdt || planData.price_bdt || planData.price || planData.amount || '';
+            const amountField = document.getElementById('amount');
+            if (amountField && price) {
+                amountField.value = price;
+                amountField.readOnly = true;
+                amountField.style.background = '#f5f5f5';
+            }
+            
+            const banner = document.createElement('div');
+            banner.id = 'selectedPlanBanner';
+            banner.style.cssText = 'background:linear-gradient(135deg,#0a3622,#062418);color:#fff;padding:20px;border-radius:16px;margin-bottom:20px;border:2px solid #d4af37;';
+            const planName = planData.name || planData.plan_name || 'Selected Plan';
+            const duration = planData.duration_min ? planData.duration_min + ' min' : '';
+            const classes = planData.classes_per_month ? planData.classes_per_month + ' classes/month' : '';
+            banner.innerHTML = '<div style="font-size:12px;letter-spacing:2px;color:#d4af37;font-weight:bold;text-transform:uppercase;margin-bottom:6px;">SELECTED PLAN</div>' +
+                '<div style="font-size:24px;font-weight:bold;margin-bottom:6px;">' + planName + '</div>' +
+                '<div style="font-size:14px;opacity:0.85;margin-bottom:12px;">' + duration + (duration && classes ? ' &middot; ' : '') + classes + '</div>' +
+                '<div style="font-size:28px;font-weight:bold;color:#d4af37;">৳' + price + '</div>' +
+                '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2);font-size:12px;opacity:0.9;">' +
+                'Your plan will be activated <b>after admin verifies your payment</b>.</div>';
+            
+            const headings = document.querySelectorAll('h1, h2, h3, h4');
+            let inserted = false;
+            for (let h of headings) {
+                if (h.textContent.trim().toLowerCase().includes('make a payment')) {
+                    h.parentNode.insertBefore(banner, h);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) {
+                const mainEl = document.querySelector('main') || document.body;
+                mainEl.insertBefore(banner, mainEl.firstChild);
+            }
+        }
+    } catch (e) {
+        console.error('Plan load error:', e);
     }
-  }
-})();
+}
 </script>
 
 <script src="../assets/js/notifications.js"></script>
