@@ -438,5 +438,33 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
 
 <script src="assets/js/site-loader.js"></script>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== MENU DEBUG ===');
+    const btn = document.getElementById('menuBtn');
+    const menu = document.getElementById('mobileMenu');
+    console.log('menuBtn found:', !!btn);
+    console.log('mobileMenu found:', !!menu);
+    if (btn) {
+        console.log('Button classes:', btn.className);
+        console.log('Button onclick:', btn.onclick);
+        btn.addEventListener('click', function() {
+            console.log('CLICK DETECTED on menuBtn');
+            if (menu) {
+                console.log('Before toggle - menu classes:', menu.className);
+                menu.classList.toggle('hidden');
+                console.log('After toggle - menu classes:', menu.className);
+            }
+        });
+    }
+    if (menu) {
+        console.log('Menu classes:', menu.className);
+        const style = window.getComputedStyle(menu);
+        console.log('Menu display:', style.display);
+    }
+});
+</script>
+
 </body>
 </html>
