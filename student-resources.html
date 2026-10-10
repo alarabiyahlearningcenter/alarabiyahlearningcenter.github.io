@@ -224,5 +224,37 @@ document.getElementById('menuBtn').addEventListener('click', () => {
 })();
 </script>
 
+
+<script>
+(function() {
+    function attachMenuHandler() {
+        var btn = document.getElementById('menuBtn');
+        var menu = document.getElementById('mobileMenu');
+        if (!btn || !menu) return;
+        
+        var newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                menu.style.display = 'block';
+            } else {
+                menu.classList.add('hidden');
+                menu.style.display = 'none';
+            }
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachMenuHandler);
+    } else {
+        attachMenuHandler();
+    }
+})();
+</script>
+
 </body>
 </html>
