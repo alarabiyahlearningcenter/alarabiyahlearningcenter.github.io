@@ -486,10 +486,10 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     const selectedPlanId = planIdFromUrl || planIdFromStorage;
     
     if (!selectedPlanId) return;
-    if (!window.db) return;
+    if (typeof db === "undefined") return;
     
     try {
-        const { data: planData, error: planErr } = await window.db.from('pricing_plans').select('*').eq('id', selectedPlanId).single();
+        const { data: planData, error: planErr } = await db.from('pricing_plans').select('*').eq('id', selectedPlanId).single();
         if (!planData || planErr) {
             console.warn('Plan load failed:', planErr);
             return;
@@ -539,6 +539,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     } catch (e) {
         console.error('Plan auto-load error:', e);
     }
+})();
 })();
 </script>
 
