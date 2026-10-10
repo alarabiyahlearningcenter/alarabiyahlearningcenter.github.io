@@ -56,7 +56,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     <div class="flex items-center gap-2">
       <a href="auth/login.html" class="inline-block px-5 py-2 text-primary font-medium hover:text-secondary transition">Login</a>
       <a href="auth/signup.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Start Learning</a>
-      <button id="menuBtn" onclick="var m=document.getElementById('mobileMenu');if(m){m.classList.toggle('hidden')};return false;" class="lg:hidden p-2 text-primary">
+      <button id="menuBtn" class="lg:hidden p-2 text-primary">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
     </div>
@@ -393,35 +393,41 @@ function formatPrice(bdt, usd) {
 <script src="assets/js/site-loader.js"></script>
 
 
+
+
+
 <script>
-(function() {
-    function attachMenuHandler() {
-        var btn = document.getElementById('menuBtn');
-        var menu = document.getElementById('mobileMenu');
-        if (!btn || !menu) return;
-        
-        var newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-                menu.style.display = 'block';
-            } else {
-                menu.classList.add('hidden');
-                menu.style.display = 'none';
-            }
+window.addEventListener('load', function() {
+    var btn = document.getElementById('menuBtn');
+    var menu = document.getElementById('mobileMenu');
+    if (!btn || !menu) return;
+    
+    // Remove any inline onclick attribute
+    btn.removeAttribute('onclick');
+    
+    // Overwrite ALL handlers with one clean handler
+    btn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (menu.classList.contains('hidden')) {
+            menu.classList.remove('hidden');
+            menu.style.display = 'block';
+        } else {
+            menu.classList.add('hidden');
+            menu.style.display = 'none';
+        }
+        return false;
+    };
+    
+    // Close menu when any link inside is clicked
+    var links = menu.querySelectorAll('a');
+    for (var i = 0; i < links.length; i++) {
+        links[i].addEventListener('click', function() {
+            menu.classList.add('hidden');
+            menu.style.display = 'none';
         });
     }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', attachMenuHandler);
-    } else {
-        attachMenuHandler();
-    }
-})();
+});
 </script>
 
 </body>
