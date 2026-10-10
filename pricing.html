@@ -474,42 +474,42 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
 
 
 
+
+
+
 <script>
-/* PLAN-ROUTER-V6-DIRECT */
+/* PLAN-ROUTER-V7-FINAL */
 (function() {
-    function scanLocalStorage() {
-        var result = [];
+    var PROJECT_REF = 'vgsgjsneymetzsuzl1fb';
+    
+    function checkSession() {
         try {
-            for (var i = 0; i < localStorage.length; i++) {
-                var key = localStorage.key(i);
-                if (key && key.indexOf('sb-') === 0) {
-                    var val = localStorage.getItem(key);
-                    var snippet = val ? val.substring(0, 80) : 'null';
-                    result.push(key + ' => ' + snippet);
-                }
+            var tokenStr = localStorage.getItem('sb-' + PROJECT_REF + '-auth-token');
+            if (!tokenStr) return { ok: false, reason: 'no-token' };
+            var parsed = JSON.parse(tokenStr);
+            if (!parsed || !parsed.access_token) return { ok: false, reason: 'no-access-token' };
+            var now = Math.floor(Date.now() / 1000);
+            var exp = parsed.expires_at || 0;
+            var remaining = exp - now;
+            if (exp > 0 && remaining <= 0) {
+                return { ok: false, reason: 'expired', expired_secs: -remaining, expires_at: exp, now: now };
             }
-        } catch(e) {}
-        return result;
-    }
-    
-    function isLoggedIn() {
-        var keys = scanLocalStorage();
-        for (var i = 0; i < keys.length; i++) {
-            if (keys[i].indexOf('-auth-token') !== -1 && keys[i].indexOf('access_token') === -1) {
-                return true;
-            }
+            return { ok: true, remaining: remaining, expires_at: exp, user: parsed.user && parsed.user.email };
+        } catch (e) {
+            return { ok: false, reason: 'parse-error: ' + e.message };
         }
-        return false;
     }
     
-    function rewriteLinks() {
-        if (!isLoggedIn()) return;
+    function rewriteAllLinks(session) {
+        if (!session.ok) return;
         var links = document.querySelectorAll('a[href*="auth/signup.html"]');
         for (var i = 0; i < links.length; i++) {
             var a = links[i];
             var href = a.getAttribute('href');
             if (!href) continue;
-            var newHref = href.replace('auth/signup.html?plan=', 'student/payment.html?plan=').replace('auth/signup.html', 'student/dashboard.html');
+            var newHref = href
+                .replace('auth/signup.html?plan=', 'student/payment.html?plan=')
+                .replace('auth/signup.html', 'student/dashboard.html');
             if (newHref !== href) {
                 a.setAttribute('href', newHref);
                 a.removeAttribute('onclick');
@@ -518,15 +518,20 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
     }
     
     function setup() {
-        // Debug badge to show localStorage state
+        var session = checkSession();
         var badge = document.createElement('div');
-        badge.style.cssText = 'position:fixed;top:60px;left:5px;background:black;color:#0f0;padding:6px;font-size:10px;z-index:999999;font-family:monospace;max-width:95%;word-break:break-all;';
-        var keys = scanLocalStorage();
-        badge.innerHTML = 'LOGGED:' + (isLoggedIn() ? 'YES' : 'NO') + '<br>' + keys.join('<br>');
+        badge.style.cssText = 'position:fixed;top:60px;left:5px;background:black;color:#0f0;padding:8px;font-size:10px;z-index:999999;font-family:monospace;max-width:95%;word-break:break-all;line-height:1.4;';
+        if (session.ok) {
+            badge.innerHTML = 'SESSION: VALID<br>Email: ' + session.user + '<br>Expires in: ' + Math.round(session.remaining/60) + ' minutes';
+            badge.style.background = '#062';
+        } else {
+            badge.innerHTML = 'SESSION: INVALID<br>Reason: ' + session.reason + (session.expired_secs ? '<br>Expired ' + Math.round(session.expired_secs/60) + ' minutes ago' : '') + '<br>⚠️ PLEASE RE-LOGIN';
+            badge.style.background = '#600';
+        }
         document.body.appendChild(badge);
         
-        rewriteLinks();
-        setInterval(rewriteLinks, 200);
+        rewriteAllLinks(session);
+        setInterval(function() { rewriteAllLinks(checkSession()); }, 300);
     }
     
     if (document.readyState === 'loading') {
