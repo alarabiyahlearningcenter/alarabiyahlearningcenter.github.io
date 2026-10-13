@@ -91,6 +91,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#0A3622;box-sh
 <!-- PLANS GRID -->
 <section class="py-12 md:py-16 bg-white">
   <div class="max-w-7xl mx-auto px-4">
+                <!-- STEP 1: Course Selector -->
+                <div id="courseSelectorSection" class="mb-10 max-w-2xl mx-auto">
+                    <div class="bg-cream rounded-2xl p-5 border-2 border-primary/20">
+                        <label class="text-sm font-semibold text-primary mb-3 block">Step 1: Choose Your Course (Optional)</label>
+                        <select id="mainCourseSelect" class="w-full p-3 border border-primary/30 rounded-xl bg-white text-charcoal">
+                            <option value="">-- Skip --</option>
+                        </select>
+                    </div>
+                </div>
+
 
     <!-- Billing Toggle (BDT / USD) -->
     <div class="flex items-center justify-center gap-3 mb-10">
@@ -373,7 +383,7 @@ function renderPlans() {
   renderPlans();
 
   // Load courses for custom plan form
-  const { data: courses } = await db.from('courses').select('title').eq('is_active', true);
+  const { data: courses } = await db.from('courses').select('*').eq('is_active', true).order('sort_order');
   const cSel = document.getElementById('customCourse');
   (courses || []).forEach(c => {
     const opt = document.createElement('option');
@@ -546,6 +556,101 @@ document.getElementById('customForm').addEventListener('submit', async (e) => {
     } else {
         setup();
     }
+})();
+</script>
+
+
+<script>
+/* COURSE-PARAM-HOOK */
+(function() {
+    function appendCourseParam() {
+        var cid = sessionStorage.getItem('alc_course_id');
+        if (!cid) return;
+        var links = document.querySelectorAll('a[href*="auth/signup.html?plan="], a[href*="student/payment.html?plan="]');
+        for (var i = 0; i < links.length; i++) {
+            var href = links[i].getAttribute('href');
+            if (!href || href.indexOf('course=') !== -1) continue;
+            var sep = href.indexOf('?') !== -1 ? '&' : '?';
+            links[i].setAttribute('href', href + sep + 'course=' + cid);
+        }
+    }
+    setInterval(appendCourseParam, 500);
+})();
+</script>
+
+
+<script>
+/* OPTION-C-STANDALONE - populates course dropdown + hooks plan links */
+(function() {
+    function whenReady(fn) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fn);
+        } else {
+            fn();
+        }
+    }
+    
+    whenReady(function() {
+        var tries = 0;
+        var waitInterval = setInterval(function() {
+            tries++;
+            var mainCsel = document.getElementById('mainCourseSelect');
+            var db = window.db;
+            
+            if (!mainCsel || !db) {
+                if (tries > 40) clearInterval(waitInterval);
+                return;
+            }
+            clearInterval(waitInterval);
+            
+            // Populate dropdown
+            db.from('courses').select('*').eq('is_active', true).order('sort_order').then(function(res) {
+                var courses = res.data || [];
+                courses.forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.dataset.title = c.title;
+                    opt.dataset.priceBdt = c.price_bdt || 0;
+                    opt.dataset.priceUsd = c.price_usd || 0;
+                    var priceText = c.price_bdt ? ' - ৳' + c.price_bdt : (c.price_usd ? ' - $' + c.price_usd : '');
+                    opt.textContent = c.title + priceText;
+                    mainCsel.appendChild(opt);
+                });
+                
+                // Restore selection
+                var saved = sessionStorage.getItem('alc_course_id');
+                if (saved) mainCsel.value = saved;
+                
+                // On change - save to sessionStorage
+                mainCsel.addEventListener('change', function() {
+                    var sel = mainCsel.options[mainCsel.selectedIndex];
+                    if (sel.value) {
+                        sessionStorage.setItem('alc_course_id', sel.value);
+                        sessionStorage.setItem('alc_course_title', sel.dataset.title || '');
+                        sessionStorage.setItem('alc_course_price', sel.dataset.priceBdt || sel.dataset.priceUsd || '0');
+                    } else {
+                        sessionStorage.removeItem('alc_course_id');
+                        sessionStorage.removeItem('alc_course_title');
+                        sessionStorage.removeItem('alc_course_price');
+                    }
+                });
+            });
+            
+            // Hook to append course to plan links every 500ms
+            function appendCourseParam() {
+                var cid = sessionStorage.getItem('alc_course_id');
+                if (!cid) return;
+                var links = document.querySelectorAll('a[href*="signup.html?plan="], a[href*="student/payment.html?plan="]');
+                for (var i = 0; i < links.length; i++) {
+                    var href = links[i].getAttribute('href');
+                    if (!href || href.indexOf('course=') !== -1) continue;
+                    var sep = href.indexOf('?') !== -1 ? '&' : '?';
+                    links[i].setAttribute('href', href + sep + 'course=' + cid);
+                }
+            }
+            setInterval(appendCourseParam, 500);
+        }, 250);
+    });
 })();
 </script>
 
