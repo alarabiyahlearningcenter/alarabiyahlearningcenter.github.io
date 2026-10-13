@@ -598,5 +598,98 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 })();
 </script>
 
+<script>
+/* ALL-PLANS-V1 - separate script to list all active enrollments */
+(function() {
+    async function renderAllPlans() {
+        if (!window.db) { setTimeout(renderAllPlans, 300); return; }
+        
+        var planContent = document.getElementById('planContent');
+        if (!planContent || planContent.classList.contains('hidden')) {
+            setTimeout(renderAllPlans, 300);
+            return;
+        }
+        if (document.getElementById('allPlansContainer')) return;
+        
+        try {
+            var res = await window.db.auth.getSession();
+            var session = res.data && res.data.session;
+            if (!session) return;
+            
+            var eRes = await window.db.from('enrollments').select('*')
+                .eq('student_id', session.user.id)
+                .eq('status', 'active')
+                .order('started_at', {ascending: false});
+            var enrollments = eRes.data;
+            if (!enrollments || enrollments.length < 2) return;
+            
+            var planIds = enrollments.map(function(e) { return e.plan_id; }).filter(Boolean);
+            var courseIds = enrollments.map(function(e) { return e.course_id; }).filter(Boolean);
+            
+            var planMap = {};
+            var courseMap = {};
+            
+            if (planIds.length > 0) {
+                var pRes = await window.db.from('pricing_plans').select('id, name, price_bdt, duration_min, description').in('id', planIds);
+                if (pRes.data) pRes.data.forEach(function(p) { planMap[p.id] = p; });
+            }
+            if (courseIds.length > 0) {
+                var cRes = await window.db.from('courses').select('id, title').in('id', courseIds);
+                if (cRes.data) cRes.data.forEach(function(c) { courseMap[c.id] = c.title; });
+            }
+            
+            var container = document.createElement('div');
+            container.id = 'allPlansContainer';
+            container.className = 'max-w-3xl';
+            container.style.cssText = 'margin-top:32px;';
+            
+            var html = '<h3 style="font-size:18px;font-weight:bold;color:#0a3622;margin-bottom:16px;">All Active Plans (' + enrollments.length + ')</h3>';
+            html += '<div style="display:grid;gap:12px;">';
+            
+            enrollments.forEach(function(en) {
+                var planName = 'Course Plan';
+                var price = '';
+                var duration = '';
+                var subtitle = '';
+                
+                if (en.plan_id && planMap[en.plan_id]) {
+                    var p = planMap[en.plan_id];
+                    planName = p.name || 'Custom Plan';
+                    price = '\u09F3' + (p.price_bdt || 0);
+                    duration = (p.duration_min || '?') + ' min';
+                    subtitle = p.description || 'Plan';
+                } else if (en.course_id && courseMap[en.course_id]) {
+                    planName = courseMap[en.course_id];
+                    subtitle = 'Course-based';
+                }
+                
+                html += '<div style="background:white;border:1px solid rgba(10,54,34,0.1);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;">' +
+                    '<div><div style="font-weight:bold;color:#0a3622;font-size:16px;">' + planName + '</div>' +
+                    '<div style="font-size:12px;color:#6b7280;margin-top:4px;">' + subtitle + (duration ? ' &middot; ' + duration : '') + '</div></div>' +
+                    '<div style="text-align:right;"><div style="font-weight:bold;color:#d4af37;font-size:18px;">' + price + '</div>' +
+                    '<div style="font-size:11px;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;margin-top:4px;display:inline-block;">ACTIVE</div></div>' +
+                    '</div>';
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+            if (planContent.parentNode) {
+                planContent.parentNode.insertBefore(container, planContent.nextSibling);
+            }
+            
+        } catch (e) {
+            console.error('All plans render error:', e);
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(renderAllPlans, 1500); });
+    } else {
+        setTimeout(renderAllPlans, 1500);
+    }
+})();
+</script>
+
 </body>
 </html>
