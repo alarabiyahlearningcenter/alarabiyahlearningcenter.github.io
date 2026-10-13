@@ -480,6 +480,7 @@ const payload = {
     // PLAN-AUTO-LOAD-V6 - reads URL param, hides course dropdown, shows banner
     const planUrlParams = new URLSearchParams(location.search);
     const signupPlanId = planUrlParams.get("plan") || localStorage.getItem("selectedPlanId");
+    window._planId = signupPlanId || null;
     if (signupPlanId) {
         const { data: signupPlan } = await db.from("pricing_plans").select("*").eq("id", signupPlanId).single();
         if (signupPlan) {
