@@ -69,3 +69,68 @@
     }
   });
 })();
+
+/* BELL-BADGE-V1 - Separate IIFE that adds unread count on bell icon */
+(function() {
+    function attachBadge() {
+        // Find bell container (injected by the code above)
+        var bellContainer = document.getElementById('notifBellContainer');
+        if (!bellContainer) {
+            // Retry if not yet injected
+            setTimeout(attachBadge, 300);
+            return;
+        }
+        if (document.getElementById('notifBadge')) return; // Already added
+        
+        var bellLink = bellContainer.querySelector('a');
+        if (!bellLink) {
+            setTimeout(attachBadge, 300);
+            return;
+        }
+        
+        bellLink.style.position = 'relative';
+        bellLink.style.display = 'inline-flex';
+        bellLink.style.alignItems = 'center';
+        
+        var badge = document.createElement('span');
+        badge.id = 'notifBadge';
+        badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;background:#dc2626;color:white;font-size:11px;font-weight:bold;border-radius:9999px;display:none;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:10;line-height:1;';
+        bellLink.appendChild(badge);
+        
+        // Wait for NotifBell to be ready
+        function tryUpdate() {
+            if (!window.NotifBell || !window.NotifBell.client || !window.NotifBell.user) {
+                setTimeout(tryUpdate, 300);
+                return;
+            }
+            updateBadge();
+        }
+        
+        async function updateBadge() {
+            try {
+                var c = window.NotifBell.client;
+                var u = window.NotifBell.user;
+                if (!c || !u) return;
+                var res = await c.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', u.id).eq('is_read', false);
+                var count = res.count || 0;
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch(e) {
+                console.warn('Badge fetch failed:', e.message);
+            }
+        }
+        
+        tryUpdate();
+        setInterval(updateBadge, 30000);
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(attachBadge, 500); });
+    } else {
+        setTimeout(attachBadge, 500);
+    }
+})();
