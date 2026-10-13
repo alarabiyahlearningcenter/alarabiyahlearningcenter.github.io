@@ -514,5 +514,89 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 })();
 </script>
 
+<script>
+/* PENDING-ALERT-V1 - separate script, never touches main code */
+(function() {
+    var checks = 0;
+    var interval = setInterval(function() {
+        checks++;
+        if (checks > 60 || typeof db === 'undefined' || !db) {
+            if (checks > 60) clearInterval(interval);
+            return;
+        }
+        clearInterval(interval);
+        
+        db.auth.getSession().then(function(res) {
+            var session = res.data && res.data.session;
+            if (!session) return;
+            
+            db.from('payments').select('*').eq('student_id', session.user.id).eq('status', 'pending').order('created_at', {ascending: false}).then(function(pRes) {
+                var pendingPayments = pRes.data;
+                if (!pendingPayments || pendingPayments.length === 0) return;
+                
+                var planIds = pendingPayments.map(function(p) { return p.plan_id; }).filter(Boolean);
+                var planNames = {};
+                
+                var doRender = function() {
+                    var tries = 0;
+                    var renderInterval = setInterval(function() {
+                        tries++;
+                        if (tries > 20) { clearInterval(renderInterval); return; }
+                        if (renderAlert(pendingPayments, planNames)) {
+                            clearInterval(renderInterval);
+                        }
+                    }, 300);
+                };
+                
+                if (planIds.length > 0) {
+                    db.from('pricing_plans').select('id, name, plan_name').in('id', planIds).then(function(pRes2) {
+                        if (pRes2.data) {
+                            pRes2.data.forEach(function(pl) {
+                                planNames[pl.id] = pl.name || pl.plan_name || 'Custom Plan';
+                            });
+                        }
+                        doRender();
+                    });
+                } else {
+                    doRender();
+                }
+            });
+        });
+    }, 500);
+    
+    function renderAlert(pendingPayments, planNames) {
+        var planContent = document.getElementById('planContent');
+        if (!planContent || !planContent.parentNode) return false;
+        if (document.getElementById('pendingPaymentsAlert')) return true;
+        
+        var alertDiv = document.createElement('div');
+        alertDiv.id = 'pendingPaymentsAlert';
+        alertDiv.style.cssText = 'background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:16px;padding:20px;margin-bottom:20px;';
+        
+        var html = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
+            '<span style="font-size:24px;">&#9203;</span>' +
+            '<div><div style="font-size:18px;font-weight:bold;color:#92400e;">Payment Verification Pending</div>' +
+            '<div style="font-size:13px;color:#78350f;">Your plan will be activated after admin approval</div></div></div>';
+        
+        html += '<div style="background:white;border-radius:12px;padding:12px;">';
+        pendingPayments.forEach(function(pp, i) {
+            var planName = pp.plan_id && planNames[pp.plan_id] ? planNames[pp.plan_id] : 'Course Payment';
+            var dateStr = new Date(pp.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            var methodUpper = (pp.method || 'unknown').toUpperCase();
+            html += '<div style="padding:10px 0;' + (i > 0 ? 'border-top:1px solid #e5e7eb;' : '') + 'display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
+                '<div><div style="font-weight:bold;color:#0a3622;font-size:14px;">' + planName + '</div>' +
+                '<div style="font-size:11px;color:#6b7280;margin-top:2px;">' + methodUpper + ' &middot; ' + (pp.transaction_id || 'N/A') + ' &middot; ' + dateStr + '</div></div>' +
+                '<div style="text-align:right;"><div style="font-weight:bold;color:#0a3622;">&#2547;' + pp.amount + '</div>' +
+                '<div style="font-size:10px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:999px;margin-top:4px;display:inline-block;">PENDING</div></div></div>';
+        });
+        html += '</div>';
+        alertDiv.innerHTML = html;
+        
+        planContent.parentNode.insertBefore(alertDiv, planContent);
+        return true;
+    }
+})();
+</script>
+
 </body>
 </html>
