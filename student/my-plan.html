@@ -206,26 +206,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 
   const pendingQuote = pendingQuotes && pendingQuotes.length > 0 ? pendingQuotes[0] : null;
 
-  // Pending payments - FETCH-PENDING-V1
-    const { data: pendingPayments } = await db.from('payments')
-        .select('id, amount, transaction_id, method, status, created_at, plan_id, course_id')
-        .eq('student_id', session.user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-    // Get plan names for pending payments
-    let pendingPlanNames = {};
-    if (pendingPayments && pendingPayments.length > 0) {
-        const ppIds = pendingPayments.map(pp => pp.plan_id).filter(Boolean);
-        if (ppIds.length > 0) {
-            const { data: ppPlans } = await db.from('pricing_plans').select('id, name, plan_name').in('id', ppIds);
-            if (ppPlans) {
-                ppPlans.forEach(pl => { pendingPlanNames[pl.id] = pl.name || pl.plan_name || 'Custom Plan'; });
-            }
-        }
-    }
-
-    // Fetch active enrollment with plan
+  // Fetch active enrollment with plan
   const { data: enrollment } = await db
     .from('enrollments')
     .select('*')
@@ -237,39 +218,6 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 
   loading.classList.add('hidden');
   content.classList.remove('hidden');
-
-    // Render pending payment alerts - PLAN-PENDING-UI-V1
-    if (pendingPayments && pendingPayments.length > 0) {
-        const pendingContainer = document.createElement('div');
-        pendingContainer.id = 'pendingPaymentsAlert';
-        pendingContainer.style.cssText = 'background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:16px;padding:20px;margin-bottom:20px;';
-        
-        let alertHtml = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
-            '<span style="font-size:24px;">&#9203;</span>' +
-            '<div><div style="font-size:18px;font-weight:bold;color:#92400e;">Payment Verification Pending</div>' +
-            '<div style="font-size:13px;color:#78350f;">Your plan will be activated after admin approval</div></div></div>';
-        
-        alertHtml += '<div style="background:white;border-radius:12px;padding:12px;">';
-        for (let i = 0; i < pendingPayments.length; i++) {
-            const pp = pendingPayments[i];
-            const planName = pp.plan_id && pendingPlanNames[pp.plan_id] ? pendingPlanNames[pp.plan_id] : 'Course Payment';
-            const dateStr = new Date(pp.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-            const methodUpper = (pp.method || 'unknown').toUpperCase();
-            alertHtml += '<div style="padding:10px 0;' + (i > 0 ? 'border-top:1px solid #e5e7eb;' : '') + 'display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
-                '<div><div style="font-weight:bold;color:#0a3622;font-size:14px;">' + planName + '</div>' +
-                '<div style="font-size:11px;color:#6b7280;margin-top:2px;">' + methodUpper + ' &middot; ' + (pp.transaction_id || 'N/A') + ' &middot; ' + dateStr + '</div></div>' +
-                '<div style="text-align:right;"><div style="font-weight:bold;color:#0a3622;">&#2547;' + pp.amount + '</div>' +
-                '<div style="font-size:10px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:999px;margin-top:4px;display:inline-block;">PENDING</div></div></div>';
-        }
-        alertHtml += '</div>';
-        pendingContainer.innerHTML = alertHtml;
-        
-        // Insert at the top of content div
-        if (content && content.parentNode) {
-            content.insertBefore(pendingContainer, content.firstChild);
-        }
-    }
-
 
   // Render pending quote section if exists
   let quoteHtml = '';
