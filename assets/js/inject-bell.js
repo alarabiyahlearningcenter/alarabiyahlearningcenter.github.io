@@ -70,18 +70,44 @@
   });
 })();
 
-/* BELL-BADGE-V2 - Own Supabase client, no dependency on NotifBell internals */
+/* BELL-BADGE-V3 - with visible debug banner */
 (function() {
     var SUPABASE_URL = 'https://vgsgjsneymetzsuzl1fb.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk';
     
+    function log(msg) {
+        var banner = document.getElementById('badgeDebug');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'badgeDebug';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:black;color:#0f0;font-size:11px;padding:5px;z-index:999999;font-family:monospace;line-height:1.4;max-height:80px;overflow-y:auto;';
+            document.body.appendChild(banner);
+        }
+        banner.innerHTML += msg + '<br>';
+    }
+    
     function attachBadge() {
+        log('[1] attachBadge started');
         var bellContainer = document.getElementById('notifBellContainer');
-        if (!bellContainer) { setTimeout(attachBadge, 300); return; }
-        if (document.getElementById('notifBadge')) return;
+        if (!bellContainer) { 
+            log('[2] notifBellContainer NOT found, retrying');
+            setTimeout(attachBadge, 300); 
+            return; 
+        }
+        log('[2] notifBellContainer FOUND');
+        
+        if (document.getElementById('notifBadge')) {
+            log('[3] Badge already exists');
+            return;
+        }
         
         var bellLink = bellContainer.querySelector('a');
-        if (!bellLink) { setTimeout(attachBadge, 300); return; }
+        if (!bellLink) { 
+            log('[3] bellLink NOT found, retrying');
+            setTimeout(attachBadge, 300); 
+            return; 
+        }
+        log('[3] bellLink FOUND');
         
         bellLink.style.position = 'relative';
         bellLink.style.display = 'inline-flex';
@@ -89,8 +115,16 @@
         
         var badge = document.createElement('span');
         badge.id = 'notifBadge';
-        badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;background:#dc2626;color:white;font-size:11px;font-weight:bold;border-radius:9999px;display:none;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:10;line-height:1;';
+        badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;background:#dc2626;color:white;font-size:11px;font-weight:bold;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:10;line-height:1;';
+        badge.textContent = '?';
         bellLink.appendChild(badge);
+        log('[4] Badge element added with ?');
+        
+        if (!window.supabase) {
+            log('[5] window.supabase NOT available!');
+            return;
+        }
+        log('[5] supabase available');
         
         var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
@@ -98,17 +132,25 @@
             try {
                 var sRes = await db.auth.getSession();
                 var session = sRes.data && sRes.data.session;
-                if (!session || !session.user) return;
+                if (!session || !session.user) {
+                    log('[6] No session');
+                    badge.style.display = 'none';
+                    return;
+                }
+                log('[6] Session: ' + session.user.email);
                 var res = await db.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('is_read', false);
+                log('[7] Count result: ' + JSON.stringify(res.count) + ' err: ' + (res.error ? res.error.message : 'none'));
                 var count = res.count || 0;
                 if (count > 0) {
                     badge.textContent = count > 99 ? '99+' : count;
                     badge.style.display = 'flex';
+                    log('[8] Badge shown with: ' + count);
                 } else {
                     badge.style.display = 'none';
+                    log('[8] Count is 0, hiding badge');
                 }
             } catch(e) {
-                console.warn('Badge fetch failed:', e.message);
+                log('[ERR] ' + e.message);
             }
         }
         
