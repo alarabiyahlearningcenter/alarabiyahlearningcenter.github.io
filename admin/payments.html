@@ -206,22 +206,69 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     if (window.Notif) {
       const { data: payInfo } = await db.from('payments').select('student_id, amount, course_id, plan_id').eq('id', id).single();
       
-      // Auto-create enrollment
-      if (payInfo?.student_id && (payInfo?.course_id || payInfo?.plan_id)) {
-        const { data: existing } = await db.from('enrollments')
-          .select('id')
-          .eq('student_id', payInfo.student_id)
-          .eq(payInfo.plan_id ? 'plan_id' : 'course_id', payInfo.plan_id || payInfo.course_id)
-          .maybeSingle();
+        // Auto-create enrollment - V2 with error logging
+        console.log("[VERIFY] payInfo2:", payInfo2);
         
-        if (!existing) {
-          await db.from('enrollments').insert({
-            student_id: payInfo.student_id,
-            course_id: payInfo.course_id || null,
-            plan_id: payInfo.plan_id || null,
-            status: 'active'
-          , started_at: new Date().toISOString()});
-          
+        if (payInfo2 && payInfo2.student_id) {
+            // Step 1: Verify profile exists
+            const { data: profileCheck, error: profileErr } = await db.from("profiles")
+                .select("id, email")
+                .eq("id", payInfo2.student_id)
+                .maybeSingle();
+            
+            console.log("[VERIFY] profileCheck:", profileCheck, "err:", profileErr);
+            
+            if (profileErr || !profileCheck) {
+                console.error("[VERIFY] Profile not found:", payInfo2.student_id);
+                alert("Warning: Profile not found! Cannot create enrollment.");
+            } else {
+                // Step 2: Check if enrollment exists
+                let existingQuery = db.from("enrollments")
+                    .select("id")
+                    .eq("student_id", payInfo2.student_id);
+                if (payInfo2.plan_id) {
+                    existingQuery = existingQuery.eq("plan_id", payInfo2.plan_id);
+                }
+                if (payInfo2.course_id) {
+                    existingQuery = existingQuery.eq("course_id", payInfo2.course_id);
+                }
+                const { data: existing, error: existErr } = await existingQuery.maybeSingle();
+                
+                console.log("[VERIFY] existing check:", existing, "err:", existErr);
+                
+                if (!existing) {
+                    // Step 3: Insert new enrollment
+                    const { data: inserted, error: insErr } = await db.from("enrollments").insert({
+                        student_id: payInfo2.student_id,
+                        course_id: payInfo2.course_id || null,
+                        plan_id: payInfo2.plan_id || null,
+                        status: "active",
+                        started_at: new Date().toISOString()
+                    }).select();
+                    
+                    console.log("[VERIFY] insert result:", inserted, "err:", insErr);
+                    
+                    if (insErr) {
+                        console.error("[VERIFY] INSERT FAILED:", insErr);
+                        alert("Warning: Enrollment failed: " + insErr.message);
+                    } else {
+                        // Step 4: Notify student
+                        if (window.Notif) {
+                            await Notif.send(
+                                payInfo2.student_id,
+                                "Enrolled in Course",
+                                "You have been enrolled. Start learning now!",
+                                "success",
+                                "/student/my-courses.html"
+                            ).catch(() => {});
+                        }
+                    }
+                } else {
+                    console.log("[VERIFY] Enrollment already exists, skipping");
+                }
+            }
+        }
+        
           // Notify student of enrollment
           if (window.Notif) {
             await Notif.send(
