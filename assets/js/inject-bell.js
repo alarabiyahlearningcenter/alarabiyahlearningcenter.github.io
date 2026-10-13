@@ -15,6 +15,7 @@
     if (!window.supabase) return;
 
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window._notifClient = client;
 
     // Make Notif API available using our client
     if (!window.Notif) {
@@ -70,11 +71,8 @@
   });
 })();
 
-/* BELL-BADGE-V4 - force-cleanup + debug */
+/* BELL-BADGE-V5 - uses exposed window._notifClient */
 (function() {
-    var SUPABASE_URL = 'https://vgsgjsneymetzsuzl1fb.supabase.co';
-    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk';
-    
     function log(msg) {
         var b = document.getElementById('badgeDebug');
         if (!b) {
@@ -86,69 +84,78 @@
         b.innerHTML += msg + '<br>';
     }
     
-    // Force remove all old badges
-    function cleanupOldBadges() {
-        var old = document.querySelectorAll('#notifBadge');
-        var n = 0;
-        old.forEach(function(el) { el.remove(); n++; });
-        return n;
-    }
-    
     function attachBadge() {
         log('[1] started');
-        var bellContainer = document.getElementById('notifBellContainer');
-        if (!bellContainer) { setTimeout(attachBadge, 300); return; }
+        var bc = document.getElementById('notifBellContainer');
+        if (!bc) { setTimeout(attachBadge, 300); return; }
         log('[2] container found');
         
-        var removed = cleanupOldBadges();
-        log('[3] removed ' + removed + ' old badge(s)');
+        document.querySelectorAll('#notifBadge').forEach(function(el) { el.remove(); });
+        log('[3] old badges removed');
         
-        var bellLink = bellContainer.querySelector('a');
-        if (!bellLink) { setTimeout(attachBadge, 300); return; }
+        var bl = bc.querySelector('a');
+        if (!bl) { setTimeout(attachBadge, 300); return; }
         log('[4] bellLink found');
         
-        bellLink.style.position = 'relative';
-        bellLink.style.display = 'inline-flex';
-        bellLink.style.alignItems = 'center';
+        bl.style.position = 'relative';
+        bl.style.display = 'inline-flex';
+        bl.style.alignItems = 'center';
         
         var badge = document.createElement('span');
         badge.id = 'notifBadge';
         badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;background:#dc2626;color:white;font-size:12px;font-weight:bold;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:9999;line-height:1;';
         badge.textContent = '?';
-        bellLink.appendChild(badge);
-        log('[5] badge added');
+        bl.appendChild(badge);
+        log('[5] badge DOM added');
         
-        if (!window.supabase) {
-            log('[ERR] supabase missing');
-            return;
-        }
-        
-        var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        async function updateBadge() {
-            try {
-                var sRes = await db.auth.getSession();
-                var session = sRes.data && sRes.data.session;
-                if (!session || !session.user) {
-                    log('[6] no session');
-                    return;
-                }
-                var res = await db.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('is_read', false);
-                var count = res.count || 0;
-                log('[7] count: ' + count);
-                if (count > 0) {
-                    badge.textContent = count > 99 ? '99+' : count;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-            } catch(e) {
-                log('[ERR] ' + e.message);
+        // Wait for client to be exposed
+        var tries = 0;
+        function waitClient() {
+            tries++;
+            if (window._notifClient) {
+                log('[6] client available after ' + tries + ' tries');
+                startCount();
+            } else if (tries < 40) {
+                setTimeout(waitClient, 250);
+            } else {
+                log('[ERR] client never appeared');
             }
         }
+        waitClient();
         
-        setTimeout(updateBadge, 100);
-        setInterval(updateBadge, 30000);
+        function startCount() {
+            var db = window._notifClient;
+            
+            async function updateBadge() {
+                try {
+                    var sRes = await db.auth.getSession();
+                    var session = sRes.data && sRes.data.session;
+                    if (!session || !session.user) {
+                        log('[7] no session');
+                        return;
+                    }
+                    log('[8] user: ' + session.user.email);
+                    var res = await db.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('is_read', false);
+                    if (res.error) {
+                        log('[9 ERR] ' + res.error.message);
+                        return;
+                    }
+                    var count = res.count || 0;
+                    log('[9] count = ' + count);
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                } catch(e) {
+                    log('[ERR] ' + e.message);
+                }
+            }
+            
+            updateBadge();
+            setInterval(updateBadge, 30000);
+        }
     }
     
     if (document.readyState === 'loading') {
