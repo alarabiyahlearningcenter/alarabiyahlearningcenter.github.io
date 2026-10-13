@@ -71,31 +71,38 @@ window._notifClient = client;
   });
 })();
 
-/* BELL-BADGE-V5 - uses exposed window._notifClient */
+/* BELL-BADGE-V6 - Direct REST fetch, no client needed */
 (function() {
-    function log(msg) {
-        var b = document.getElementById('badgeDebug');
-        if (!b) {
-            b = document.createElement('div');
-            b.id = 'badgeDebug';
-            b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:black;color:#0f0;font-size:11px;padding:5px;z-index:999999;font-family:monospace;line-height:1.4;max-height:80px;overflow-y:auto;';
-            document.body.appendChild(b);
-        }
-        b.innerHTML += msg + '<br>';
+    var SUPABASE_URL = 'https://vgsgjsneymetzsuzl1fb.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk';
+    var SESSION_KEY = 'sb-vgsgjsneymetzsuzl1fb-auth-token';
+    
+    function getToken() {
+        try {
+            var raw = localStorage.getItem(SESSION_KEY);
+            if (!raw) return null;
+            var p = JSON.parse(raw);
+            return p && p.access_token ? p.access_token : null;
+        } catch(e) { return null; }
+    }
+    
+    function getUserId() {
+        try {
+            var raw = localStorage.getItem(SESSION_KEY);
+            if (!raw) return null;
+            var p = JSON.parse(raw);
+            return p && p.user ? p.user.id : null;
+        } catch(e) { return null; }
     }
     
     function attachBadge() {
-        log('[1] started');
         var bc = document.getElementById('notifBellContainer');
         if (!bc) { setTimeout(attachBadge, 300); return; }
-        log('[2] container found');
         
         document.querySelectorAll('#notifBadge').forEach(function(el) { el.remove(); });
-        log('[3] old badges removed');
         
         var bl = bc.querySelector('a');
         if (!bl) { setTimeout(attachBadge, 300); return; }
-        log('[4] bellLink found');
         
         bl.style.position = 'relative';
         bl.style.display = 'inline-flex';
@@ -103,59 +110,44 @@ window._notifClient = client;
         
         var badge = document.createElement('span');
         badge.id = 'notifBadge';
-        badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;background:#dc2626;color:white;font-size:12px;font-weight:bold;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:9999;line-height:1;';
-        badge.textContent = '?';
+        badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;background:#dc2626;color:white;font-size:12px;font-weight:bold;border-radius:9999px;display:none;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:9999;line-height:1;';
         bl.appendChild(badge);
-        log('[5] badge DOM added');
         
-        // Wait for client to be exposed
-        var tries = 0;
-        function waitClient() {
-            tries++;
-            if (window._notifClient) {
-                log('[6] client available after ' + tries + ' tries');
-                startCount();
-            } else if (tries < 40) {
-                setTimeout(waitClient, 250);
-            } else {
-                log('[ERR] client never appeared');
-            }
-        }
-        waitClient();
-        
-        function startCount() {
-            var db = window._notifClient;
-            
-            async function updateBadge() {
-                try {
-                    var sRes = await db.auth.getSession();
-                    var session = sRes.data && sRes.data.session;
-                    if (!session || !session.user) {
-                        log('[7] no session');
-                        return;
+        async function updateBadge() {
+            try {
+                var token = getToken();
+                var userId = getUserId();
+                if (!token || !userId) return;
+                
+                var url = SUPABASE_URL + '/rest/v1/notifications?select=id&user_id=eq.' + userId + '&is_read=eq.false';
+                var res = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + token,
+                        'Prefer': 'count=exact',
+                        'Range-Unit': 'items',
+                        'Range': '0-0'
                     }
-                    log('[8] user: ' + session.user.email);
-                    var res = await db.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', session.user.id).eq('is_read', false);
-                    if (res.error) {
-                        log('[9 ERR] ' + res.error.message);
-                        return;
-                    }
-                    var count = res.count || 0;
-                    log('[9] count = ' + count);
-                    if (count > 0) {
-                        badge.textContent = count > 99 ? '99+' : count;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                } catch(e) {
-                    log('[ERR] ' + e.message);
+                });
+                var rangeHeader = res.headers.get('content-range');
+                if (!rangeHeader) return;
+                var count = parseInt(rangeHeader.split('/')[1], 10);
+                if (isNaN(count)) count = 0;
+                
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
                 }
+            } catch(e) {
+                // silent
             }
-            
-            updateBadge();
-            setInterval(updateBadge, 30000);
         }
+        
+        setTimeout(updateBadge, 200);
+        setInterval(updateBadge, 30000);
     }
     
     if (document.readyState === 'loading') {
