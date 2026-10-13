@@ -71,27 +71,18 @@ window._notifClient = client;
   });
 })();
 
-/* BELL-BADGE-V6 - Direct REST fetch, no client needed */
+/* BELL-BADGE-V7 - JSON fetch with visible error */
 (function() {
     var SUPABASE_URL = 'https://vgsgjsneymetzsuzl1fb.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk';
     var SESSION_KEY = 'sb-vgsgjsneymetzsuzl1fb-auth-token';
     
-    function getToken() {
+    function getSession() {
         try {
             var raw = localStorage.getItem(SESSION_KEY);
             if (!raw) return null;
             var p = JSON.parse(raw);
-            return p && p.access_token ? p.access_token : null;
-        } catch(e) { return null; }
-    }
-    
-    function getUserId() {
-        try {
-            var raw = localStorage.getItem(SESSION_KEY);
-            if (!raw) return null;
-            var p = JSON.parse(raw);
-            return p && p.user ? p.user.id : null;
+            return (p && p.access_token && p.user) ? { token: p.access_token, userId: p.user.id } : null;
         } catch(e) { return null; }
     }
     
@@ -115,38 +106,48 @@ window._notifClient = client;
         
         async function updateBadge() {
             try {
-                var token = getToken();
-                var userId = getUserId();
-                if (!token || !userId) return;
+                var session = getSession();
+                if (!session) {
+                    badge.textContent = 'X';
+                    badge.style.display = 'flex';
+                    badge.title = 'No session';
+                    return;
+                }
                 
-                var url = SUPABASE_URL + '/rest/v1/notifications?select=id&user_id=eq.' + userId + '&is_read=eq.false';
+                var url = SUPABASE_URL + '/rest/v1/notifications?select=id,is_read&user_id=eq.' + session.userId + '&is_read=eq.false';
                 var res = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': 'Bearer ' + token,
-                        'Prefer': 'count=exact',
-                        'Range-Unit': 'items',
-                        'Range': '0-0'
+                        'Authorization': 'Bearer ' + session.token
                     }
                 });
-                var rangeHeader = res.headers.get('content-range');
-                if (!rangeHeader) return;
-                var count = parseInt(rangeHeader.split('/')[1], 10);
-                if (isNaN(count)) count = 0;
+                
+                if (!res.ok) {
+                    badge.textContent = 'E';
+                    badge.style.display = 'flex';
+                    badge.title = 'HTTP ' + res.status;
+                    return;
+                }
+                
+                var data = await res.json();
+                var count = Array.isArray(data) ? data.length : 0;
                 
                 if (count > 0) {
                     badge.textContent = count > 99 ? '99+' : count;
                     badge.style.display = 'flex';
+                    badge.title = count + ' unread';
                 } else {
                     badge.style.display = 'none';
                 }
             } catch(e) {
-                // silent
+                badge.textContent = '!';
+                badge.style.display = 'flex';
+                badge.title = e.message;
             }
         }
         
-        setTimeout(updateBadge, 200);
+        setTimeout(updateBadge, 300);
         setInterval(updateBadge, 30000);
     }
     
