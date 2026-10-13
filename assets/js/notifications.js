@@ -173,9 +173,9 @@ window.NotifBell = {
       const count = await Notif.unreadCount(userId);
       if (count > 0) {
         badge.textContent = count > 99 ? '99+' : count;
-        badge.classList.remove('hidden');
+        badge.style.display = 'flex';
       } else {
-        badge.classList.add('hidden');
+        badge.style.display = 'none';
       }
     }
 
