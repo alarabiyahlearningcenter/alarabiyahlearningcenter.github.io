@@ -207,20 +207,20 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       const { data: payInfo } = await db.from('payments').select('student_id, amount, course_id, plan_id').eq('id', id).single();
       
       // Auto-create enrollment
-      if (payInfo?.student_id && payInfo?.course_id) {
+      if (payInfo?.student_id && (payInfo?.course_id || payInfo?.plan_id)) {
         const { data: existing } = await db.from('enrollments')
           .select('id')
           .eq('student_id', payInfo.student_id)
-          .eq('course_id', payInfo.course_id)
+          .eq(payInfo.plan_id ? 'plan_id' : 'course_id', payInfo.plan_id || payInfo.course_id)
           .maybeSingle();
         
         if (!existing) {
           await db.from('enrollments').insert({
             student_id: payInfo.student_id,
-            course_id: payInfo.course_id,
+            course_id: payInfo.course_id || null,
             plan_id: payInfo.plan_id || null,
             status: 'active'
-          });
+          , started_at: new Date().toISOString()});
           
           // Notify student of enrollment
           if (window.Notif) {
