@@ -506,7 +506,14 @@ const payload = {
                 const cls = signupPlan.classes_per_month ? signupPlan.classes_per_month + " classes/month" : "";
                 const banner = document.createElement("div");
                 banner.style.cssText = "background:linear-gradient(135deg,#0a3622,#062418);color:#fff;padding:20px;border-radius:16px;margin-bottom:20px;border:2px solid #d4af37;";
-                banner.innerHTML = "<div style=\"font-size:12px;letter-spacing:2px;color:#d4af37;font-weight:bold;text-transform:uppercase;margin-bottom:6px;\">SELECTED PLAN</div><div style=\"font-size:24px;font-weight:bold;margin-bottom:6px;\">" + planName + "</div><div style=\"font-size:14px;opacity:0.85;margin-bottom:12px;\">" + dur + (dur && cls ? " &middot; " : "") + cls + "</div><div style=\"font-size:28px;font-weight:bold;color:#d4af37;\">৳" + planPrice + "</div>";
+                var bannerItems = "";
+                bannerItems += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;"><span>' + planName + (dur ? " (" + dur + ")" : "") + '</span><span style="color:#d4af37;font-weight:bold;">৳' + planPrice + '</span></div>';
+                if (courseData) {
+                    bannerItems += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;border-top:1px solid rgba(255,255,255,0.15);"><span>' + (courseData.title || "Course") + '</span><span style="color:#d4af37;font-weight:bold;">৳' + coursePrice + '</span></div>';
+                }
+                var totalHtml = '<div style="display:flex;justify-content:space-between;padding:10px 0;margin-top:8px;border-top:2px solid rgba(212,175,55,0.4);font-size:18px;font-weight:bold;"><span>TOTAL</span><span style="color:#d4af37;">৳' + totalPrice + '</span></div>';
+                banner.innerHTML = '<div style="font-size:12px;letter-spacing:2px;color:#d4af37;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">ORDER SUMMARY</div>' + bannerItems + totalHtml +
+                    '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2);font-size:12px;opacity:0.9;">Your plan will be activated <b>after admin verifies your payment</b>.</div>';
                 const headings = document.querySelectorAll("h1, h2, h3, h4");
                 for (let h of headings) {
                     if (h.textContent.trim().toLowerCase().includes("make a payment")) {
