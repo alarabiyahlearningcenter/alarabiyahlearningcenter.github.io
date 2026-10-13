@@ -16,6 +16,7 @@
 
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window._notifClient = client;
+window._notifClient = client;
 
     // Make Notif API available using our client
     if (!window.Notif) {
@@ -71,21 +72,8 @@ window._notifClient = client;
   });
 })();
 
-/* BELL-BADGE-V7 - JSON fetch with visible error */
+/* BELL-BADGE-V8 - uses exposed client + localStorage diagnostics */
 (function() {
-    var SUPABASE_URL = 'https://vgsgjsneymetzsuzl1fb.supabase.co';
-    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk';
-    var SESSION_KEY = 'sb-vgsgjsneymetzsuzl1fb-auth-token';
-    
-    function getSession() {
-        try {
-            var raw = localStorage.getItem(SESSION_KEY);
-            if (!raw) return null;
-            var p = JSON.parse(raw);
-            return (p && p.access_token && p.user) ? { token: p.access_token, userId: p.user.id } : null;
-        } catch(e) { return null; }
-    }
-    
     function attachBadge() {
         var bc = document.getElementById('notifBellContainer');
         if (!bc) { setTimeout(attachBadge, 300); return; }
@@ -101,54 +89,64 @@ window._notifClient = client;
         
         var badge = document.createElement('span');
         badge.id = 'notifBadge';
-        badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;background:#dc2626;color:white;font-size:12px;font-weight:bold;border-radius:9999px;display:none;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:9999;line-height:1;';
+        badge.style.cssText = 'position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;background:#dc2626;color:white;font-size:12px;font-weight:bold;border-radius:9999px;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:9999;line-height:1;';
+        badge.textContent = '.';
         bl.appendChild(badge);
         
-        async function updateBadge() {
-            try {
-                var session = getSession();
-                if (!session) {
-                    badge.textContent = 'X';
-                    badge.style.display = 'flex';
-                    badge.title = 'No session';
-                    return;
-                }
-                
-                var url = SUPABASE_URL + '/rest/v1/notifications?select=id,is_read&user_id=eq.' + session.userId + '&is_read=eq.false';
-                var res = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': 'Bearer ' + session.token
-                    }
-                });
-                
-                if (!res.ok) {
-                    badge.textContent = 'E';
-                    badge.style.display = 'flex';
-                    badge.title = 'HTTP ' + res.status;
-                    return;
-                }
-                
-                var data = await res.json();
-                var count = Array.isArray(data) ? data.length : 0;
-                
-                if (count > 0) {
-                    badge.textContent = count > 99 ? '99+' : count;
-                    badge.style.display = 'flex';
-                    badge.title = count + ' unread';
-                } else {
-                    badge.style.display = 'none';
-                }
-            } catch(e) {
-                badge.textContent = '!';
-                badge.style.display = 'flex';
-                badge.title = e.message;
+        var tries = 0;
+        function init() {
+            tries++;
+            if (tries > 60) {
+                badge.textContent = 'TIMEOUT';
+                badge.style.fontSize = '8px';
+                return;
             }
+            
+            var c = window._notifClient;
+            if (!c) { setTimeout(init, 250); return; }
+            
+            // Client found
+            badge.textContent = '~';
+            
+            async function updateBadge() {
+                try {
+                    var sRes = await c.auth.getSession();
+                    var s = sRes.data && sRes.data.session;
+                    if (!s || !s.user) {
+                        // Session not available via client either - check localStorage
+                        var keys = [];
+                        for (var i = 0; i < localStorage.length; i++) {
+                            var k = localStorage.key(i);
+                            if (k.indexOf('sb-') === 0) keys.push(k);
+                        }
+                        badge.textContent = keys.length > 0 ? 'L' : 'N';
+                        badge.title = 'localStorage sb keys: ' + keys.join(', ');
+                        return;
+                    }
+                    
+                    var res = await c.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', s.user.id).eq('is_read', false);
+                    if (res.error) {
+                        badge.textContent = 'E';
+                        badge.title = 'DB error: ' + res.error.message;
+                        return;
+                    }
+                    var count = res.count || 0;
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                } catch(e) {
+                    badge.textContent = '!';
+                    badge.title = e.message;
+                }
+            }
+            
+            updateBadge();
+            setInterval(updateBadge, 30000);
         }
         
-        setTimeout(updateBadge, 300);
-        setInterval(updateBadge, 30000);
+        setTimeout(init, 500);
     }
     
     if (document.readyState === 'loading') {
