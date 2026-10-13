@@ -127,7 +127,7 @@ window.NotifBell = {
           <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
           </svg>
-          <span id="notifBadge" class="hidden absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">0</span>
+          <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;font-size:11px;font-weight:bold;border-radius:9999px;min-width:20px;height:20px;align-items:center;justify-content:center;padding:0 6px;z-index:50;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;pointer-events:none;">0</span>
         </button>
         <div id="notifPanel" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-primary/10 max-h-[500px] overflow-hidden z-50">
           <div class="flex items-center justify-between px-4 py-3 border-b border-primary/10 bg-cream">
