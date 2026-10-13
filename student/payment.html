@@ -428,17 +428,20 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       }
     }
 
-const payload = {
+const urlParams = new URLSearchParams(location.search);
+            const planIdFromUrl = urlParams.get('plan');
+            const courseIdFromUrl = urlParams.get('course');
+            const payload = {
                 student_id: user.id,
                 coupon_id: appliedCoupon ? appliedCoupon.coupon_id : null,
                 discount_amount: appliedCoupon ? appliedCoupon.discount : 0,
                 screenshot_url: screenshotUrl,
-                course_id: (window.courseData && window.courseData.id) || (document.getElementById("courseSelect") && document.getElementById("courseSelect").value) || null,
+                course_id: courseIdFromUrl || (window.courseData && window.courseData.id) || null,
                 amount: Number(document.getElementById("amount").value),
                 method: document.getElementById("method").value,
                 transaction_id: document.getElementById("transactionId").value.trim().toUpperCase(),
                 status: "pending",
-                plan_id: _planId
+                plan_id: planIdFromUrl || window._planId || null
             };
 
     const { error } = await db.from('payments').insert(payload);
@@ -489,6 +492,7 @@ const payload = {
         } catch(e) {}
     }
     window._planId = signupPlanId || null;
+    window._planIdFixed = signupPlanId || null;
     if (signupPlanId) {
         const { data: signupPlan } = await db.from("pricing_plans").select("*").eq("id", signupPlanId).single();
         if (signupPlan) {
