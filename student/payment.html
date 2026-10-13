@@ -433,7 +433,7 @@ const payload = {
                 coupon_id: appliedCoupon ? appliedCoupon.coupon_id : null,
                 discount_amount: appliedCoupon ? appliedCoupon.discount : 0,
                 screenshot_url: screenshotUrl,
-                course_id: (document.getElementById("courseSelect") && document.getElementById("courseSelect").value) || null,
+                course_id: courseData ? courseData.id : (document.getElementById("courseSelect") && document.getElementById("courseSelect").value) || null,
                 amount: Number(document.getElementById("amount").value),
                 method: document.getElementById("method").value,
                 transaction_id: document.getElementById("transactionId").value.trim().toUpperCase(),
@@ -480,14 +480,24 @@ const payload = {
     // PLAN-AUTO-LOAD-V6 - reads URL param, hides course dropdown, shows banner
     const planUrlParams = new URLSearchParams(location.search);
     const signupPlanId = planUrlParams.get("plan") || localStorage.getItem("selectedPlanId");
+    const courseIdFromUrl = planUrlParams.get("course");
+    let courseData = null;
+    if (courseIdFromUrl) {
+        try {
+            const { data: cData } = await db.from('courses').select('*').eq('id', courseIdFromUrl).single();
+            if (cData) courseData = cData;
+        } catch(e) {}
+    }
     window._planId = signupPlanId || null;
     if (signupPlanId) {
         const { data: signupPlan } = await db.from("pricing_plans").select("*").eq("id", signupPlanId).single();
         if (signupPlan) {
             localStorage.setItem("selectedPlanId", signupPlanId);
             const planPrice = signupPlan.plan_bdt || signupPlan.price_bdt || signupPlan.price || 0;
+            const coursePrice = courseData ? (courseData.price_bdt || courseData.price_usd || 0) : 0;
+            const totalPrice = Number(planPrice) + Number(coursePrice);
             const amtEl = document.getElementById("amount");
-            if (amtEl) { amtEl.value = planPrice; amtEl.readOnly = true; amtEl.style.background = "#f5f5f5"; }
+            if (amtEl) { amtEl.value = totalPrice; amtEl.readOnly = true; amtEl.style.background = "#f5f5f5"; }
             const cs = document.getElementById("courseSelect");
             if (cs) { cs.removeAttribute("required"); const cw = cs.closest("div"); if (cw) cw.style.display = "none"; }
             setTimeout(function() {
