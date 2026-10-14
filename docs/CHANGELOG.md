@@ -30,3 +30,10 @@
 
 ### F-002 (Partial): Repository Hygiene
 - Untracked supabase/.temp/cli-latest from Git (temp file, must not be committed).
+
+### F-006: Notice Section Missing (COMPLETED)
+- JS (loadNotices) referenced #noticesSection and #noticesGrid elements.
+- Neither element existed in HTML; getElementById returned null, silently aborting.
+- Added section markup after Courses, before Why Choose Us.
+- Verified on live site: "ওয়েলকাম!" notice renders correctly.
+- Commit: (see git log)
