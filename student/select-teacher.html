@@ -76,8 +76,33 @@
     let selectedTeacherForConfirm = null;
 
     async function init() {
-        const { data: { session } } = await db.auth.getSession();
-        if (!session) { window.location.href = '../auth/login.html'; return; }
+        // Retry session check (Supabase may need time to restore session)
+        let session = null;
+        for (let i = 0; i < 10; i++) {
+            const res = await db.auth.getSession();
+            session = res.data && res.data.session;
+            if (session && session.user) break;
+            await new Promise(r => setTimeout(r, 200));
+        }
+        
+        // Fallback: check localStorage directly
+        if (!session || !session.user) {
+            try {
+                const raw = localStorage.getItem('sb-vgsgjsneymetzsuzl1fb-auth-token');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.user && parsed.access_token) {
+                        session = { user: parsed.user };
+                    }
+                }
+            } catch(e) { console.warn('localStorage parse failed:', e); }
+        }
+        
+        if (!session || !session.user) { 
+            window.location.href = '../auth/login.html'; 
+            return; 
+        }
+        
         currentUser = session.user;
 
         document.getElementById('page-content').classList.remove('hidden');
