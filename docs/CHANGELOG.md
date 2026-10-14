@@ -90,3 +90,15 @@
 - Unescaped 1 interpolation in teachers.html (F-004 pattern)
 - Verified: 0 remaining escapes, 3/3 script blocks pass syntax check
 - All "View Profile" links now resolve to real teacher UUIDs
+
+### F-011: Reminder marked as sent even when all deliveries failed (COMPLETED)
+- logSent() was called unconditionally, preventing retry on transient failures
+- Fixed: logSent() now only called when at least one channel (push or email) succeeded
+- If both channels fail, no log is written, allowing next cron run to retry
+
+### F-012: Race condition on duplicate reminders (COMPLETED)
+- alreadySent() check-then-insert pattern could allow duplicate sends
+- Added UNIQUE constraint: notification_log (class_id, reminder_type)
+- New atomic pattern: claimReminder() inserts first; releaseReminder() on total failure
+- SQL migration executed: notification_log_class_type_unique
+- alreadySent() function is now unused (kept as harmless dead code for future reference)

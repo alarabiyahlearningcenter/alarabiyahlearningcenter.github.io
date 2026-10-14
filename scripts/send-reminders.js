@@ -31,6 +31,17 @@ async function logSent(classId, type) {
   await sb.from('notification_log').insert({ class_id: classId, reminder_type: type });
 }
 
+async function claimReminder(classId, type) {
+  // Atomic claim: insert succeeds only if no prior log entry exists
+  const { error } = await sb.from('notification_log').insert({ class_id: classId, reminder_type: type });
+  return !error;
+}
+
+async function releaseReminder(classId, type) {
+  // Release claim so next cron run can retry
+  await sb.from('notification_log').delete().eq('class_id', classId).eq('reminder_type', type);
+}
+
 async function sendPush(recipientIds, payload) {
   if (!recipientIds.length) return 0;
 
@@ -122,7 +133,8 @@ async function processReminders() {
     else if (minutesUntil >= 0 && minutesUntil <= 7) type = '5min';
 
     if (!type) continue;
-    if (await alreadySent(cls.id, type)) continue;
+    const claimed = await claimReminder(cls.id, type);
+    if (!claimed) continue; // already sent or claimed by another run
 
     // Build recipient list
     const recipients = [cls.student_id].filter(Boolean);
@@ -168,8 +180,14 @@ async function processReminders() {
       }
     }
 
-    await logSent(cls.id, type);
+    const anyDelivered = sentCount > 0 || emailSent > 0;
+    if (anyDelivered) {
+      // log already inserted by claimReminder()
     console.log(`✓ ${type} reminder for class ${cls.id} → push: ${sentCount}, email: ${emailSent}`);
+    } else {
+      await releaseReminder(cls.id, type);
+      console.log('WARN: ' + type + ' reminder for class ' + cls.id + ' - ALL deliveries failed, released for retry');
+    }
   }
 }
 
