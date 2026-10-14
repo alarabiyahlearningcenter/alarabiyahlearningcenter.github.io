@@ -225,7 +225,8 @@ const courseIcons = { 'noorani-qaida': '01', 'quran-reading': '02', 'tajweed': '
 
   container.innerHTML = enrollments.map(e => {
     const c = courseMap[e.course_id] || {};
-    const percent = progressMap[c.id] || 0;
+    const progressMap = {}; // placeholder - will be filled below
+                const percent = progressMap[c.id] || 0;
     return `
       <div class="bg-white rounded-2xl overflow-hidden card-hover border border-primary/5">
         <div class="h-32 bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center relative">
