@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Debug v3</title>
+    <title>Debug v4 — Direct Token Approach</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: monospace; padding: 20px; background: #000; color: #0f0; line-height: 1.8; font-size: 13px; }
@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-    <h2>🔍 Debug v3</h2>
+    <h2>🔍 Debug v4 — Direct Token</h2>
     <div id="log">Starting...</div>
 
     <script>
@@ -20,67 +20,52 @@
 
         (async function() {
             try {
-                // Find raw token
+                // Find raw token dynamically
                 let raw = null;
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
                     if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1) {
                         raw = localStorage.getItem(k);
-                        log('Key: ' + k, 'info');
                         break;
                     }
                 }
                 if (!raw) { log('❌ No token', 'err'); return; }
                 
                 const parsed = JSON.parse(raw);
-                log('Token length: ' + raw.length, 'ok');
-                log('Top-level keys: ' + Object.keys(parsed).join(', '), 'info');
-                log('Has refresh_token: ' + !!parsed.refresh_token, 'info');
+                const accessToken = parsed.access_token;
+                const user = parsed.user;
+                
+                log('=== ✓ Token loaded ===', 'ok');
+                log('User email: ' + user.email, 'ok');
+                log('User id: ' + user.id, 'ok');
+                log('Token length: ' + accessToken.length, 'ok');
 
-                // Method A: createClient with explicit auth config
-                log('=== Method A: createClient with explicit storageKey ===', 'warn');
-                const dbA = window.supabase.createClient(
-                    'https://vgsgjsneymetzsuzl1fb.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk',
-                    {
-                        auth: {
-                            storageKey: 'sb-vgsgjsneymetzsuzl1fb-auth-token',
-                            persistSession: true,
-                            autoRefreshToken: true,
-                            detectSessionInUrl: false
-                        }
+                log('=== Testing direct REST API with token ===', 'warn');
+                const url = 'https://vgsgjsneymetzsuzl1fb.supabase.co/rest/v1/enrollments?select=id,course_id,status&student_id=eq.' + user.id;
+                const res = await fetch(url, {
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk',
+                        'Authorization': 'Bearer ' + accessToken
                     }
-                );
-                const resA = await dbA.auth.getSession();
-                const sessionA = resA.data && resA.data.session;
-                if (sessionA && sessionA.user) {
-                    log('✓ Method A: getSession() WORKS!', 'ok');
-                    log('  Email: ' + sessionA.user.email, 'ok');
+                });
+                
+                log('Response status: ' + res.status, res.ok ? 'ok' : 'err');
+                const data = await res.json();
+                log('Response data: ' + JSON.stringify(data).substring(0, 200), 'info');
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    log('✓✓✓ Direct REST API WORKS! Found ' + data.length + ' enrollments', 'ok');
+                    log('👉 Use direct fetch() with Authorization header instead of Supabase client', 'warn');
+                } else if (res.ok) {
+                    log('✓ API works but no enrollments for this user', 'warn');
                 } else {
-                    log('❌ Method A: still null', 'err');
-
-                    // Method B: manually setSession
-                    log('=== Method B: Manual setSession ===', 'warn');
-                    try {
-                        const resB = await dbA.auth.setSession({
-                            access_token: parsed.access_token,
-                            refresh_token: parsed.refresh_token
-                        });
-                        if (resB.data && resB.data.session) {
-                            log('✓ Method B: setSession WORKS!', 'ok');
-                            log('  Email: ' + resB.data.session.user.email, 'ok');
-                            log('  👉 Use this approach in your pages', 'warn');
-                        } else {
-                            log('❌ Method B failed: ' + JSON.stringify(resB.error), 'err');
-                        }
-                    } catch(eB) {
-                        log('❌ Method B exception: ' + eB.message, 'err');
-                    }
+                    log('❌ API failed', 'err');
                 }
 
                 log('=== DONE ===', 'ok');
             } catch(e) {
                 log('❌ EXCEPTION: ' + e.message, 'err');
+                log(e.stack, 'err');
             }
         })();
     </script>
