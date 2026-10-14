@@ -47,3 +47,12 @@
 - Verified unused via grep across active HTML/JS/CSS/JSON.
 - .gitignore already prevents future re-additions.
 - Commit: 441edf7
+
+### F-002: Repository Hygiene (COMPLETED)
+- Untracked 9 files from Git (preserved on disk):
+  _backup_f5_20260930_224940/ (3 files, 88 KB)
+  _diag/ (4 files, 76 KB)
+  admin-shell.js.bak (12 KB)
+  super-admin-shell.js.bak (12 KB)
+- Verified unused via grep across active code.
+- Commit: 441edf7
