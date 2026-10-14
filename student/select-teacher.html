@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Teacher - Al-Arabiyah Learning Center</title>
+    <meta name="theme-color" content="#0A3622">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+        h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+        .btn-primary { background: #0A3622; color: white; }
+        .btn-primary:hover { background: #062418; }
+        .btn-secondary { background: #d4af37; color: #0A3622; }
+        .btn-secondary:hover { background: #b8932e; }
+    </style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+    <div id="admin-shell"></div>
+
+    <div id="page-content" class="hidden p-4 md:p-6 max-w-6xl mx-auto">
+        <div class="mb-6">
+            <a href="dashboard.html" class="text-primary text-sm font-semibold hover:underline">← Back to Dashboard</a>
+            <h1 class="text-2xl md:text-3xl font-bold text-primary mt-2 mb-1">Select Your Teacher</h1>
+            <p class="text-charcoal/60 text-sm">Choose a teacher for each course. Admin will approve your selection.</p>
+        </div>
+
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+            <p class="text-charcoal/60 text-sm mt-3">Loading courses...</p>
+        </div>
+
+        <div id="coursesContainer" class="space-y-6"></div>
+    </div>
+
+    <div id="teacherModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-primary/10 p-5 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-primary">Choose a Teacher</h3>
+                    <p class="text-charcoal/60 text-xs mt-1" id="modalCourseName"></p>
+                </div>
+                <button onclick="closeTeacherModal()" class="text-charcoal/60 hover:text-primary text-2xl">×</button>
+            </div>
+            <div id="teachersList" class="p-5 space-y-3"></div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6">
+            <div class="text-center mb-5">
+                <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-3">
+                    <span class="text-3xl">⚠️</span>
+                </div>
+                <h3 class="text-xl font-bold text-primary mb-2">Confirm Teacher Selection</h3>
+                <p class="text-charcoal/70 text-sm">আপনি কি এই teacher কে select করতে চান? Admin approval এর জন্য request যাবে।</p>
+            </div>
+            <div id="confirmTeacherInfo" class="bg-cream rounded-xl p-4 mb-5"></div>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-xl border-2 border-primary/20 text-charcoal font-semibold text-sm hover:bg-cream transition">Cancel</button>
+                <button onclick="confirmSelection()" class="flex-1 py-2.5 rounded-xl btn-primary font-semibold text-sm">✓ Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const SUPABASE_URL = 'https://vgsgjsneymetzsuzl1fb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let currentCourseForSelection = null;
+    let selectedTeacherForConfirm = null;
+
+    async function init() {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) { window.location.href = '../auth/login.html'; return; }
+        currentUser = session.user;
+
+        document.getElementById('page-content').classList.remove('hidden');
+        await loadCoursesAndAssignments();
+    }
+
+    async function loadCoursesAndAssignments() {
+        document.getElementById('loading').classList.remove('hidden');
+
+        // Fetch student's active enrollments with course info
+        const { data: enrollments, error: enrollErr } = await db
+            .from('enrollments')
+            .select('id, course_id, plan_id, status')
+            .eq('student_id', currentUser.id)
+            .in('status', ['active', 'completed']);
+
+        if (enrollErr || !enrollments || enrollments.length === 0) {
+            document.getElementById('loading').innerHTML = '<p class="text-center text-charcoal/60 py-12">No enrolled courses yet. <a href="payment.html" class="text-primary font-semibold hover:underline">Make a payment first →</a></p>';
+            return;
+        }
+
+        // Deduplicate by course_id
+        const uniqueCourses = [];
+        const seen = new Set();
+        for (const e of enrollments) {
+            if (!e.course_id || seen.has(e.course_id)) continue;
+            seen.add(e.course_id);
+            uniqueCourses.push(e);
+        }
+
+        // Get course titles
+        const courseIds = uniqueCourses.map(e => e.course_id);
+        const { data: courses } = await db.from('courses').select('id, title, description').in('id', courseIds);
+        const courseMap = {};
+        (courses || []).forEach(c => courseMap[c.id] = c);
+
+        // Get existing teacher assignments
+        const { data: assignments } = await db
+            .from('student_teacher_assignments')
+            .select('id, course_id, teacher_id, status')
+            .eq('student_id', currentUser.id)
+            .in('course_id', courseIds);
+
+        const assignmentMap = {};
+        (assignments || []).forEach(a => assignmentMap[a.course_id] = a);
+
+        // Get teacher names for existing assignments
+        const teacherIds = (assignments || []).map(a => a.teacher_id).filter(Boolean);
+        let teacherMap = {};
+        if (teacherIds.length) {
+            const { data: teachers } = await db.from('profiles').select('id, full_name, email').in('id', teacherIds);
+            (teachers || []).forEach(t => teacherMap[t.id] = t);
+        }
+
+        document.getElementById('loading').classList.add('hidden');
+        renderCourses(uniqueCourses, courseMap, assignmentMap, teacherMap);
+    }
+
+    function renderCourses(enrollments, courseMap, assignmentMap, teacherMap) {
+        const container = document.getElementById('coursesContainer');
+
+        container.innerHTML = enrollments.map(e => {
+            const course = courseMap[e.course_id] || { title: 'Unknown Course' };
+            const assignment = assignmentMap[e.course_id];
+
+            let statusHtml = '';
+            let buttonHtml = '';
+
+            if (!assignment) {
+                statusHtml = '<span class="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">NO TEACHER</span>';
+                buttonHtml = `<button onclick="openTeacherModal('${e.course_id}', '${course.title.replace(/'/g, "\\'")}')" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold mt-3 w-full">Choose Teacher →</button>`;
+            } else if (assignment.status === 'pending') {
+                statusHtml = '<span class="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">PENDING APPROVAL</span>';
+                buttonHtml = '<p class="text-xs text-charcoal/60 mt-3 italic">Admin approval এর জন্য অপেক্ষা করছেন</p>';
+            } else if (assignment.status === 'active') {
+                const teacher = teacherMap[assignment.teacher_id] || {};
+                statusHtml = '<span class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold">✓ ASSIGNED</span>';
+                buttonHtml = `<div class="mt-3 bg-cream rounded-xl p-3">
+                    <p class="text-xs text-charcoal/60 mb-1">Your Teacher</p>
+                    <p class="text-sm font-semibold text-primary">${teacher.full_name || 'Teacher'}</p>
+                    <p class="text-xs text-charcoal/60">${teacher.email || ''}</p>
+                </div>
+                <button onclick="requestChange('${e.course_id}', '${course.title.replace(/'/g, "\\'")}', '${assignment.teacher_id}')" class="mt-3 w-full py-2 rounded-xl border-2 border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition">Request Change</button>`;
+            } else if (assignment.status === 'rejected') {
+                statusHtml = '<span class="text-xs px-3 py-1 rounded-full bg-red-100 text-red-700 font-semibold">REJECTED</span>';
+                buttonHtml = `<button onclick="openTeacherModal('${e.course_id}', '${course.title.replace(/'/g, "\\'")}')" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold mt-3 w-full">Choose Another Teacher →</button>`;
+            }
+
+            return `<div class="bg-white rounded-2xl p-5 border border-primary/10 shadow-sm">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <h3 class="text-lg font-bold text-primary">${course.title}</h3>
+                    ${statusHtml}
+                </div>
+                <p class="text-sm text-charcoal/60">${course.description || ''}</p>
+                ${buttonHtml}
+            </div>`;
+        }).join('');
+    }
+
+    async function openTeacherModal(courseId, courseTitle) {
+        currentCourseForSelection = { course_id: courseId, title: courseTitle };
+        document.getElementById('modalCourseName').textContent = courseTitle;
+        document.getElementById('teachersList').innerHTML = '<p class="text-center text-charcoal/60 py-8">Loading teachers...</p>';
+        document.getElementById('teacherModal').classList.remove('hidden');
+
+        const { data: teachers, error } = await db
+            .from('profiles')
+            .select('id, full_name, email, role')
+            .eq('role', 'teacher');
+
+        if (error || !teachers || teachers.length === 0) {
+            document.getElementById('teachersList').innerHTML = '<p class="text-center text-charcoal/60 py-8">No teachers available right now.</p>';
+            return;
+        }
+
+        document.getElementById('teachersList').innerHTML = teachers.map(t => `
+            <div class="border border-primary/15 rounded-xl p-4 hover:border-primary/40 transition">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">${(t.full_name || t.email || 'T').charAt(0).toUpperCase()}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-primary truncate">${t.full_name || 'Teacher'}</p>
+                        <p class="text-xs text-charcoal/60 truncate">${t.email || ''}</p>
+                    </div>
+                    <button onclick="selectTeacher('${t.id}', '${(t.full_name || '').replace(/'/g, "\\'")}', '${t.email || ''}')" class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold">Select</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function closeTeacherModal() {
+        document.getElementById('teacherModal').classList.add('hidden');
+        currentCourseForSelection = null;
+    }
+
+    function selectTeacher(teacherId, teacherName, teacherEmail) {
+        selectedTeacherForConfirm = { id: teacherId, name: teacherName, email: teacherEmail };
+
+        document.getElementById('confirmTeacherInfo').innerHTML = `
+            <p class="text-xs text-charcoal/60 mb-2">Selected Teacher</p>
+            <p class="font-semibold text-primary">${teacherName}</p>
+            <p class="text-xs text-charcoal/60">${teacherEmail}</p>
+            <p class="text-xs text-charcoal/60 mt-3">Course: <strong>${currentCourseForSelection.title}</strong></p>
+        `;
+
+        closeTeacherModal();
+        document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').classList.add('hidden');
+        selectedTeacherForConfirm = null;
+        currentCourseForSelection = null;
+    }
+
+    async function confirmSelection() {
+        if (!selectedTeacherForConfirm || !currentCourseForSelection) return;
+
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        const { error } = await db.from('student_teacher_assignments').insert({
+            student_id: currentUser.id,
+            course_id: currentCourseForSelection.course_id,
+            teacher_id: selectedTeacherForConfirm.id,
+            assigned_by: 'student',
+            status: 'pending'
+        });
+
+        if (error) {
+            alert('Error: ' + error.message);
+            btn.disabled = false;
+            btn.textContent = '✓ Confirm';
+            return;
+        }
+
+        // Notify admin (using notifications system)
+        try {
+            if (window.Notif) {
+                await Notif.toAdmins(
+                    'New Teacher Request',
+                    'Student requested teacher ' + selectedTeacherForConfirm.name + ' for ' + currentCourseForSelection.title,
+                    'info',
+                    '/admin/teacher-requests.html'
+                );
+            }
+        } catch(e) { console.warn('Notification failed:', e); }
+
+        alert('✓ Request submitted! Admin approval pending.');
+        closeConfirmModal();
+        await loadCoursesAndAssignments();
+    }
+
+    async function requestChange(courseId, courseTitle, currentTeacherId) {
+        const reason = prompt('আপনি কেন teacher change করতে চান? (কারণ লিখুন)');
+        if (!reason || !reason.trim()) return;
+
+        // For now, open teacher modal to select new teacher
+        openTeacherModal(courseId, courseTitle);
+        // Note: Complex flow can be implemented in Phase B
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    </script>
+
+    <script src="../assets/js/notifications.js"></script>
+    <script src="../assets/js/inject-bell.js"></script>
+</body>
+</html>
