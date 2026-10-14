@@ -161,9 +161,13 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
   if (!courseId) { window.location.href = 'my-courses.html'; return; }
 
   // Access control: Check enrollment
-  const { data: enrollment } = await db.from('enrollments')
-    .select('*').eq('student_id', user.id).eq('course_id', courseId)
-    .in('status', ['active', 'completed']).maybeSingle();
+  const { data: allMyEnrollments } = await db.from('enrollments')
+            .select('id, course_id, status')
+            .eq('student_id', user.id);
+        
+        const enrollment = (allMyEnrollments || []).find(e => 
+            e.course_id === courseId && (e.status === 'active' || e.status === 'completed')
+        );
 
   if (!enrollment) {
     document.getElementById('loading').classList.add('hidden');
