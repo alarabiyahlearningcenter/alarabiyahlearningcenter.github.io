@@ -102,3 +102,18 @@
 - New atomic pattern: claimReminder() inserts first; releaseReminder() on total failure
 - SQL migration executed: notification_log_class_type_unique
 - alreadySent() function is now unused (kept as harmless dead code for future reference)
+
+### F-014: Notification bell not mounting (COMPLETED)
+- notifications.js defined NotifBell.mount() but no page ever called it
+- Result: no bell rendered, no unread badge, no dropdown panel
+- Fix: appended auto-mount block that:
+  - Waits for window.db and window.NotifBell to be ready
+  - Checks session via db.auth.getSession()
+  - Calls NotifBell.mount(user.id) on DOMContentLoaded
+  - Retries up to 20 times if db not yet available
+- No changes needed in 30+ HTML files
+- All syntax checks pass
+
+### F-015: is_read default verification
+- Verified DB column has default 'false' — no change needed
+- Nullable but functionally safe

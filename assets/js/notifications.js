@@ -245,3 +245,39 @@ window.NotifBell = {
     setInterval(refreshBadge, 30000);
   }
 };
+
+
+// ============================================
+// Auto-mount bell when user session is ready
+// ============================================
+(async function() {
+  function tryMount() {
+    if (!window.db || !window.NotifBell) return false;
+    window.db.auth.getSession().then(function(res) {
+      if (res && res.data && res.data.session && res.data.session.user) {
+        try {
+          window.NotifBell.mount(res.data.session.user.id);
+          console.log("✅ Notification bell mounted for user:", res.data.session.user.id);
+        } catch (e) {
+          console.error("Notification mount error:", e);
+        }
+      }
+    });
+    return true;
+  }
+
+  // Try immediately (if scripts loaded in order)
+  if (!tryMount()) {
+    // Fallback: wait for DOMContentLoaded
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", tryMount);
+    } else {
+      // Retry a few times if db not yet available
+      let attempts = 0;
+      const iv = setInterval(function() {
+        attempts++;
+        if (tryMount() || attempts > 20) clearInterval(iv);
+      }, 250);
+    }
+  }
+})();
