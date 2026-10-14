@@ -32,13 +32,21 @@
                     if (k && k.indexOf('sb-') === 0) keys.push(k);
                 }
                 log('Total sb-* keys: ' + keys.length);
-                keys.forEach(k => log('  KEY: ' + k));
+                keys.forEach(k => {
+                    const v = localStorage.getItem(k);
+                    log('  KEY: ' + k);
+                    log('  VALUE length: ' + (v ? v.length : 'null'));
+                });
 
                 log('=== STEP 3: Check auth-token ===', 'warn');
                 const raw = localStorage.getItem('sb-vgsgjsneymetzsuzl1fb-auth-token');
                 if (!raw) {
-                    log('❌ NO auth-token in localStorage!', 'err');
-                    log('   This means you are NOT logged in on this domain.', 'err');
+                    log('❌ auth-token VALUE is NULL/EMPTY', 'err');
+                    log('   Key exists but value is missing!', 'err');
+                } else if (raw === 'null' || raw === 'undefined' || raw.length < 10) {
+                    log('❌ auth-token has invalid value', 'err');
+                    log('   Length: ' + raw.length, 'err');
+                    log('   Value: ' + JSON.stringify(raw.substring(0, 100)), 'err');
                 } else {
                     log('✓ Token found (' + raw.length + ' chars)', 'ok');
                     try {
