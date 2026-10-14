@@ -19,3 +19,14 @@
 
 ### F-001: .gitignore populated (COMPLETED)
 - Added standard safety patterns to prevent accidental commits.
+
+### F-004: JavaScript Syntax Repair (COMPLETED)
+- Fixed malformed template literals in 4 HTML files.
+- Root cause: auto-escape artifacts (\` and \${) from copy-paste.
+- Files: admin/signup.html, student-resources.html, courses.html, index.html
+- Restored missing if-condition for admin signup secret code check (fail-safe).
+- All 12 inline script blocks now pass syntax validation.
+- Commit: 07d65be
+
+### F-002 (Partial): Repository Hygiene
+- Untracked supabase/.temp/cli-latest from Git (temp file, must not be committed).
