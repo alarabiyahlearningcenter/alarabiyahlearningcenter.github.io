@@ -339,6 +339,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
   // Load progress
   const { data: progressData } = await db.from('progress').select('*').eq('student_id', user.id).eq('is_completed', true);
+        const { data: allLessonsForProgress } = await db.from('lessons').select('id, course_id');
   document.getElementById('statLessons').textContent = progressData?.length || 0;
 
   // Load upcoming classes
@@ -381,7 +382,11 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     const { data: courses } = await db.from('courses').select('*').in('id', courseIds);
     
     const progressHtml = (courses || []).map(c => {
-      const percent = Math.floor(Math.random() * 80) + 10;
+      // Real progress calculation
+        const courseKey = c.course_id || c.id;
+        const totalLessons = (allLessonsForProgress || []).filter(l => l.course_id === courseKey).length;
+        const doneLessons = (progressData || []).filter(p => p.course_id === courseKey).length;
+        const percent = totalLessons > 0 ? Math.round((doneLessons / totalLessons) * 100) : 0;
       return `
         <div>
           <div class="flex items-center justify-between mb-2">
