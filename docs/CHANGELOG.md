@@ -60,3 +60,14 @@
 ### F-002: Repository Hygiene (COMPLETED)
 - Untracked 9 files: _backup_f5_*/ (3), _diag/ (4), 2 .bak files
 - Verified unused via grep. Commit: 441edf7
+
+### F-007: Broken settings.html link (COMPLETED)
+- parent/dashboard.html line 58 pointed to non-existent parent/settings.html
+- Replaced with existing parent/notification-preferences.html
+- Verified no remaining settings.html references
+
+### F-008: Wrong logo path (COMPLETED)
+- teacher-profile.html line 32 used src="images/logo.png" (missing assets/)
+- Fixed to src="assets/images/logo.png"
+- Removed onerror="this.style.display='none'" which was masking the broken path
+- Verified no remaining wrong-logo paths across all HTML
