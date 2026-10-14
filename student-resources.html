@@ -211,16 +211,16 @@ document.getElementById('menuBtn').addEventListener('click', () => {
     other: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z'
   };
   
-  document.getElementById('resourcesGrid').innerHTML = data.map(r => \`
+  document.getElementById('resourcesGrid').innerHTML = data.map(r => `
     <div class="bg-cream p-6 rounded-2xl card-hover border border-primary/5">
       <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
-        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="\${icons[r.category] || icons.other}"/></svg>
+        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icons[r.category] || icons.other}"/></svg>
       </div>
-      <h3 class="font-bold text-primary mb-2">\${r.title}</h3>
-      <p class="text-charcoal/60 text-sm mb-4">\${r.description || ''}</p>
-      \${r.file_url ? \`<a href="\${r.file_url}" target="_blank" class="text-secondary font-semibold text-sm hover:underline">Open Resource →</a>\` : '<span class="text-charcoal/40 text-sm">Coming soon</span>'}
+      <h3 class="font-bold text-primary mb-2">${r.title}</h3>
+      <p class="text-charcoal/60 text-sm mb-4">${r.description || ''}</p>
+      ${r.file_url ? `<a href="${r.file_url}" target="_blank" class="text-secondary font-semibold text-sm hover:underline">Open Resource &rarr;</a>` : '<span class="text-charcoal/40 text-sm">Coming soon</span>'}
     </div>
-  \`).join('');
+  `).join('');
 })();
 </script>
 

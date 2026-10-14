@@ -192,7 +192,7 @@ async function loadAllCourses() {
       <div class="flex items-center justify-between pt-4 border-t border-primary/10">
         <div>
           <p class="text-xs text-charcoal/50">Starting from</p>
-          <p class="text-primary font-bold">${(c.price_bdt && c.price_usd) ? "৳" + c.price_bdt + " / $" + c.price_usd : (c.price_bdt ? "৳" + c.price_bdt : (c.price_usd ? "$" + c.price_usd : "Free"))}</p>
+          <p class="text-primary font-bold">${(c.price_bdt && c.price_usd) ? "&#2547;" + c.price_bdt + " / $" + c.price_usd : (c.price_bdt ? "&#2547;" + c.price_bdt : (c.price_usd ? "$" + c.price_usd : "Free"))}</p>
         </div>
         <a href="free-assessment.html?course=${c.slug}" class="btn-primary px-4 py-2 rounded-full text-xs font-semibold">Enroll Now</a>
       </div>
@@ -212,19 +212,19 @@ document.getElementById('courseSearch')?.addEventListener('input', (e) => {
   if (!q) {
     // Re-render all
     const iconSlugs = { 'noorani-qaida': '01', 'quran-reading': '02', 'tajweed': '03', 'hifz': '04', 'islamic-learning': '05' };
-    grid.innerHTML = all.map(c => \`
+    grid.innerHTML = all.map(c => `
       <div class="bg-cream rounded-2xl p-6 card-hover border border-primary/5 relative">
-        \${c.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
-        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm"><span class="text-2xl font-bold text-primary">\${(c.title || 'C').charAt(0)}</span></div>
-        <h3 class="text-xl font-bold text-primary mb-2">\${c.title}</h3>
-        <p class="text-charcoal/60 text-sm mb-4">\${c.description || ''}</p>
-        <div class="flex gap-3 text-xs text-charcoal/50 mb-4"><span class="px-2 py-1 bg-primary/5 rounded">\${c.level || 'beginner'}</span><span class="px-2 py-1 bg-primary/5 rounded">\${c.duration_months || 1} months</span></div>
+        ${c.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
+        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm"><span class="text-2xl font-bold text-primary">${(c.title || 'C').charAt(0)}</span></div>
+        <h3 class="text-xl font-bold text-primary mb-2">${c.title}</h3>
+        <p class="text-charcoal/60 text-sm mb-4">${c.description || ''}</p>
+        <div class="flex gap-3 text-xs text-charcoal/50 mb-4"><span class="px-2 py-1 bg-primary/5 rounded">${c.level || 'beginner'}</span><span class="px-2 py-1 bg-primary/5 rounded">${c.duration_months || 1} months</span></div>
         <div class="flex items-center justify-between pt-4 border-t border-primary/10">
-          <div><p class="text-xs text-charcoal/50">Starting from</p><p class="text-primary font-bold">৳\${c.price_bdt || 0}</p></div>
-          <a href="free-assessment.html?course=\${c.slug}" class="btn-primary px-4 py-2 rounded-full text-xs font-semibold">Enroll Now</a>
+          <div><p class="text-xs text-charcoal/50">Starting from</p><p class="text-primary font-bold">&#2547;${c.price_bdt || 0}</p></div>
+          <a href="free-assessment.html?course=${c.slug}" class="btn-primary px-4 py-2 rounded-full text-xs font-semibold">Enroll Now</a>
         </div>
       </div>
-    \`).join('');
+    `).join('');
     count.textContent = '';
     return;
   }
@@ -242,19 +242,19 @@ document.getElementById('courseSearch')?.addEventListener('input', (e) => {
     return;
   }
 
-  grid.innerHTML = filtered.map(c => \`
+  grid.innerHTML = filtered.map(c => `
     <div class="bg-cream rounded-2xl p-6 card-hover border border-primary/5 relative">
-      \${c.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
-      <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm"><span class="text-2xl font-bold text-primary">\${(c.title || 'C').charAt(0)}</span></div>
-      <h3 class="text-xl font-bold text-primary mb-2">\${c.title}</h3>
-      <p class="text-charcoal/60 text-sm mb-4">\${c.description || ''}</p>
-      <div class="flex gap-3 text-xs text-charcoal/50 mb-4"><span class="px-2 py-1 bg-primary/5 rounded">\${c.level || 'beginner'}</span><span class="px-2 py-1 bg-primary/5 rounded">\${c.duration_months || 1} months</span></div>
+      ${c.is_popular ? '<span class="absolute top-4 right-4 bg-secondary text-primary text-xs font-bold px-3 py-1 rounded-full">Popular</span>' : ''}
+      <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm"><span class="text-2xl font-bold text-primary">${(c.title || 'C').charAt(0)}</span></div>
+      <h3 class="text-xl font-bold text-primary mb-2">${c.title}</h3>
+      <p class="text-charcoal/60 text-sm mb-4">${c.description || ''}</p>
+      <div class="flex gap-3 text-xs text-charcoal/50 mb-4"><span class="px-2 py-1 bg-primary/5 rounded">${c.level || 'beginner'}</span><span class="px-2 py-1 bg-primary/5 rounded">${c.duration_months || 1} months</span></div>
       <div class="flex items-center justify-between pt-4 border-t border-primary/10">
-        <div><p class="text-xs text-charcoal/50">Starting from</p><p class="text-primary font-bold">৳\${c.price_bdt || 0}</p></div>
-        <a href="free-assessment.html?course=\${c.slug}" class="btn-primary px-4 py-2 rounded-full text-xs font-semibold">Enroll Now</a>
+        <div><p class="text-xs text-charcoal/50">Starting from</p><p class="text-primary font-bold">&#2547;${c.price_bdt || 0}</p></div>
+        <a href="free-assessment.html?course=${c.slug}" class="btn-primary px-4 py-2 rounded-full text-xs font-semibold">Enroll Now</a>
       </div>
     </div>
-  \`).join('');
+  `).join('');
   count.textContent = filtered.length + ' result' + (filtered.length > 1 ? 's' : '') + ' found';
 });
 </script>

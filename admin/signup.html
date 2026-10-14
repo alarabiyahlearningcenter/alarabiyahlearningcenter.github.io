@@ -117,7 +117,10 @@ document.getElementById('adminSignupForm').addEventListener('submit', async (e) 
   const fullName = document.getElementById('fullName').value.trim();
   const phone = document.getElementById('phone').value.trim();
 
-  // Step 1: Check secret code
+  // Step 1: Check secret code (queries site_settings)
+  const { data: setting } = await db.from('site_settings').select('value').eq('key', 'admin_signup_code').maybeSingle();
+  const expectedCode = typeof setting?.value === 'string' ? setting.value.toUpperCase() : null;
+  if (!expectedCode || code !== expectedCode) {
     status.textContent = '❌ Invalid secret code.';
     status.className = 'text-sm text-center text-red-600';
     status.classList.remove('hidden');
