@@ -71,3 +71,15 @@
 - Fixed to src="assets/images/logo.png"
 - Removed onerror="this.style.display='none'" which was masking the broken path
 - Verified no remaining wrong-logo paths across all HTML
+
+### F-009: teacher-profile.html was a mislabeled dashboard (COMPLETED)
+- Root teacher-profile.html was actually a duplicate of teacher/dashboard.html
+  (299 lines, contained "Add Student" button, sidebar menu)
+- Public "View Profile" links from index.html:406 and teachers.html:189/207/256
+  were sending visitors to an internal dashboard
+- Replaced with a proper public teacher profile page:
+  - Fetches teacher data from `teachers` table by ?id= query param
+  - Shows name, photo, bio, experience, specialties
+  - Includes loading, error, and not-found states
+  - Uses same header/footer as rest of site
+- Backup: ~/audit_backup/teacher-profile_dashboard_version_*.html

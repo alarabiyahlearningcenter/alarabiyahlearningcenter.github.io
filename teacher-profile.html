@@ -3,296 +3,294 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teacher Dashboard — Al-Arabiyah</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title id="pageTitle">Teacher Profile | Al-Arabiyah Learning Center</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A3622">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' }, fontFamily: { heading: ['Playfair Display','serif'], body: ['Inter','sans-serif'], arabic: ['Amiri','serif'] } } } }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #faf8f2; color: #1a3a2a; }
-  .btn-primary { background: #0A3622; color: #D4AF37; padding: 10px 20px; border-radius: 999px; font-weight: 600; }
-  .btn-primary:hover { background: #062218; }
-  .card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(10,54,34,.06); }
-  .student-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; transition: all .2s; }
-  .student-row:hover { background: #f5f2e8; }
-  .avatar { width: 44px; height: 44px; border-radius: 50%; background: #0A3622; color: #D4AF37; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-  .modal.active { display: flex; }
-  .modal-content { background: #fff; border-radius: 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-  .badge-active { background: #dcfce7; color: #15803d; }
-  .input-field { width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; }
-  .input-field:focus { border-color: #D4AF37; }
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.islamic-pattern { background-image: radial-gradient(circle at 20% 30%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(10,54,34,0.05) 0%, transparent 50%); }
+.btn-primary { background: #0A3622; color: white; }
+.gold-divider { height: 3px; width: 60px; background: linear-gradient(90deg, #D4AF37, #E8C766); border-radius: 2px; }
 </style>
 </head>
-<body>
+<body class="bg-cream text-charcoal">
 
-<!-- Header -->
-<header style="background:#0A3622;padding:16px 20px;position:sticky;top:0;z-index:50">
-  <div style="max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center">
-    <div style="display:flex;gap:12px;align-items:center">
-      <img src="assets/images/logo.png" alt="Logo" style="width:40px;height:40px;border-radius:50%" >
-      <div>
-        <h1 style="color:#D4AF37;font-weight:700;font-size:18px">Teacher Dashboard</h1>
-        <p id="headerName" style="color:#fff;font-size:12px;opacity:.8">Loading...</p>
+<header class="sticky top-0 z-50 bg-cream/95 backdrop-blur border-b border-primary/10">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <img src="assets/images/logo.png" alt="Al-Arabiyah" width="48" height="48" loading="eager" decoding="async" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+      <div class="hidden sm:block">
+        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
+        <div class="text-xs text-primary/70">Learning Center</div>
       </div>
+    </a>
+    <nav class="hidden lg:flex items-center gap-8">
+      <a href="index.html" class="text-primary/80 hover:text-secondary">Home</a>
+      <a href="courses.html" class="text-primary/80 hover:text-secondary">Courses</a>
+      <a href="teachers.html" class="text-primary font-medium">Teachers</a>
+      <a href="about.html" class="text-primary/80 hover:text-secondary">About</a>
+      <a href="reviews.html" class="text-primary/80 hover:text-secondary">Reviews</a>
+      <a href="contact.html" class="text-primary/80 hover:text-secondary">Contact</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <a href="auth/login.html" class="inline-block px-5 py-2 text-primary font-medium">Login</a>
+      <a href="auth/signup.html" class="btn-primary px-5 py-2 rounded-full font-medium text-sm">Start Learning</a>
+      <button id="menuBtn" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
     </div>
-    <button onclick="logout()" style="background:rgba(255,255,255,.1);color:#fff;padding:8px 16px;border-radius:999px;font-size:13px">Logout</button>
+  </div>
+  <div id="mobileMenu" class="hidden lg:hidden border-t border-primary/10 bg-cream">
+    <nav class="px-4 py-4 flex flex-col gap-3">
+      <a href="index.html" class="text-primary/80 py-2">Home</a>
+      <a href="courses.html" class="text-primary/80 py-2">Courses</a>
+      <a href="teachers.html" class="text-primary py-2 font-medium">Teachers</a>
+      <a href="about.html" class="text-primary/80 py-2">About</a>
+      <a href="reviews.html" class="text-primary/80 py-2">Reviews</a>
+      <a href="contact.html" class="text-primary/80 py-2">Contact</a>
+    </nav>
   </div>
 </header>
 
-<main style="max-width:900px;margin:0 auto;padding:20px">
+<main>
+  <section id="loadingState" class="py-20 text-center">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
+    <p class="mt-4 text-charcoal/60">Loading profile...</p>
+  </section>
 
-  <!-- Stats -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-    <div class="card" style="text-align:center">
-      <p style="font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:700">Students</p>
-      <p id="statStudents" style="font-size:28px;font-weight:800;color:#0A3622">—</p>
+  <section id="errorState" class="hidden py-20 text-center px-4">
+    <div class="max-w-md mx-auto">
+      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </div>
+      <h2 class="text-2xl font-bold text-primary mb-2">Profile Not Found</h2>
+      <p id="errorMessage" class="text-charcoal/60 mb-6">The requested teacher profile could not be loaded.</p>
+      <a href="teachers.html" class="btn-primary inline-block px-6 py-3 rounded-full font-medium">Back to Teachers</a>
     </div>
-    <div class="card" style="text-align:center">
-      <p style="font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:700">Active</p>
-      <p id="statActive" style="font-size:28px;font-weight:800;color:#15803d">—</p>
+  </section>
+
+  <section id="profileState" class="hidden">
+    <div class="islamic-pattern py-12 md:py-16">
+      <div class="max-w-4xl mx-auto px-4">
+        <div class="bg-white rounded-3xl p-6 md:p-10 shadow-lg border border-primary/5">
+          <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
+            <div id="avatarWrap" class="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <span id="avatarInitial" class="text-5xl font-bold text-primary"></span>
+              <img id="avatarImg" src="" alt="" class="hidden w-full h-full object-cover">
+            </div>
+            <div class="flex-1 text-center md:text-left">
+              <p class="text-xs font-semibold text-secondary tracking-wider uppercase mb-1">Our Teacher</p>
+              <h1 id="teacherName" class="text-3xl md:text-4xl font-heading font-bold text-primary mb-2"></h1>
+              <div class="gold-divider mb-4 mx-auto md:mx-0"></div>
+              <p id="teacherSpec" class="text-secondary font-medium mb-3"></p>
+              <p id="teacherBio" class="text-charcoal/70 mb-6 leading-relaxed"></p>
+              <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                <a href="free-assessment.html" class="btn-primary px-6 py-3 rounded-full font-medium">Book Free Assessment</a>
+                <a href="contact.html" class="border-2 border-primary text-primary px-6 py-3 rounded-full font-medium">Contact Us</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="card" style="text-align:center">
-      <p style="font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:700">Classes Today</p>
-      <p id="statToday" style="font-size:28px;font-weight:800;color:#D4AF37">—</p>
+
+    <div class="py-12 md:py-16 bg-white">
+      <div class="max-w-4xl mx-auto px-4 grid md:grid-cols-2 gap-6">
+        <div class="bg-cream rounded-2xl p-6 border border-primary/5">
+          <h3 class="font-bold text-primary text-lg mb-3">Experience</h3>
+          <p id="experienceText" class="text-charcoal/70"></p>
+        </div>
+        <div class="bg-cream rounded-2xl p-6 border border-primary/5">
+          <h3 class="font-bold text-primary text-lg mb-3">Specialties</h3>
+          <ul id="specialtiesList" class="space-y-2 text-charcoal/70"></ul>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Action buttons -->
-  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-    <button onclick="openAddStudentModal()" class="btn-primary">➕ Add Student</button>
-    <button onclick="loadStudents()" style="background:#fff;border:2px solid #0A3622;color:#0A3622;padding:10px 20px;border-radius:999px;font-weight:600">🔄 Refresh</button>
-  </div>
-
-  <!-- Search -->
-  <input id="searchBox" type="text" class="input-field" placeholder="🔍 Search my students..." style="margin-bottom:16px" oninput="filterStudents()">
-
-  <!-- Student list -->
-  <div id="studentsList" class="card"></div>
-
+    <div class="py-12 bg-primary">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-2xl md:text-3xl font-heading font-bold text-white mb-3">Want to learn with this teacher?</h2>
+        <p class="text-white/80 mb-6">Book a free assessment class and get started.</p>
+        <a href="free-assessment.html" class="inline-block bg-secondary text-primary px-8 py-3 rounded-full font-semibold">Book Free Assessment</a>
+      </div>
+    </div>
+  </section>
 </main>
 
-<!-- Add Student Modal -->
-<div id="addStudentModal" class="modal">
-  <div class="modal-content" style="padding:24px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h2 style="font-size:20px;font-weight:700;color:#0A3622">➕ Add Student</h2>
-      <button onclick="closeModal('addStudentModal')" style="font-size:24px;color:#6b7280;background:none;border:none;cursor:pointer">✕</button>
+<footer class="bg-primary text-white py-12">
+  <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-8">
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <img src="assets/images/logo.png" alt="Al-Arabiyah" width="40" height="40" loading="lazy" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div>
+          <div class="font-heading font-bold">Al-Arabiyah</div>
+          <div class="text-xs text-white/70">Learning Center</div>
+        </div>
+      </div>
+      <p class="text-white/70 text-sm">Learn - Practice - Grow. Better Qur'an Readers, A Stronger Ummah.</p>
     </div>
-
-    <label style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase">Search student by name or email</label>
-    <input id="studentSearchInput" class="input-field" placeholder="Type name or email..." oninput="searchStudentDebounced()" style="margin-top:6px">
-
-    <div id="searchResults" style="margin-top:12px;max-height:250px;overflow-y:auto"></div>
-
-    <div id="assignOptions" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
-      <p style="font-size:13px;font-weight:700;color:#0A3622;margin-bottom:8px">Selected: <span id="selectedStudentName" style="color:#D4AF37"></span></p>
-      <label style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase">Subjects (comma separated)</label>
-      <input id="subjectsInput" class="input-field" placeholder="Quran, Tajweed" style="margin-top:6px;margin-bottom:12px">
-      <label style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase">Schedule</label>
-      <input id="scheduleInput" class="input-field" placeholder="Mon-Wed-Fri 5PM" style="margin-top:6px;margin-bottom:12px">
-      <label style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase">Notes (private)</label>
-      <textarea id="notesInput" class="input-field" rows="2" placeholder="Optional notes..." style="margin-top:6px;margin-bottom:16px"></textarea>
-      <button onclick="assignStudent()" class="btn-primary" style="width:100%">✅ Assign to Me</button>
+    <div>
+      <h4 class="font-bold mb-3 text-secondary">Quick Links</h4>
+      <ul class="space-y-2 text-sm text-white/70">
+        <li><a href="index.html" class="hover:text-secondary">Home</a></li>
+        <li><a href="courses.html" class="hover:text-secondary">Courses</a></li>
+        <li><a href="teachers.html" class="hover:text-secondary">Teachers</a></li>
+        <li><a href="pricing.html" class="hover:text-secondary">Pricing</a></li>
+        <li><a href="about.html" class="hover:text-secondary">About Us</a></li>
+        <li><a href="contact.html" class="hover:text-secondary">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-bold mb-3 text-secondary">Resources</h4>
+      <ul class="space-y-2 text-sm text-white/70">
+        <li><a href="reviews.html" class="hover:text-secondary">Reviews</a></li>
+        <li><a href="faq.html" class="hover:text-secondary">FAQ</a></li>
+        <li><a href="student-resources.html" class="hover:text-secondary">Student Resources</a></li>
+        <li><a href="certificate-verification.html" class="hover:text-secondary">Verify Certificate</a></li>
+        <li><a href="free-assessment.html" class="hover:text-secondary">Free Assessment</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-bold mb-3 text-secondary">Contact</h4>
+      <ul class="space-y-2 text-sm text-white/70">
+        <li>WhatsApp: +8801737326555</li>
+        <li>Email: info@alarabiyahlearningcenter.com</li>
+        <li>Rajshahi, Bangladesh (Online Only)</li>
+      </ul>
     </div>
   </div>
-</div>
+  <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-white/10 text-sm text-white/60 flex flex-col md:flex-row justify-between gap-2">
+    <div>Privacy Policy | Terms &amp; Conditions</div>
+    <div>2026 Al-Arabiyah Learning Center. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="assets/js/supabase-config.js"></script>
 
 <script>
-const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+(async function() {
+  var loadingEl = document.getElementById('loadingState');
+  var errorEl = document.getElementById('errorState');
+  var profileEl = document.getElementById('profileState');
+  var errorMsgEl = document.getElementById('errorMessage');
 
-let currentUser = null;
-let allStudents = [];
-let selectedStudent = null;
-let searchTimer = null;
-
-// ---------- INIT ----------
-async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = 'auth/login.html'; return; }
-  currentUser = session.user;
-
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-  if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin')) {
-    document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>Access Denied</h2><p>Only teachers can access this page.</p><a href="index.html">← Home</a></div>';
-    return;
-  }
-  document.getElementById('headerName').textContent = profile.full_name || currentUser.email;
-  await loadStudents();
-}
-
-// ---------- LOAD STUDENTS ----------
-async function loadStudents() {
-  const box = document.getElementById('studentsList');
-  box.innerHTML = '<p style="text-align:center;padding:20px;color:#6b7280">Loading...</p>';
-
-  const { data, error } = await sb
-    .from('teacher_students')
-    .select(`
-      id, status, subjects, schedule, notes, assigned_at,
-      student:profiles!teacher_students_student_id_fkey (id, full_name, email, avatar_url)
-    `)
-    .eq('teacher_id', currentUser.id)
-    .eq('status', 'active')
-    .order('assigned_at', { ascending: false });
-
-  if (error) {
-    console.error(error);
-    box.innerHTML = '<p style="text-align:center;padding:20px;color:#dc2626">Failed to load: ' + error.message + '</p>';
-    return;
+  function showError(msg) {
+    loadingEl.classList.add('hidden');
+    profileEl.classList.add('hidden');
+    errorMsgEl.textContent = msg;
+    errorEl.classList.remove('hidden');
   }
 
-  allStudents = data || [];
-  document.getElementById('statStudents').textContent = allStudents.length;
-  document.getElementById('statActive').textContent = allStudents.filter(s => s.status === 'active').length;
-  document.getElementById('statToday').textContent = '0';
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var id = params.get('id');
 
-  renderStudents(allStudents);
-}
+    if (!id) {
+      showError('No teacher ID provided in the URL.');
+      return;
+    }
 
-// ---------- RENDER ----------
-function renderStudents(list) {
-  const box = document.getElementById('studentsList');
-  if (!list.length) {
-    box.innerHTML = '<p style="text-align:center;padding:30px;color:#6b7280">No students yet. Click "Add Student" to begin.</p>';
-    return;
+    var db = window.db;
+    if (!db) {
+      showError('Database connection not available. Please reload the page.');
+      return;
+    }
+
+    var result = await db.from('teachers').select('*').eq('id', id).maybeSingle();
+    var data = result.data;
+    var error = result.error;
+
+    if (error) {
+      console.error('Supabase error:', error);
+      showError('Could not load profile. Please try again later.');
+      return;
+    }
+
+    if (!data) {
+      showError('This teacher profile does not exist or has been removed.');
+      return;
+    }
+
+    document.getElementById('teacherName').textContent = data.name || 'Teacher';
+    var specText = (data.specialties && data.specialties.length)
+      ? data.specialties.slice(0, 3).join(', ')
+      : "Qur'an Teacher";
+    document.getElementById('teacherSpec').textContent = specText;
+    document.getElementById('teacherBio').textContent =
+      data.bio || 'This teacher has not added a bio yet.';
+
+    if (data.photo_url) {
+      var img = document.getElementById('avatarImg');
+      img.src = data.photo_url;
+      img.alt = data.name || 'Teacher';
+      img.classList.remove('hidden');
+      document.getElementById('avatarInitial').classList.add('hidden');
+    } else {
+      document.getElementById('avatarInitial').textContent =
+        (data.name || 'T').charAt(0).toUpperCase();
+    }
+
+    document.getElementById('experienceText').textContent =
+      (data.experience_years || 0) + " years of teaching experience in Qur'an education.";
+
+    var specList = document.getElementById('specialtiesList');
+    if (data.specialties && data.specialties.length) {
+      specList.innerHTML = data.specialties.map(function(s) {
+        return '<li>' + s + '</li>';
+      }).join('');
+    } else {
+      specList.innerHTML = "<li>Qur'an Reading</li>";
+    }
+
+    document.title = (data.name || 'Teacher') + ' | Al-Arabiyah Learning Center';
+
+    loadingEl.classList.add('hidden');
+    profileEl.classList.remove('hidden');
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    showError('Something went wrong while loading the profile.');
   }
-  box.innerHTML = list.map(row => {
-    const s = row.student;
-    if (!s) return '';
-    const initial = (s.full_name || s.email || '?')[0].toUpperCase();
-    const subjects = (row.subjects || []).join(', ') || '—';
-    const schedule = row.schedule || '—';
-    return `
-      <div class="student-row">
-        <div class="avatar">${initial}</div>
-        <div style="flex:1;min-width:0">
-          <p style="font-weight:700;color:#0A3622;font-size:14px">${escapeHtml(s.full_name || 'Unnamed')}</p>
-          <p style="font-size:12px;color:#6b7280">${escapeHtml(s.email || '')}</p>
-          <p style="font-size:11px;color:#9ca3af;margin-top:2px">📚 ${escapeHtml(subjects)} • 🕐 ${escapeHtml(schedule)}</p>
-        </div>
-        <span class="badge badge-active">${row.status}</span>
-        <button onclick="removeStudent('${row.id}', '${escapeHtml(s.full_name || '')}')" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px">✕</button>
-      </div>
-    `;
-  }).join('');
-}
+})();
+</script>
 
-function filterStudents() {
-  const q = document.getElementById('searchBox').value.toLowerCase();
-  if (!q) return renderStudents(allStudents);
-  const filtered = allStudents.filter(r => {
-    const s = r.student;
-    return s && ((s.full_name || '').toLowerCase().includes(q) || (s.email || '').toLowerCase().includes(q));
-  });
-  renderStudents(filtered);
-}
+<script src="assets/js/site-loader.js"></script>
 
-// ---------- MODAL ----------
-function openAddStudentModal() {
-  document.getElementById('addStudentModal').classList.add('active');
-  document.getElementById('studentSearchInput').value = '';
-  document.getElementById('searchResults').innerHTML = '';
-  document.getElementById('assignOptions').style.display = 'none';
-  selectedStudent = null;
-}
-
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-function searchStudentDebounced() {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(searchStudents, 350);
-}
-
-async function searchStudents() {
-  const term = document.getElementById('studentSearchInput').value.trim();
-  const box = document.getElementById('searchResults');
-  if (term.length < 2) { box.innerHTML = '<p style="font-size:12px;color:#9ca3af;padding:8px">Type at least 2 characters...</p>'; return; }
-  box.innerHTML = '<p style="font-size:12px;color:#9ca3af;padding:8px">Searching...</p>';
-
-  const { data, error } = await sb
-    .from('profiles')
-    .select('id, full_name, email, avatar_url')
-    .eq('role', 'student')
-    .or(`full_name.ilike.%${term}%,email.ilike.%${term}%`)
-    .limit(20);
-
-  if (error) { box.innerHTML = '<p style="color:#dc2626;font-size:12px;padding:8px">Error: ' + error.message + '</p>'; return; }
-
-  if (!data || !data.length) {
-    box.innerHTML = '<p style="font-size:12px;color:#9ca3af;padding:8px">No students found.</p>';
-    return;
+<script>
+/* MENU-FIX-V8 */
+window.addEventListener('load', function() {
+  var oldBtn = document.getElementById('menuBtn');
+  var menu = document.getElementById('mobileMenu');
+  if (!oldBtn || !menu) return;
+  var btn = oldBtn.cloneNode(true);
+  btn.removeAttribute('onclick');
+  oldBtn.parentNode.replaceChild(btn, oldBtn);
+  btn.onclick = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (menu.classList.contains('hidden')) {
+      menu.classList.remove('hidden');
+      menu.style.display = 'block';
+    } else {
+      menu.classList.add('hidden');
+      menu.style.display = 'none';
+    }
+    return false;
+  };
+  var links = menu.querySelectorAll('a');
+  for (var i = 0; i < links.length; i++) {
+    links[i].addEventListener('click', function() {
+      menu.classList.add('hidden');
+      menu.style.display = 'none';
+    });
   }
-
-  box.innerHTML = data.map(s => {
-    const initial = (s.full_name || s.email || '?')[0].toUpperCase();
-    return `
-      <div onclick="pickStudent('${s.id}', '${escapeHtml(s.full_name || s.email)}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;border:1px solid #e5e7eb;margin-bottom:6px">
-        <div class="avatar" style="width:36px;height:36px;font-size:14px">${initial}</div>
-        <div>
-          <p style="font-weight:600;font-size:13px">${escapeHtml(s.full_name || 'Unnamed')}</p>
-          <p style="font-size:11px;color:#6b7280">${escapeHtml(s.email || '')}</p>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function pickStudent(id, name) {
-  selectedStudent = { id, name };
-  document.getElementById('selectedStudentName').textContent = name;
-  document.getElementById('assignOptions').style.display = 'block';
-  document.getElementById('searchResults').innerHTML = '<p style="font-size:12px;color:#15803d;padding:8px">✅ Selected: ' + name + '</p>';
-}
-
-async function assignStudent() {
-  if (!selectedStudent) return;
-  const subjectsRaw = document.getElementById('subjectsInput').value.trim();
-  const subjects = subjectsRaw ? subjectsRaw.split(',').map(s => s.trim()).filter(Boolean) : null;
-  const schedule = document.getElementById('scheduleInput').value.trim() || null;
-  const notes = document.getElementById('notesInput').value.trim() || null;
-
-  const { error } = await sb.from('teacher_students').insert({
-    teacher_id: currentUser.id,
-    student_id: selectedStudent.id,
-    assigned_by: currentUser.id,
-    subjects,
-    schedule,
-    notes,
-    status: 'active'
-  });
-
-  if (error) {
-    if (error.code === '23505') alert('This student is already assigned to you.');
-    else alert('Failed: ' + error.message);
-    return;
-  }
-
-  closeModal('addStudentModal');
-  await loadStudents();
-  alert('✅ Student assigned successfully!');
-}
-
-async function removeStudent(id, name) {
-  if (!confirm('Remove ' + name + ' from your student list?')) return;
-  const { error } = await sb.from('teacher_students').update({ status: 'removed' }).eq('id', id);
-  if (error) { alert('Failed: ' + error.message); return; }
-  await loadStudents();
-}
-
-function escapeHtml(t) {
-  const d = document.createElement('div');
-  d.textContent = t || '';
-  return d.innerHTML;
-}
-
-async function logout() {
-  await sb.auth.signOut();
-  window.location.href = 'auth/login.html';
-}
-
-init();
+});
 </script>
 
 </body>
