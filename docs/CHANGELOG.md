@@ -117,3 +117,10 @@
 ### F-015: is_read default verification
 - Verified DB column has default 'false' — no change needed
 - Nullable but functionally safe
+
+### F-016: window.db not exposed on student/dashboard (COMPLETED)
+- dashboard created local `const db` but never set `window.db`
+- notifications.js auto-mount required window.db, so mount silently failed
+- Result: bell icon rendered (by inject-bell.js) but unread badge never appeared
+- Verified via debug-bell.html: unreadCount() returned 10 for st3@gmail.com
+- Fix: single line `window.db = db;` added after createClient call
