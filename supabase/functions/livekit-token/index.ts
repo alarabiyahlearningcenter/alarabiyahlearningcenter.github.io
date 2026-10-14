@@ -1,8 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { AccessToken } from "npm:livekit-server-sdk@2";
 
+// CORS restricted to production domain only
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://alarabiyahlearningcenter.github.io",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
@@ -21,6 +22,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    // 1. Verify the authenticated user via Supabase Auth
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -35,19 +37,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // SECURITY FIX: Do NOT trust 'isTeacher' from client. Fetch it from DB.
-    const { roomName, participantName } = await req.json();
-    if (!roomName) {
+    // 2. Extract client request (roomName only)
+    const { roomName } = await req.json();
+    if (!roomName || typeof roomName !== "string") {
       return new Response(JSON.stringify({ error: "roomName required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Fetch the user's trusted role from the database
+    const trimmedRoom = roomName.trim();
+
+    // 3. Fetch user's trusted profile (role and name) from DB
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, full_name, email")
       .eq("id", user.id)
       .single();
 
@@ -58,25 +62,70 @@ Deno.serve(async (req) => {
       });
     }
 
-    const isTrustedTeacher = profile.role === "teacher" || profile.role === "admin";
+    // 4. Verify the class exists and is active
+    const { data: classData, error: classError } = await supabase
+      .from("classes")
+      .select("id, student_id, teacher_id, status")
+      .eq("jitsi_room", trimmedRoom)
+      .single();
 
+    if (classError || !classData) {
+      return new Response(JSON.stringify({ error: "Class not found for this room" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (classData.status !== "scheduled" && classData.status !== "live") {
+      return new Response(JSON.stringify({ error: "Class is not active" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 5. Authorization check based on role
+    const userRole = profile.role;
+    const isAdmin = userRole === "admin" || userRole === "super-admin";
+    const isTeacher = userRole === "teacher";
+    const isStudent = userRole === "student";
+
+    let isAuthorized = false;
+
+    if (isAdmin) {
+      isAuthorized = true;
+    } else if (isTeacher && classData.teacher_id === user.id) {
+      isAuthorized = true;
+    } else if (isStudent && classData.student_id === user.id) {
+      isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return new Response(JSON.stringify({ error: "You are not authorized to join this class" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 6. Generate LiveKit token with appropriate grants
     const API_KEY = Deno.env.get("LIVEKIT_API_KEY")!;
     const API_SECRET = Deno.env.get("LIVEKIT_API_SECRET")!;
 
+    const isPrivileged = isAdmin || isTeacher;
+
     const at = new AccessToken(API_KEY, API_SECRET, {
       identity: user.id,
-      name: participantName || user.email || "User",
+      name: profile.full_name || profile.email || "User",
       ttl: "2h",
     });
 
     at.addGrant({
       roomJoin: true,
-      room: roomName,
+      room: trimmedRoom,
       canPublish: true,
       canSubscribe: true,
       canPublishData: true,
-      roomAdmin: isTrustedTeacher,
-      roomCreate: isTrustedTeacher,
+      roomAdmin: isPrivileged,
+      roomCreate: isPrivileged,
     });
 
     const token = await at.toJwt();
@@ -84,13 +133,15 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         token,
-        roomName,
+        roomName: trimmedRoom,
         url: Deno.env.get("LIVEKIT_URL"),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    // Safe generic error - log details server-side only
+    console.error("LiveKit token error:", err);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
