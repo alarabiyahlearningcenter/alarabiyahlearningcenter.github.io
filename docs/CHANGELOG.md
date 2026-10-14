@@ -37,3 +37,13 @@
 - Added section markup after Courses, before Why Choose Us.
 - Verified on live site: "ওয়েলকাম!" notice renders correctly.
 - Commit: (see git log)
+
+### F-002: Repository Hygiene (COMPLETED)
+- Untracked from Git (files preserved on disk):
+  - _backup_f5_20260930_224940/ (3 HTML, 88 KB)
+  - _diag/ (4 diagnostic files, 76 KB)
+  - assets/js/admin-shell.js.bak (12 KB)
+  - assets/js/super-admin-shell.js.bak (12 KB)
+- Verified unused via grep across active HTML/JS/CSS/JSON.
+- .gitignore already prevents future re-additions.
+- Commit: 441edf7
