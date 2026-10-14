@@ -83,3 +83,10 @@
   - Includes loading, error, and not-found states
   - Uses same header/footer as rest of site
 - Backup: ~/audit_backup/teacher-profile_dashboard_version_*.html
+
+### F-010: teachers.html broken interpolation (COMPLETED)
+- Fallback array had no `id` field AND main data path had escaped \${t.id}
+- URL became literal "teacher-profile.html?id=${t.id}" causing null lookup
+- Unescaped 1 interpolation in teachers.html (F-004 pattern)
+- Verified: 0 remaining escapes, 3/3 script blocks pass syntax check
+- All "View Profile" links now resolve to real teacher UUIDs

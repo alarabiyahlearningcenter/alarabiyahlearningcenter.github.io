@@ -204,7 +204,7 @@ async function loadTeachers() {
         ${t.specialities ? `<li>Specialities: ${t.specialities.join(', ')}</li>` : ''}
       </ul>
       <div class="flex gap-2">
-          <a href="teacher-profile.html?id=\${t.id}" class="btn-primary flex-1 text-center px-4 py-2 rounded-full text-sm font-semibold">View Profile</a>
+          <a href="teacher-profile.html?id=${t.id}" class="btn-primary flex-1 text-center px-4 py-2 rounded-full text-sm font-semibold">View Profile</a>
           <a href="free-assessment.html" class="border-2 border-primary text-primary px-4 py-2 rounded-full text-sm font-semibold">Book</a>
         </div>
     </div>
