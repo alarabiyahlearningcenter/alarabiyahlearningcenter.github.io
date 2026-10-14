@@ -56,3 +56,7 @@
   super-admin-shell.js.bak (12 KB)
 - Verified unused via grep across active code.
 - Commit: 441edf7
+
+### F-002: Repository Hygiene (COMPLETED)
+- Untracked 9 files: _backup_f5_*/ (3), _diag/ (4), 2 .bak files
+- Verified unused via grep. Commit: 441edf7
