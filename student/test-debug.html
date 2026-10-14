@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Debug Test v2</title>
+    <title>Debug v3</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: monospace; padding: 20px; background: #000; color: #0f0; line-height: 1.8; font-size: 13px; }
@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-    <h2>🔍 Debug v2</h2>
+    <h2>🔍 Debug v3</h2>
     <div id="log">Starting...</div>
 
     <script>
@@ -20,73 +20,67 @@
 
         (async function() {
             try {
-                log('=== STEP 1: Find auth-token dynamically ===', 'warn');
+                // Find raw token
                 let raw = null;
-                let foundKey = null;
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
                     if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1) {
-                        foundKey = k;
                         raw = localStorage.getItem(k);
+                        log('Key: ' + k, 'info');
                         break;
                     }
                 }
+                if (!raw) { log('❌ No token', 'err'); return; }
                 
-                if (!raw) {
-                    log('❌ No auth-token found at all', 'err');
-                    return;
-                }
-                log('✓ Found key: ' + foundKey, 'ok');
-                log('✓ Value length: ' + raw.length, 'ok');
+                const parsed = JSON.parse(raw);
+                log('Token length: ' + raw.length, 'ok');
+                log('Top-level keys: ' + Object.keys(parsed).join(', '), 'info');
+                log('Has refresh_token: ' + !!parsed.refresh_token, 'info');
 
-                log('=== STEP 2: Parse token ===', 'warn');
-                let parsed = null;
-                try {
-                    parsed = JSON.parse(raw);
-                    log('✓ Parsed OK', 'ok');
-                } catch(e) {
-                    log('❌ Parse failed: ' + e.message, 'err');
-                    return;
-                }
-
-                log('  Has access_token: ' + !!parsed.access_token, parsed.access_token ? 'ok' : 'err');
-                log('  Has user: ' + !!parsed.user, parsed.user ? 'ok' : 'err');
-                log('  Email: ' + (parsed.user && parsed.user.email || 'none'), 'info');
-                log('  User id: ' + (parsed.user && parsed.user.id || 'none'), 'info');
-                
-                log('=== STEP 3: Check expiry ===', 'warn');
-                const now = Math.floor(Date.now() / 1000);
-                const expires = parsed.expires_at;
-                log('  expires_at: ' + expires, 'info');
-                log('  now: ' + now, 'info');
-                if (!expires) {
-                    log('  ⚠️ expires_at is missing!', 'err');
-                } else if (expires < now) {
-                    log('  ❌ TOKEN IS EXPIRED! Expired ' + Math.floor((now - expires) / 60) + ' minutes ago', 'err');
-                    log('  👉 SOLUTION: Log out and login again', 'warn');
-                } else {
-                    log('  ✓ Token valid for ' + Math.floor((expires - now) / 60) + ' more minutes', 'ok');
-                }
-
-                log('=== STEP 4: Supabase client test ===', 'warn');
-                const db = window.supabase.createClient(
+                // Method A: createClient with explicit auth config
+                log('=== Method A: createClient with explicit storageKey ===', 'warn');
+                const dbA = window.supabase.createClient(
                     'https://vgsgjsneymetzsuzl1fb.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk'
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk',
+                    {
+                        auth: {
+                            storageKey: 'sb-vgsgjsneymetzsuzl1fb-auth-token',
+                            persistSession: true,
+                            autoRefreshToken: true,
+                            detectSessionInUrl: false
+                        }
+                    }
                 );
-                
-                const res = await db.auth.getSession();
-                const session = res.data && res.data.session;
-                if (session && session.user) {
-                    log('✓ getSession() returned valid session', 'ok');
-                    log('  Session email: ' + session.user.email, 'info');
+                const resA = await dbA.auth.getSession();
+                const sessionA = resA.data && resA.data.session;
+                if (sessionA && sessionA.user) {
+                    log('✓ Method A: getSession() WORKS!', 'ok');
+                    log('  Email: ' + sessionA.user.email, 'ok');
                 } else {
-                    log('❌ getSession() returned NO session', 'err');
+                    log('❌ Method A: still null', 'err');
+
+                    // Method B: manually setSession
+                    log('=== Method B: Manual setSession ===', 'warn');
+                    try {
+                        const resB = await dbA.auth.setSession({
+                            access_token: parsed.access_token,
+                            refresh_token: parsed.refresh_token
+                        });
+                        if (resB.data && resB.data.session) {
+                            log('✓ Method B: setSession WORKS!', 'ok');
+                            log('  Email: ' + resB.data.session.user.email, 'ok');
+                            log('  👉 Use this approach in your pages', 'warn');
+                        } else {
+                            log('❌ Method B failed: ' + JSON.stringify(resB.error), 'err');
+                        }
+                    } catch(eB) {
+                        log('❌ Method B exception: ' + eB.message, 'err');
+                    }
                 }
 
                 log('=== DONE ===', 'ok');
             } catch(e) {
                 log('❌ EXCEPTION: ' + e.message, 'err');
-                log(e.stack, 'err');
             }
         })();
     </script>
