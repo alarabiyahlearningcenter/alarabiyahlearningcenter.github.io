@@ -156,6 +156,19 @@ document.addEventListener('click', function(e) {
   </div>
 </section>
 
+  <!-- F-006: Notices Section (populated by loadNotices in JS) -->
+  <section id="noticesSection" class="hidden py-16 md:py-24 bg-cream">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-10">
+        <p class="text-sm font-semibold text-secondary tracking-wider uppercase mb-2">Announcements</p>
+        <h2 class="text-3xl md:text-4xl font-heading font-bold text-primary mb-3">Latest Notices</h2>
+        <div class="w-20 h-1 bg-secondary mx-auto mb-4"></div>
+        <p class="text-charcoal/60 max-w-2xl mx-auto">Stay updated with our latest announcements and news.</p>
+      </div>
+      <div id="noticesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    </div>
+  </section>
+
 <section class="py-16 md:py-24 islamic-pattern">
   <div class="max-w-7xl mx-auto px-4">
     <div class="text-center mb-12">
