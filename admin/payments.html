@@ -94,6 +94,12 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       const { data: courses } = await db.from('courses').select('id, title').in('id', courseIds);
       (courses || []).forEach(c => coursesMap[c.id] = c);
     }
+    const planIds = [...new Set(allPayments.map(p => p.plan_id).filter(Boolean))];
+    const plansMap = {};
+    if (planIds.length) {
+        const { data: plans } = await db.from('pricing_plans').select('id, name').in('id', planIds);
+        (plans || []).forEach(p => plansMap[p.id] = p);
+    }
 
     const pending = allPayments.filter(p => p.status === 'pending').length;
     const verified = allPayments.filter(p => p.status === 'verified').length;
@@ -126,7 +132,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
               <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-secondary font-bold flex-shrink-0">${sName.charAt(0).toUpperCase()}</div>
               <div class="min-w-0">
                 <p class="font-bold text-primary text-sm truncate">${sName}</p>
-                <p class="text-xs text-charcoal/60 truncate">${course.title || 'N/A'} • ${p.method?.toUpperCase() || 'N/A'}</p>
+                <p class="text-xs text-charcoal/60 truncate">${plansMap[p.plan_id]?.name || "No Plan"} • ${course.title || "No Course"} • ${p.method.toUpperCase() || "N/A"}</p>
                 <p class="text-xs text-charcoal/50 mt-0.5">TXN: ${p.transaction_id || 'N/A'} • ${date}</p>
               </div>
             </div>
