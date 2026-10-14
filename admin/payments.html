@@ -76,6 +76,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
   let allPayments = [];
   let profilesMap = {};
   let coursesMap = {};
+    let plansMap = {};
 
   async function loadPayments() {
     document.getElementById('loading').classList.remove('hidden');
@@ -95,7 +96,6 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       (courses || []).forEach(c => coursesMap[c.id] = c);
     }
     const planIds = [...new Set(allPayments.map(p => p.plan_id).filter(Boolean))];
-    const plansMap = {};
     if (planIds.length) {
         const { data: plans } = await db.from('pricing_plans').select('id, name').in('id', planIds);
         (plans || []).forEach(p => plansMap[p.id] = p);
