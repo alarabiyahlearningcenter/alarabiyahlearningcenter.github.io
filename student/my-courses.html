@@ -223,7 +223,8 @@ const courseIcons = { 'noorani-qaida': '01', 'quran-reading': '02', 'tajweed': '
   const courseMap = {};
   (courses || []).forEach(c => courseMap[c.id] = c);
 
-  container.innerHTML = enrollments.map(e => {
+  const uniqueEnrollments = (enrollments || []).filter((e, i, arr) => arr.findIndex(x => x.course_id === e.course_id) === i);
+      container.innerHTML = uniqueEnrollments.map(e => {
     const c = courseMap[e.course_id] || {};
     const progressMap = {}; // placeholder - will be filled below
                 const percent = progressMap[c.id] || 0;
