@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Debug Test</title>
+    <title>Debug Test v2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: monospace; padding: 20px; background: #000; color: #0f0; line-height: 1.8; }
-        .err { color: #f66; }
-        .ok { color: #6f6; }
-        .warn { color: #ff0; }
+        body { font-family: monospace; padding: 20px; background: #000; color: #0f0; line-height: 1.8; font-size: 13px; }
+        .err { color: #f66; } .ok { color: #6f6; } .warn { color: #ff0; } .info { color: #6cf; }
         h2 { color: #fff; }
     </style>
 </head>
 <body>
-    <h2>🔍 Debug Console — Select Teacher Page</h2>
+    <h2>🔍 Debug v2</h2>
     <div id="log">Starting...</div>
 
     <script>
@@ -22,78 +20,73 @@
 
         (async function() {
             try {
-                log('=== STEP 1: Page loaded ===', 'ok');
-                log('URL: ' + location.href);
-
-                log('=== STEP 2: Check localStorage keys ===', 'warn');
-                const keys = [];
+                log('=== STEP 1: Find auth-token dynamically ===', 'warn');
+                let raw = null;
+                let foundKey = null;
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
-                    if (k && k.indexOf('sb-') === 0) keys.push(k);
-                }
-                log('Total sb-* keys: ' + keys.length);
-                keys.forEach(k => {
-                    const v = localStorage.getItem(k);
-                    log('  KEY: ' + k);
-                    log('  VALUE length: ' + (v ? v.length : 'null'));
-                });
-
-                log('=== STEP 3: Check auth-token ===', 'warn');
-                const raw = localStorage.getItem('sb-vgsgjsneymetzsuzl1fb-auth-token');
-                if (!raw) {
-                    log('❌ auth-token VALUE is NULL/EMPTY', 'err');
-                    log('   Key exists but value is missing!', 'err');
-                } else if (raw === 'null' || raw === 'undefined' || raw.length < 10) {
-                    log('❌ auth-token has invalid value', 'err');
-                    log('   Length: ' + raw.length, 'err');
-                    log('   Value: ' + JSON.stringify(raw.substring(0, 100)), 'err');
-                } else {
-                    log('✓ Token found (' + raw.length + ' chars)', 'ok');
-                    try {
-                        const parsed = JSON.parse(raw);
-                        log('✓ Parsed successfully', 'ok');
-                        log('  Has access_token: ' + !!parsed.access_token);
-                        log('  Has user: ' + !!parsed.user);
-                        log('  User email: ' + (parsed.user && parsed.user.email || 'none'));
-                        log('  User id: ' + (parsed.user && parsed.user.id || 'none'));
-                    } catch(e) {
-                        log('❌ JSON.parse failed: ' + e.message, 'err');
+                    if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1) {
+                        foundKey = k;
+                        raw = localStorage.getItem(k);
+                        break;
                     }
                 }
+                
+                if (!raw) {
+                    log('❌ No auth-token found at all', 'err');
+                    return;
+                }
+                log('✓ Found key: ' + foundKey, 'ok');
+                log('✓ Value length: ' + raw.length, 'ok');
 
-                log('=== STEP 4: Supabase getSession ===', 'warn');
+                log('=== STEP 2: Parse token ===', 'warn');
+                let parsed = null;
+                try {
+                    parsed = JSON.parse(raw);
+                    log('✓ Parsed OK', 'ok');
+                } catch(e) {
+                    log('❌ Parse failed: ' + e.message, 'err');
+                    return;
+                }
+
+                log('  Has access_token: ' + !!parsed.access_token, parsed.access_token ? 'ok' : 'err');
+                log('  Has user: ' + !!parsed.user, parsed.user ? 'ok' : 'err');
+                log('  Email: ' + (parsed.user && parsed.user.email || 'none'), 'info');
+                log('  User id: ' + (parsed.user && parsed.user.id || 'none'), 'info');
+                
+                log('=== STEP 3: Check expiry ===', 'warn');
+                const now = Math.floor(Date.now() / 1000);
+                const expires = parsed.expires_at;
+                log('  expires_at: ' + expires, 'info');
+                log('  now: ' + now, 'info');
+                if (!expires) {
+                    log('  ⚠️ expires_at is missing!', 'err');
+                } else if (expires < now) {
+                    log('  ❌ TOKEN IS EXPIRED! Expired ' + Math.floor((now - expires) / 60) + ' minutes ago', 'err');
+                    log('  👉 SOLUTION: Log out and login again', 'warn');
+                } else {
+                    log('  ✓ Token valid for ' + Math.floor((expires - now) / 60) + ' more minutes', 'ok');
+                }
+
+                log('=== STEP 4: Supabase client test ===', 'warn');
                 const db = window.supabase.createClient(
                     'https://vgsgjsneymetzsuzl1fb.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dqc25leW1ldHpzdXpsMWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU0NjI4OTQsImV4cCI6MjA0MTAzODg5NH0.gSnsS1xGl0ChIZB5k7oyK3HgL8G4xKv7mR2sB-XLxOk'
                 );
+                
                 const res = await db.auth.getSession();
                 const session = res.data && res.data.session;
                 if (session && session.user) {
-                    log('✓ getSession returned valid session', 'ok');
-                    log('  Email: ' + session.user.email);
+                    log('✓ getSession() returned valid session', 'ok');
+                    log('  Session email: ' + session.user.email, 'info');
                 } else {
-                    log('❌ getSession returned NO session', 'err');
-                }
-
-                log('=== STEP 5: Fetch enrollments (test) ===', 'warn');
-                if (session && session.user) {
-                    const { data, error } = await db
-                        .from('enrollments')
-                        .select('id, course_id, status')
-                        .eq('student_id', session.user.id);
-                    if (error) {
-                        log('❌ Enrollment fetch error: ' + error.message, 'err');
-                    } else {
-                        log('✓ Enrollments found: ' + (data ? data.length : 0), 'ok');
-                    }
-                } else {
-                    log('Skipped - no session', 'warn');
+                    log('❌ getSession() returned NO session', 'err');
                 }
 
                 log('=== DONE ===', 'ok');
             } catch(e) {
                 log('❌ EXCEPTION: ' + e.message, 'err');
-                log('Stack: ' + e.stack, 'err');
+                log(e.stack, 'err');
             }
         })();
     </script>
