@@ -68,20 +68,37 @@
   }
 
   // ---------- UI ----------
-  function buildFab() {
-    const b = document.createElement('button');
-    b.id = 'recFab';
-    b.innerHTML = '🎥 Recordings';
-    b.style.cssText = `
-      position:fixed;bottom:20px;right:20px;z-index:9997;
-      padding:12px 18px;border-radius:999px;
-      background:#0A3622;color:#D4AF37;font-weight:700;
-      box-shadow:0 8px 24px rgba(10,54,34,.4);border:2px solid #D4AF37;
-      font-family:Inter,sans-serif;font-size:14px;cursor:pointer;
-    `;
-    document.body.appendChild(b);
-    return b;
+// F-032: Sidebar integration - replaces floating button
+function injectSidebarLink() {
+  var nav = document.querySelector('nav.space-y-1');
+  if (!nav) return null;
+  if (nav.querySelector('[data-rec-link="1"]')) return null;
+
+  var anchor = null;
+  var links = nav.querySelectorAll('a.sidebar-link');
+  for (var i = 0; i < links.length; i++) {
+    var txt = (links[i].textContent || '').trim();
+    if (txt.indexOf('My Courses') !== -1 || txt.indexOf('My Classes') !== -1) {
+      anchor = links[i]; break;
+    }
   }
+  if (!anchor) {
+    for (var j = 0; j < links.length; j++) {
+      var t2 = (links[j].textContent || '').trim();
+      if (t2.indexOf('Dashboard') !== -1) { anchor = links[j]; break; }
+    }
+  }
+  if (!anchor) return null;
+
+  var a = document.createElement('a');
+  a.href = '#';
+  a.setAttribute('data-rec-link', '1');
+  a.className = 'sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70';
+  a.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>My Recordings';
+
+  anchor.parentNode.insertBefore(a, anchor.nextSibling);
+  return a;
+}
 
   function buildListModal(ctx, classes, onRefresh) {
     const wrap = document.createElement('div');
@@ -286,11 +303,14 @@
       }
       await refresh();
 
-      const fab = buildFab();
-      fab.onclick = async () => {
-        await refresh();
-        buildListModal(ctx, cache, refresh);
-      };
+      const recLink = injectSidebarLink();
+      if (recLink) {
+        recLink.addEventListener('click', async (ev) => {
+          ev.preventDefault();
+          await refresh();
+          buildListModal(ctx, cache, refresh);
+        });
+      }
     } catch (e) {
       console.warn('[RecAddon] boot:', e);
     }

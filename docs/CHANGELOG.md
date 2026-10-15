@@ -170,3 +170,13 @@
 - Any logged-in student visiting the URL directly would leak their session
 - Not linked anywhere (orphaned) but publicly accessible via GitHub Pages
 - Removed from repo; backup preserved at ~/audit_backup/test-debug_removed_*.html
+
+### F-032: Recordings button — floating → sidebar integration (COMPLETED)
+- recording-addon.js was creating a floating button (bottom:20px right:20px)
+- This overlapped "Book a Class" and cluttered the dashboard
+- Replaced buildFab() with injectSidebarLink():
+  - Injects "My Recordings" link into existing sidebar nav
+  - Sits after "My Courses" (student) / "My Classes" (teacher)
+  - Fallback position: after Dashboard
+  - Same modal opens on click — no functionality lost
+  - Fail-safe: skips pages without sidebar
