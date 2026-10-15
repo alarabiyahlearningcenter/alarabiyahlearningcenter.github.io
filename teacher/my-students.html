@@ -233,6 +233,33 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
   const { data: profiles } = await db.from('profiles').select('*').in('id', studentIds);
   diag('profiles fetched: ' + (profiles ? profiles.length : 'null'));
+
+  // F-048-RAW: bypass supabase-js — hit REST API directly
+  diag('--- RAW PROFILES FETCH ---');
+  try {
+    var _sess = await db.auth.getSession();
+    var _tok = _sess && _sess.data && _sess.data.session ? _sess.data.session.access_token : null;
+    var _cacheBust = SUPABASE_URL + '/rest/v1/profiles?id=eq.' + user.id + '&select=id,full_name,email&_t=' + Date.now();
+    diag('RAW URL: ' + _cacheBust.substring(0, 80) + '...');
+    var _r = await fetch(_cacheBust, {
+      cache: 'no-store',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + _tok,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    diag('RAW status: ' + _r.status);
+    diag('RAW cf-cache-status: ' + (_r.headers.get('cf-cache-status') || 'none'));
+    diag('RAW age: ' + (_r.headers.get('age') || 'none'));
+    diag('RAW x-sb-cache: ' + (_r.headers.get('x-sb-cache') || 'none'));
+    var _txt = await _r.text();
+    diag('RAW body: ' + _txt.substring(0, 250));
+  } catch(e) {
+    diag('RAW fetch error: ' + e.message);
+  }
+  diag('--- END RAW ---');
   if (profiles) profiles.forEach(function(p) { diag('  profile: ' + p.full_name + ' (' + p.email + ')'); });
   const { data: courses } = await db.from('courses').select('id, title');
 
