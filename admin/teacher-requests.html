@@ -300,12 +300,16 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 
     // F-045-FIX: Sync enrollments.teacher_id so teacher-side pages see this student
     try {
-      await db.from('enrollments')
-        .update({ teacher_id: req.teacher_id })
-        .eq('student_id', req.student_id)
-        .eq('course_id', req.course_id);
-      console.log('[F-045] enrollments.teacher_id synced');
-    } catch (e) { console.warn('[F-045] enrollment sync failed', e); }
+      // F-045b: enrollments.teacher_id → teachers.id (NOT profiles.id)
+      const _t = await db.from('teachers').select('id').eq('profile_id', req.teacher_id).maybeSingle();
+      if (_t.data && _t.data.id) {
+        await db.from('enrollments')
+          .update({ teacher_id: _t.data.id })
+          .eq('student_id', req.student_id)
+          .eq('course_id', req.course_id);
+        console.log('[F-045b] enrollments synced with teachers.id');
+      }
+    } catch (e) { console.warn('[F-045b] sync failed', e); }
 
     // Notify student
     try {
@@ -423,12 +427,16 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 
     // F-045-FIX: sync enrollments.teacher_id to new teacher
     try {
-      await db.from('enrollments')
-        .update({ teacher_id: newTeacher.id })
-        .eq('student_id', req.student_id)
-        .eq('course_id', req.course_id);
-      console.log('[F-045] enrollments.teacher_id changed');
-    } catch (e) { console.warn('[F-045] enrollment change sync failed', e); }
+      // F-045b: resolve teachers.id from new teacher profile_id
+      const _t2 = await db.from('teachers').select('id').eq('profile_id', newTeacher.id).maybeSingle();
+      if (_t2.data && _t2.data.id) {
+        await db.from('enrollments')
+          .update({ teacher_id: _t2.data.id })
+          .eq('student_id', req.student_id)
+          .eq('course_id', req.course_id);
+        console.log('[F-045b] enrollments synced to new teacher');
+      }
+    } catch (e) { console.warn('[F-045b] sync failed', e); }
 
     // Notify
     try {
