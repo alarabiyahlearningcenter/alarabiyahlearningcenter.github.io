@@ -78,6 +78,21 @@ window.db = db; // F-017: expose globally for notifications.js
     let selectedTeacherForConfirm = null;
 
     async function init() {
+      // DEBUG-VAR: dump URL/key lengths and exact URL used
+      try {
+        var el = document.getElementById('diagPanel');
+        if (el) {
+          el.innerHTML += '<div>URL length: ' + (SUPABASE_URL ? SUPABASE_URL.length : 'NULL') + '</div>';
+          el.innerHTML += '<div>URL chars: ' + JSON.stringify(SUPABASE_URL) + '</div>';
+          el.innerHTML += '<div>KEY length: ' + (SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.length : 'NULL') + '</div>';
+          el.innerHTML += '<div>KEY start: ' + (SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 40) : 'NULL') + '</div>';
+          el.innerHTML += '<div>KEY end: ' + (SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(SUPABASE_ANON_KEY.length - 20) : 'NULL') + '</div>';
+          var testUrl = SUPABASE_URL + '/rest/v1/enrollments?select=id&limit=1';
+          el.innerHTML += '<div>Test URL: ' + testUrl + '</div>';
+          el.innerHTML += '<div>URL byte length: ' + testUrl.length + '</div>';
+        }
+      } catch (e) { console.log('DEBUG-VAR error', e); }
+
     // F-036: Robust session detection — localStorage first, then getSession retries
       let user = null;
 
@@ -126,7 +141,7 @@ window.db = db; // F-017: expose globally for notifications.js
     }
 
     async function loadCoursesAndAssignments() {
-      diag('BUILD: F-036d-v2');
+      diag('BUILD: F-036e-v3');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
 
