@@ -142,7 +142,7 @@ window.db = db; // F-017: expose globally for notifications.js
     }
 
     async function loadCoursesAndAssignments() {
-      diag('BUILD: F-038-v5');
+      diag('BUILD: F-039-v6');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
 
@@ -323,10 +323,25 @@ window.db = db; // F-017: expose globally for notifications.js
         document.getElementById('teachersList').innerHTML = '<p class="text-center text-charcoal/60 py-8">Loading teachers...</p>';
         document.getElementById('teacherModal').classList.remove('hidden');
 
+        // F-039-FIX: Only show teachers with active record in 'teachers' table
+        const { data: activeTeacherRecs } = await db
+          .from('teachers')
+          .select('profile_id')
+          .eq('is_active', true);
+
+        const activeProfileIds = (activeTeacherRecs || []).map(function(r) { return r.profile_id; }).filter(Boolean);
+        diag('active teacher count: ' + activeProfileIds.length);
+
+        if (!activeProfileIds.length) {
+          document.getElementById('teachersList').innerHTML = '<p class="text-center text-charcoal/60 py-8">No teachers available right now.</p>';
+          return;
+        }
+
         const { data: teachers, error } = await db
-            .from('profiles')
-            .select('id, full_name, email, role')
-            .eq('role', 'teacher');
+          .from('profiles')
+          .select('id, full_name, email, role')
+          .in('id', activeProfileIds)
+          .eq('role', 'teacher');
 
         if (error || !teachers || teachers.length === 0) {
             document.getElementById('teachersList').innerHTML = '<p class="text-center text-charcoal/60 py-8">No teachers available right now.</p>';
