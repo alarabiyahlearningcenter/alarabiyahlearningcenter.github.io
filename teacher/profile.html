@@ -329,7 +329,9 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
       name: q('inputName').value.trim(),
       bio: q('inputBio').value.trim() || null,
       experience_years: parseInt(q('inputExperience').value, 10) || 0,
-      specialties: specialties.length ? specialties : null
+      // F-025-TEMP: specialties save disabled due to PostgREST schema cache issue
+      // Re-enable after Supabase resolves the cache for the 'specialties' column.
+      // specialties: specialties.length ? specialties : null
     };
 
     var res = await db.from('teachers').update(update).eq('id', teacherRow.id);
