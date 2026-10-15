@@ -127,6 +127,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     // Send notification to the teacher
     const { data: teacher } = await db.from('teachers').select('profile_id').eq('id', id).single();
     if (teacher?.profile_id) {
+      await db.from('profiles').update({ kyc_status: 'approved' }).eq('id', teacher.profile_id);
       await Notif.send(
         teacher.profile_id,
         'Welcome to the Team! 🎉',
@@ -141,9 +142,17 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
   };
 
   window.rejectTeacher = async (id, name) => {
-    if (!confirm(`Reject and delete "${name}"\'s teacher application?`)) return;
-    const { error } = await db.from('teachers').delete().eq('id', id);
+    if (!confirm(`Reject "${name}"'s teacher application?`)) return;
+
+    // F-024: Deactivate instead of delete; sync KYC status
+    const { data: t } = await db.from('teachers').select('profile_id').eq('id', id).single();
+    const { error } = await db.from('teachers').update({ is_active: false }).eq('id', id);
     if (error) { alert('Error: ' + error.message); return; }
+
+    if (t && t.profile_id) {
+      await db.from('profiles').update({ kyc_status: 'rejected' }).eq('id', t.profile_id);
+    }
+
     alert('Teacher application rejected.');
     loadTeachers();
   };

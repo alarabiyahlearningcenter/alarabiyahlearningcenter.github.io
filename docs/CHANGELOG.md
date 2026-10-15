@@ -140,3 +140,13 @@
 - DB trigger: profiles.kyc_status='approved' auto-activates, 'rejected' auto-deactivates
 - teacher-profile.html: added .eq('is_active', true) to prevent direct URL access to hidden teachers
 - Existing 3 teachers remain active (kyc_status='approved')
+
+### F-024: Admin panel deactivate/reject out of sync with profiles (COMPLETED)
+- admin/teachers.html rejectTeacher was deleting teachers row without
+  updating profiles.kyc_status, so the sync trigger could recreate the
+  teacher row on next profile update.
+- approveTeacher only set is_active=true but not kyc_status='approved'.
+- Fix:
+  - rejectTeacher now deactivates (is_active=false) and sets kyc_status='rejected'
+  - approveTeacher now also sets kyc_status='approved'
+  - Data preserved; no row deletions on reject
