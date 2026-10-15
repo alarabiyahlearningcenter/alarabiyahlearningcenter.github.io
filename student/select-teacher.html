@@ -126,9 +126,34 @@ window.db = db; // F-017: expose globally for notifications.js
     }
 
     async function loadCoursesAndAssignments() {
-      diag('BUILD: F-036b-v1');
+      diag('BUILD: F-036d-v2');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
+
+      diag('--- TEST A: apikey only ---');
+      try {
+        var _k = SUPABASE_ANON_KEY;
+        var _r1 = await fetch(SUPABASE_URL + '/rest/v1/enrollments?select=id&limit=1', {
+          headers: { 'apikey': _k }
+        });
+        diag('A status: ' + _r1.status);
+        var _b1 = await _r1.text();
+        diag('A body: ' + _b1.substring(0, 100));
+      } catch (e) { diag('A ERROR: ' + e.message); }
+
+      diag('--- TEST B: apikey + Authorization ---');
+      try {
+        var _sess = await db.auth.getSession();
+        var _tok = _sess && _sess.data && _sess.data.session ? _sess.data.session.access_token : null;
+        diag('token present: ' + (!!_tok));
+        var _r2 = await fetch(SUPABASE_URL + '/rest/v1/enrollments?select=id&limit=1', {
+          headers: { 'apikey': _k, 'Authorization': 'Bearer ' + _tok }
+        });
+        diag('B status: ' + _r2.status);
+        var _b2 = await _r2.text();
+        diag('B body: ' + _b2.substring(0, 100));
+      } catch (e) { diag('B ERROR: ' + e.message); }
+      diag('--- end tests ---');
 
       // F-036c: raw fetch test — bypass supabase-js entirely
       diag('--- raw fetch test ---');
