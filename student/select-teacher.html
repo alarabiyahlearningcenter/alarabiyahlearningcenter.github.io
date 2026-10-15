@@ -142,7 +142,7 @@ window.db = db; // F-017: expose globally for notifications.js
     }
 
     async function loadCoursesAndAssignments() {
-      diag('BUILD: F-039-v6');
+      diag('BUILD: F-040-v7');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
 
@@ -364,7 +364,8 @@ window.db = db; // F-017: expose globally for notifications.js
 
     function closeTeacherModal() {
         document.getElementById('teacherModal').classList.add('hidden');
-        currentCourseForSelection = null;
+        // F-040-FIX: do NOT reset currentCourseForSelection here — needed by confirmSelection()
+        // (reset happens in closeConfirmModal instead)
     }
 
     function selectTeacher(teacherId, teacherName, teacherEmail) {
