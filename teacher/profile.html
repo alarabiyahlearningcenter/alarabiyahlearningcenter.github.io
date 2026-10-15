@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' }, fontFamily: { heading: ['Playfair Display','serif'], body: ['Inter','sans-serif'], arabic: ['Amiri','serif'] } } } }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s; }
+.btn-primary:hover { background: #062218; }
+.sidebar-link { transition: all 0.2s; }
+.sidebar-link:hover, .sidebar-link.active { background: rgba(212,175,55,0.15); color: #0A3622; border-left: 3px solid #D4AF37; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.pulse-green { animation: pulse 2s infinite; }
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Teacher Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="hidden md:inline-block bg-secondary/20 text-primary text-xs font-semibold px-3 py-1 rounded-full">TEACHER</span>
+      <div class="relative">
+        <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
+          <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">T</div>
+        </button>
+        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary/10 py-2">
+          <div class="px-4 py-2 border-b border-primary/10">
+            <p id="userName" class="text-sm font-semibold text-primary">Teacher</p>
+            <p id="userEmail" class="text-xs text-charcoal/60 truncate">teacher@email.com</p>
+          </div>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          Dashboard
+        </a>
+        <a href="profile.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          My Profile
+        </a>
+        <a href="performance.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          My Performance
+        </a>
+        <a href="my-classes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          My Classes
+        </a>
+        <a href="availability.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          My Availability
+        </a>
+        <a href="notification-preferences.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          Notifications
+        </a>
+        <a href="chat.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+          Chat
+        </a>
+        <a href="my-students.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          My Students
+        </a>
+        <a href="mark-attendance.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Mark Attendance
+        </a>
+        <a href="log-external-class.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Log External Class
+        </a>
+        <a href="kyc.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+          KYC Verification
+        </a>
+      </nav>
+    </div>
+  </aside>
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">My Profile</h1>
+      <p class="text-charcoal/60 text-sm mb-6">Manage your public teacher profile</p>
+
+      <div id="loadingState" class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary"></div>
+        <p class="mt-3 text-charcoal/60 text-sm">Loading profile...</p>
+      </div>
+
+      <div id="errorState" class="hidden bg-white rounded-2xl p-6 border border-red-200">
+        <h3 class="font-bold text-red-700 mb-2">Profile Not Found</h3>
+        <p id="errorMessage" class="text-charcoal/70 text-sm"></p>
+      </div>
+
+      <div id="profileState" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl p-6 border border-primary/5">
+          <h2 class="text-lg font-bold text-primary mb-4">Profile Photo</h2>
+          <div class="flex flex-col sm:flex-row items-center gap-6">
+            <div id="photoPreview" class="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0 border-4 border-secondary">
+              <span id="photoInitial" class="text-5xl font-bold text-primary">T</span>
+              <img id="photoImg" src="" alt="" class="hidden w-full h-full object-cover">
+            </div>
+            <div class="flex-1 text-center sm:text-left">
+              <input type="file" id="photoInput" accept="image/*" class="hidden">
+              <button type="button" id="uploadBtn" class="btn-primary px-5 py-2 rounded-full text-sm font-medium">Upload New Photo</button>
+              <button type="button" id="removePhotoBtn" class="hidden ml-2 text-sm text-red-600 hover:underline">Remove</button>
+              <p class="text-xs text-charcoal/50 mt-2">JPG, PNG. Max 2MB. Square image recommended.</p>
+              <p id="uploadStatus" class="text-xs mt-2 hidden"></p>
+            </div>
+          </div>
+        </div>
+
+        <form id="profileForm" class="bg-white rounded-2xl p-6 border border-primary/5 space-y-4">
+          <h2 class="text-lg font-bold text-primary mb-2">Profile Details</h2>
+
+          <div>
+            <label class="block text-sm font-medium text-charcoal mb-1">Full Name</label>
+            <input type="text" id="inputName" required maxlength="100" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-charcoal mb-1">Bio</label>
+            <textarea id="inputBio" rows="4" maxlength="500" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white" placeholder="Tell students about your teaching experience..."></textarea>
+            <p class="text-xs text-charcoal/50 mt-1">Max 500 characters</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-charcoal mb-1">Years of Experience</label>
+            <input type="number" id="inputExperience" min="0" max="60" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-charcoal mb-1">Specialties (comma-separated)</label>
+            <input type="text" id="inputSpecialties" placeholder="Quran Reading, Tajweed, Hifz" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+            <p class="text-xs text-charcoal/50 mt-1">Separate multiple specialties with commas</p>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="saveBtn" class="btn-primary px-6 py-3 rounded-full font-medium text-sm">Save Changes</button>
+            <span id="saveStatus" class="ml-3 text-sm hidden"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script>
+(function() {
+  var db = window.db;
+  if (!db) {
+    console.error("window.db not available - is supabase-config.js loaded?");
+    return;
+  }
+
+  var userId = null;
+  var teacherRow = null;
+
+  function q(id) { return document.getElementById(id); }
+
+  function showError(msg) {
+    q('loadingState').classList.add('hidden');
+    q('profileState').classList.add('hidden');
+    q('errorMessage').textContent = msg;
+    q('errorState').classList.remove('hidden');
+  }
+
+  // Sidebar toggle
+  q('sidebarToggle').addEventListener('click', function() {
+    q('sidebar').classList.remove('-translate-x-full');
+    q('sidebarOverlay').classList.remove('hidden');
+  });
+  q('sidebarClose').addEventListener('click', function() {
+    q('sidebar').classList.add('-translate-x-full');
+    q('sidebarOverlay').classList.add('hidden');
+  });
+  q('sidebarOverlay').addEventListener('click', function() {
+    q('sidebar').classList.add('-translate-x-full');
+    q('sidebarOverlay').classList.add('hidden');
+  });
+
+  // User menu dropdown
+  q('userMenuBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    q('userMenu').classList.toggle('hidden');
+  });
+  document.addEventListener('click', function(e) {
+    if (!q('userMenu').contains(e.target) && e.target !== q('userMenuBtn')) {
+      q('userMenu').classList.add('hidden');
+    }
+  });
+
+  // Logout
+  q('logoutBtn').addEventListener('click', async function() {
+    await db.auth.signOut();
+    window.location.href = '../auth/login.html';
+  });
+
+  // Photo upload
+  q('uploadBtn').addEventListener('click', function() { q('photoInput').click(); });
+
+  q('photoInput').addEventListener('change', async function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showUploadStatus('File too large. Max 2MB.', 'error');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      showUploadStatus('Only image files allowed.', 'error');
+      return;
+    }
+
+    showUploadStatus('Uploading...', 'info');
+
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var path = userId + '/avatar.' + ext;
+
+    var up = await db.storage.from('teachers').upload(path, file, {
+      upsert: true,
+      contentType: file.type
+    });
+
+    if (up.error) {
+      showUploadStatus('Upload failed: ' + up.error.message, 'error');
+      return;
+    }
+
+    var pub = db.storage.from('teachers').getPublicUrl(path);
+    var url = pub.data.publicUrl + '?t=' + Date.now();
+
+    var upd = await db.from('teachers').update({ photo_url: url }).eq('id', teacherRow.id);
+    if (upd.error) {
+      showUploadStatus('Save failed: ' + upd.error.message, 'error');
+      return;
+    }
+
+    // Update UI
+    var img = q('photoImg');
+    img.src = url;
+    img.classList.remove('hidden');
+    q('photoInitial').classList.add('hidden');
+    q('removePhotoBtn').classList.remove('hidden');
+    showUploadStatus('Photo updated!', 'success');
+    setTimeout(function() { q('uploadStatus').classList.add('hidden'); }, 2500);
+  });
+
+  q('removePhotoBtn').addEventListener('click', async function() {
+    if (!confirm('Remove your profile photo?')) return;
+
+    var upd = await db.from('teachers').update({ photo_url: null }).eq('id', teacherRow.id);
+    if (upd.error) {
+      showUploadStatus('Failed: ' + upd.error.message, 'error');
+      return;
+    }
+
+    q('photoImg').classList.add('hidden');
+    q('photoInitial').classList.remove('hidden');
+    q('removePhotoBtn').classList.add('hidden');
+    showUploadStatus('Photo removed.', 'success');
+  });
+
+  function showUploadStatus(msg, kind) {
+    var el = q('uploadStatus');
+    el.textContent = msg;
+    el.className = 'text-xs mt-2 ' + (
+      kind === 'error' ? 'text-red-600' :
+      kind === 'success' ? 'text-green-600' :
+      'text-charcoal/60'
+    );
+    el.classList.remove('hidden');
+  }
+
+  // Save form
+  q('profileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var btn = q('saveBtn');
+    var status = q('saveStatus');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    status.classList.add('hidden');
+
+    var specialties = q('inputSpecialties').value
+      .split(',')
+      .map(function(s) { return s.trim(); })
+      .filter(Boolean);
+
+    var update = {
+      name: q('inputName').value.trim(),
+      bio: q('inputBio').value.trim() || null,
+      experience_years: parseInt(q('inputExperience').value, 10) || 0,
+      specialties: specialties.length ? specialties : null
+    };
+
+    var res = await db.from('teachers').update(update).eq('id', teacherRow.id);
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+
+    if (res.error) {
+      status.textContent = 'Error: ' + res.error.message;
+      status.className = 'ml-3 text-sm text-red-600';
+    } else {
+      status.textContent = 'Saved!';
+      status.className = 'ml-3 text-sm text-green-600';
+      teacherRow = Object.assign(teacherRow, update);
+    }
+    status.classList.remove('hidden');
+    setTimeout(function() { status.classList.add('hidden'); }, 3000);
+  });
+
+  // Initialization
+  (async function() {
+    try {
+      var sess = await db.auth.getSession();
+      if (!sess || !sess.data || !sess.data.session) {
+        window.location.href = '../auth/login.html';
+        return;
+      }
+      userId = sess.data.session.user.id;
+      q('userEmail').textContent = sess.data.session.user.email || '';
+
+      var res = await db.from('teachers').select('*').eq('profile_id', userId).maybeSingle();
+      if (res.error || !res.data) {
+        showError('No teacher record found for your account. Please contact admin.');
+        return;
+      }
+      teacherRow = res.data;
+
+      // Populate fields
+      q('inputName').value = teacherRow.name || '';
+      q('inputBio').value = teacherRow.bio || '';
+      q('inputExperience').value = teacherRow.experience_years || 0;
+      q('inputSpecialties').value = (teacherRow.specialties || []).join(', ');
+      q('userName').textContent = teacherRow.name || 'Teacher';
+      q('avatar').textContent = (teacherRow.name || 'T').charAt(0).toUpperCase();
+
+      // Photo
+      if (teacherRow.photo_url) {
+        q('photoImg').src = teacherRow.photo_url;
+        q('photoImg').classList.remove('hidden');
+        q('photoInitial').classList.add('hidden');
+        q('removePhotoBtn').classList.remove('hidden');
+      } else {
+        q('photoInitial').textContent = (teacherRow.name || 'T').charAt(0).toUpperCase();
+      }
+
+      q('loadingState').classList.add('hidden');
+      q('profileState').classList.remove('hidden');
+    } catch (err) {
+      console.error(err);
+      showError('Unexpected error: ' + err.message);
+    }
+  })();
+})();
+</script>
+
+<script src="../assets/js/site-loader.js"></script>
+<script src="../assets/js/notifications.js"></script>
+
+</body>
+</html>

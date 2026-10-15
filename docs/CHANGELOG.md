@@ -150,3 +150,16 @@
   - rejectTeacher now deactivates (is_active=false) and sets kyc_status='rejected'
   - approveTeacher now also sets kyc_status='approved'
   - Data preserved; no row deletions on reject
+
+### F-025: Teacher self-service profile page (COMPLETED)
+- Created teacher/profile.html (401 lines):
+  - Photo upload (Supabase Storage bucket 'teachers')
+  - Photo remove
+  - Edit name, bio, experience_years, specialties
+  - Loading / error / not-found states
+- Storage policies added for teacher self-service:
+  - teachers_upload_own (INSERT), teachers_update_own (UPDATE), teachers_delete_own (DELETE)
+  - Path scoped to: teachers/<auth.uid>/avatar.*
+- Added "My Profile" link to all 10 teacher pages:
+  - 8 pages: sidebar link added after Dashboard
+  - notification-preferences.html & kyc.html: header nav link added
