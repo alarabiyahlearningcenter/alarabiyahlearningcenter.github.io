@@ -27,6 +27,8 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
 </style>
 </head>
 <body class="bg-cream text-charcoal min-h-screen">
+  <div id="diagPanel" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;padding:8px;font-family:monospace;font-size:10px;max-height:40vh;overflow:auto;"></div>
+  <button id="diagToggle" style="position:fixed;bottom:8px;right:8px;z-index:100000;background:#0A3622;color:#0f0;border:1px solid #0f0;padding:4px 8px;font-size:10px;border-radius:4px;">DIAG</button>
 
 <header class="sticky top-0 z-40 bg-white border-b border-primary/10">
   <div class="px-4 py-3 flex items-center justify-between">
@@ -163,6 +165,13 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 (async () => {
+  function diag(msg) {
+    var el = document.getElementById('diagPanel');
+    if (el) el.innerHTML += '<div>' + msg + '</div>';
+    console.log('[DIAG]', msg);
+  }
+  diag('=== MY-STUDENTS DIAG ===');
+  
   const { data: { session } } = await db.auth.getSession();
   if (!session) { window.location.href = '../auth/login.html'; return; }
   const user = session.user;
@@ -181,6 +190,16 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
   const { data: teacherRecord } = await db.from('teachers').select('*').eq('profile_id', user.id).maybeSingle();
   const teacherId = teacherRecord?.id;
+  diag('session.user.id: ' + (user ? user.id : 'NULL'));
+  diag('session.user.email: ' + (user ? user.email : 'NULL'));
+  diag('teacherRecord.id: ' + (teacherRecord ? teacherRecord.id : 'NULL'));
+  diag('teacherId: ' + teacherId);
+  // MYSTUDENTS-DIAG
+  console.log('=== MY-STUDENTS DIAG ===');
+  console.log('session.user.id:', user.id);
+  console.log('session.user.email:', user.email);
+  console.log('teacherRecord:', JSON.stringify(teacherRecord));
+  console.log('teacherId:', teacherId);
 
   const grid = document.getElementById('studentsGrid');
   document.getElementById('loading').classList.add('hidden');
@@ -193,6 +212,12 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   // Get unique student ids from classes and enrollments
   const { data: classes } = await db.from('classes').select('student_id').eq('teacher_id', teacherId);
   const { data: enrollments } = await db.from('enrollments').select('student_id, course_id').eq('teacher_id', teacherId);
+  diag('enrollments count: ' + (enrollments ? enrollments.length : 'null'));
+  if (enrollments && enrollments.length) {
+    enrollments.forEach(function(e, i) { diag('  e[' + i + '].student_id: ' + e.student_id); });
+  }
+  console.log('enrollments count:', enrollments ? enrollments.length : 'null');
+  console.log('enrollments data:', JSON.stringify(enrollments));
 
   const studentIds = [...new Set([
     ...(classes || []).map(c => c.student_id),
@@ -205,6 +230,8 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   }
 
   const { data: profiles } = await db.from('profiles').select('*').in('id', studentIds);
+  diag('profiles fetched: ' + (profiles ? profiles.length : 'null'));
+  if (profiles) profiles.forEach(function(p) { diag('  profile: ' + p.full_name + ' (' + p.email + ')'); });
   const { data: courses } = await db.from('courses').select('id, title');
 
   grid.innerHTML = (profiles || []).map(s => {
@@ -249,6 +276,22 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 <script src="../assets/js/notifications.js"></script>
 <script src="../assets/js/inject-bell.js"></script>
 <script src="../assets/js/kyc-gate.js"></script>
+
+<script>
+  (function() {
+    var btn = document.getElementById('diagToggle');
+    var panel = document.getElementById('diagPanel');
+    if (btn && panel) {
+      btn.addEventListener('click', function() {
+        if (panel.style.display === 'none') {
+          panel.style.display = 'block';
+        } else {
+          panel.style.display = 'none';
+        }
+      });
+    }
+  })();
+</script>
 </body>
 </html>
 
