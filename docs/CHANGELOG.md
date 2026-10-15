@@ -209,3 +209,14 @@
   have different sidebar structure — will add in later phase if needed
 - Skipped pages (3): livekit-class, select-teacher, delete-account
   have no sidebar (utility pages)
+
+### F-036: My Teacher link caused login-redirect loop (COMPLETED)
+- select-teacher.html session check was too strict
+- Original required both parsed.user AND parsed.access_token from localStorage
+- Also relied on db.auth.getSession() which could time out
+- Result: click "My Teacher" → redirected to login → login page detected session → back to dashboard (loop)
+- Fix:
+  - localStorage checked FIRST (synchronous, immediate)
+  - Only requires parsed.user (removed access_token requirement)
+  - getSession retries increased to 15 × 250ms (3.75s total)
+  - Added console logging for diagnostics

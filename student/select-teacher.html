@@ -77,34 +77,42 @@ window.db = db; // F-017: expose globally for notifications.js
     let selectedTeacherForConfirm = null;
 
     async function init() {
-        // Retry session check (Supabase may need time to restore session)
-        let session = null;
-        for (let i = 0; i < 10; i++) {
+    // F-036: Robust session detection — localStorage first, then getSession retries
+      let user = null;
+
+      // Method 1: localStorage directly (synchronous, most reliable)
+      try {
+        const raw = localStorage.getItem('sb-vgsgisyneymtszuslftb-auth-token');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.user) {
+            user = parsed.user;
+            console.log('[select-teacher] session from localStorage');
+          }
+        }
+      } catch (e) { console.warn('[select-teacher] localStorage parse failed:', e); }
+
+      // Method 2: supabase getSession (with retries)
+      if (!user) {
+        for (let i = 0; i < 15; i++) {
+          try {
             const res = await db.auth.getSession();
-            session = res.data && res.data.session;
-            if (session && session.user) break;
-            await new Promise(r => setTimeout(r, 200));
+            if (res && res.data && res.data.session && res.data.session.user) {
+              user = res.data.session.user;
+              console.log('[select-teacher] session from getSession attempt', i + 1);
+              break;
+            }
+          } catch (e) { console.warn('[select-teacher] getSession attempt', i + 1, 'failed:', e); }
+          await new Promise(r => setTimeout(r, 250));
         }
-        
-        // Fallback: check localStorage directly
-        if (!session || !session.user) {
-            try {
-                const raw = localStorage.getItem('sb-vgsgjsneymetzsuzl1fb-auth-token');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && parsed.user && parsed.access_token) {
-                        session = { user: parsed.user };
-                    }
-                }
-            } catch(e) { console.warn('localStorage parse failed:', e); }
-        }
-        
-        if (!session || !session.user) { 
-            window.location.href = '../auth/login.html'; 
-            return; 
-        }
-        
-        currentUser = session.user;
+      }
+
+      if (!user) {
+        console.warn('[select-teacher] No session — redirecting to login');
+        window.location.href = '../auth/login.html';
+        return;
+      }
+      currentUser = user;
 
         document.getElementById('page-content').classList.remove('hidden');
         await loadCoursesAndAssignments();
