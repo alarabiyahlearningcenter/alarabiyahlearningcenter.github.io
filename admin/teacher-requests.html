@@ -87,6 +87,14 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
   if (!ctx) return;
   const db = ctx.db;
 
+  // F-043-FIX: safely fetch current user id (ctx.user may not exist)
+  let ADMIN_UID = null;
+  try {
+    const _u = await db.auth.getUser();
+    ADMIN_UID = _u && _u.data && _u.data.user ? _u.data.user.id : null;
+    console.log('Admin UID:', ADMIN_UID);
+  } catch (e) { console.warn('getUser failed', e); }
+
   let allRequests = [];
   let currentTab = 'pending';
 
@@ -282,7 +290,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     var upd = await db.from('student_teacher_assignments').update({
       status: 'approved',
       approved_at: new Date().toISOString(),
-      approved_by: ctx.user.id
+      approved_by: ADMIN_UID
     }).eq('id', id);
 
     if (upd.error) {
@@ -327,7 +335,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
     var upd = await db.from('student_teacher_assignments').update({
       status: 'rejected',
       approved_at: new Date().toISOString(),
-      approved_by: ctx.user.id
+      approved_by: ADMIN_UID
     }).eq('id', id);
 
     if (upd.error) {
@@ -396,7 +404,7 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       teacher_id: newTeacher.id,
       status: 'approved',
       approved_at: new Date().toISOString(),
-      approved_by: ctx.user.id
+      approved_by: ADMIN_UID
     }).eq('id', id);
 
     if (upd.error) {

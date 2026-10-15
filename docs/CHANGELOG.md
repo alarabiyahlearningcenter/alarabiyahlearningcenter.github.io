@@ -253,3 +253,9 @@
   - Reject → status='rejected' + reason + notify student
   - Change Teacher → admin selects new active teacher + notify both
 - Admin sidebar menu updated with new entry
+
+### F-043: Admin approve/reject silently failed (COMPLETED)
+- ctx.user was undefined in admin-shell context
+- accessed ctx.user.id → TypeError inside async → silent fail
+- Fix: fetch uid via db.auth.getUser() into ADMIN_UID
+- Both RLS policies (Admins manage all + sta_admin_update) verified present
