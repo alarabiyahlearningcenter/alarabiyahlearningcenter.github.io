@@ -227,3 +227,10 @@
 - Fix: switch to .select('*') + .order('started_at', ...) like my-courses.html
 - Filter status in JavaScript after fetch (functional equivalent)
 - Diagnostic panel proves: allEnrollments.length = 2, filtered = 2
+
+### F-036c: select-teacher.html had wrong anon key (COMPLETED)
+- Raw fetch test proved: server reachable, returned 401 "Invalid API key"
+- Both files had JWT with same payload but DIFFERENT signatures
+- my-courses.html works; select-teacher.html failed with "Failed to fetch"
+- Fix: copied the correct anon key from my-courses.html
+- MD5 of both files' anon key now identical (4303123b...)
