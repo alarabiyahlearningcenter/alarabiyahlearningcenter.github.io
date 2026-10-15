@@ -200,3 +200,12 @@
 - Fix: Added RLS policy "profiles_read_chat_participants" (SQL executed):
   - Authenticated users can read profile only of their chat participants
   - Narrow scope — no wide-open access
+
+### F-035 Phase 1: Student sidebar — "My Teacher" link (COMPLETED)
+- Added "My Teacher" link to 16 student sidebar pages
+- Links to student/select-teacher.html
+- Purpose: make teacher assignment discoverable
+- Failed pages (2): reschedule-class.html, notification-preferences.html
+  have different sidebar structure — will add in later phase if needed
+- Skipped pages (3): livekit-class, select-teacher, delete-account
+  have no sidebar (utility pages)
