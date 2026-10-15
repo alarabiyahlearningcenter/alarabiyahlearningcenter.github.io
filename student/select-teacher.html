@@ -18,6 +18,7 @@
     </style>
 </head>
 <body class="bg-cream text-charcoal min-h-screen">
+  <div id="diagPanel" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;padding:8px;font-family:monospace;font-size:11px;max-height:40vh;overflow:auto;"></div>
 
     <div id="admin-shell"></div>
 
@@ -118,7 +119,17 @@ window.db = db; // F-017: expose globally for notifications.js
         await loadCoursesAndAssignments();
     }
 
+    function diag(msg) {
+      var el = document.getElementById('diagPanel');
+      if (el) el.innerHTML += '<div>' + msg + '</div>';
+      console.log('[DIAG]', msg);
+    }
+
     async function loadCoursesAndAssignments() {
+      diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
+      diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
+      console.log('[DIAG] currentUser:', currentUser ? currentUser.id : 'NULL');
+      console.log('[DIAG] currentUser email:', currentUser ? currentUser.email : 'NULL');
         document.getElementById('loading').classList.remove('hidden');
 
         // Fetch student's active enrollments with course info
@@ -128,7 +139,14 @@ window.db = db; // F-017: expose globally for notifications.js
             .eq('student_id', currentUser.id)
             .in('status', ['active', 'completed']);
 
-        if (enrollErr || !enrollments || enrollments.length === 0) {
+        console.log('[DIAG] enrollErr:', enrollErr);
+      console.log('[DIAG] enrollments:', enrollments);
+
+      diag('enrollErr: ' + JSON.stringify(enrollErr));
+      diag('enrollments.length: ' + (enrollments ? enrollments.length : 'null'));
+      diag('enrollments: ' + JSON.stringify(enrollments));
+
+      if (enrollErr || !enrollments || enrollments.length === 0) {
             document.getElementById('loading').innerHTML = '<p class="text-center text-charcoal/60 py-12">No enrolled courses yet. <a href="payment.html" class="text-primary font-semibold hover:underline">Make a payment first →</a></p>';
             return;
         }
