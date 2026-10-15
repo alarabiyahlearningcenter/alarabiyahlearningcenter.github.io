@@ -227,7 +227,12 @@ window.db = db; // F-017: expose globally for notifications.js
 
         // Get course titles
         const courseIds = uniqueCourses.map(e => e.course_id);
-        const { data: courses } = await db.from('courses').select('id, title, description').in('id', courseIds);
+        // COURSES-DIAG
+      diag('courseIds count: ' + courseIds.length);
+      diag('courseIds[0]: ' + courseIds[0]);
+      const { data: courses, error: coursesErr } = await db.from('courses').select('id, title, description').in('id', courseIds);
+      diag('coursesErr: ' + JSON.stringify(coursesErr));
+      diag('courses.length: ' + (courses ? courses.length : 'null'));
         const courseMap = {};
         (courses || []).forEach(c => courseMap[c.id] = c);
 
