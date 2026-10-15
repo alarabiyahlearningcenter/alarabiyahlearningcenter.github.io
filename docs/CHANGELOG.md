@@ -163,3 +163,10 @@
 - Added "My Profile" link to all 10 teacher pages:
   - 8 pages: sidebar link added after Dashboard
   - notification-preferences.html & kyc.html: header nav link added
+
+### F-031: test-debug.html leaked auth tokens (COMPLETED)
+- Root cause: leftover debug page from earlier LiveKit token investigation
+- Page read supabase auth token from localStorage and printed it to console
+- Any logged-in student visiting the URL directly would leak their session
+- Not linked anywhere (orphaned) but publicly accessible via GitHub Pages
+- Removed from repo; backup preserved at ~/audit_backup/test-debug_removed_*.html
