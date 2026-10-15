@@ -234,3 +234,11 @@
 - my-courses.html works; select-teacher.html failed with "Failed to fetch"
 - Fix: copied the correct anon key from my-courses.html
 - MD5 of both files' anon key now identical (4303123b...)
+
+### F-036d: select-teacher.html had wrong SUPABASE_URL (COMPLETED)
+- Root cause: URL was pointing to nonexistent project
+  (vgsgjsneymetzsuzl1fb instead of vgsgisyneymtszuslftb)
+- 5 characters differed — typo during copy-paste
+- Result: all fetch calls failed with "TypeError: Failed to fetch"
+- Fix: replaced URL with confirmed correct value from Supabase dashboard
+  Also re-synced anon key from working my-courses.html
