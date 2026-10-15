@@ -220,3 +220,10 @@
   - Only requires parsed.user (removed access_token requirement)
   - getSession retries increased to 15 × 250ms (3.75s total)
   - Added console logging for diagnostics
+
+### F-036b: select-teacher.html enrollment query failed (COMPLETED)
+- .in('status', ['active', 'completed']) caused "TypeError: Failed to fetch"
+- supabase-js sent malformed request due to .in() with array on some clients
+- Fix: switch to .select('*') + .order('started_at', ...) like my-courses.html
+- Filter status in JavaScript after fetch (functional equivalent)
+- Diagnostic panel proves: allEnrollments.length = 2, filtered = 2

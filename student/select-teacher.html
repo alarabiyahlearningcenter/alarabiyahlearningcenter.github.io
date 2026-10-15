@@ -135,9 +135,9 @@ window.db = db; // F-017: expose globally for notifications.js
         // Fetch student's active enrollments with course info
         const { data: enrollments, error: enrollErr } = await db
             .from('enrollments')
-            .select('id, course_id, plan_id, status')
+            .select('*')
             .eq('student_id', currentUser.id)
-            .in('status', ['active', 'completed']);
+            .order('started_at', { ascending: false });
 
         console.log('[DIAG] enrollErr:', enrollErr);
       console.log('[DIAG] enrollments:', enrollments);
@@ -145,6 +145,13 @@ window.db = db; // F-017: expose globally for notifications.js
       diag('enrollErr: ' + JSON.stringify(enrollErr));
       diag('enrollments.length: ' + (enrollments ? enrollments.length : 'null'));
       diag('enrollments: ' + JSON.stringify(enrollments));
+
+            // F-036b: filter status in JS (server-side .in() caused Failed to fetch)
+      const _filteredEnrollments = (enrollments || []).filter(function(e) {
+        return e.status === 'active' || e.status === 'completed';
+      });
+      diag('filtered: ' + _filteredEnrollments.length);
+      if (enrollments) { enrollments.length = 0; Array.prototype.push.apply(enrollments, _filteredEnrollments); }
 
       if (enrollErr || !enrollments || enrollments.length === 0) {
             document.getElementById('loading').innerHTML = '<p class="text-center text-charcoal/60 py-12">No enrolled courses yet. <a href="payment.html" class="text-primary font-semibold hover:underline">Make a payment first →</a></p>';
