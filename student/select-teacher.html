@@ -18,7 +18,7 @@
     </style>
 </head>
 <body class="bg-cream text-charcoal min-h-screen">
-  <div id="diagPanel" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;padding:8px;font-family:monospace;font-size:11px;max-height:40vh;overflow:auto;"></div>
+  <div id="diagPanel" data-version="v036b-fix" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;padding:8px;font-family:monospace;font-size:11px;max-height:40vh;overflow:auto;"></div>
 
     <div id="admin-shell"></div>
 
@@ -126,6 +126,7 @@ window.db = db; // F-017: expose globally for notifications.js
     }
 
     async function loadCoursesAndAssignments() {
+      diag('BUILD: F-036b-v1');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
       console.log('[DIAG] currentUser:', currentUser ? currentUser.id : 'NULL');
