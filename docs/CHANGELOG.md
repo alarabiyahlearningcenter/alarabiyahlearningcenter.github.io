@@ -265,3 +265,9 @@
 - But admin approval sets status to 'approved' (via admin/teacher-requests.html)
 - Result: neither pending nor approved branch matched, so card had no badge/button
 - Fix: accept both 'active' OR 'approved' as the "assigned" state
+
+### F-047: Service Worker caching stale Supabase responses (COMPLETED)
+- index.html registers sw.js — scope './' caches aggressively
+- Supabase REST responses were served from SW cache (stale data)
+- Fix: teacher/my-students.html now sends cache:'no-store' on all fetches
+- User must also unregister SW once manually
