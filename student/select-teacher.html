@@ -18,7 +18,8 @@
     </style>
 </head>
 <body class="bg-cream text-charcoal min-h-screen">
-  <div id="diagPanel" data-version="v036b-fix" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;padding:8px;font-family:monospace;font-size:11px;max-height:40vh;overflow:auto;"></div>
+  <div id="diagPanel" style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;padding:8px;font-family:monospace;font-size:10px;max-height:28vh;overflow:auto;border-top:2px solid #0f0;"></div>
+  <button id="diagToggle" style="position:fixed;bottom:28vh;right:8px;z-index:100000;background:#0f0;color:#000;border:none;padding:6px 10px;font-size:11px;font-weight:bold;border-radius:6px 6px 0 0;cursor:pointer;">HIDE DIAG</button>
 
     <div id="admin-shell"></div>
 
@@ -428,5 +429,25 @@ window.db = db; // F-017: expose globally for notifications.js
 
     <script src="../assets/js/notifications.js"></script>
     <script src="../assets/js/inject-bell.js"></script>
+
+<script>
+  (function() {
+    var btn = document.getElementById('diagToggle');
+    var panel = document.getElementById('diagPanel');
+    if (btn && panel) {
+      btn.addEventListener('click', function() {
+        if (panel.style.display === 'none') {
+          panel.style.display = 'block';
+          btn.textContent = 'HIDE DIAG';
+          btn.style.bottom = '28vh';
+        } else {
+          panel.style.display = 'none';
+          btn.textContent = 'SHOW DIAG';
+          btn.style.bottom = '8px';
+        }
+      });
+    }
+  })();
+</script>
 </body>
 </html>
