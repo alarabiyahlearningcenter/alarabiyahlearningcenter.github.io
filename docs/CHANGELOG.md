@@ -192,3 +192,11 @@
   - Select teacher → creates chat_threads row → opens chat
   - Idempotent: reuses existing thread if already present
 - RLS policy already allows students to insert their own threads
+
+### F-034: Teacher/Student chat showed generic names (COMPLETED)
+- Root cause: profiles RLS only allowed own profile or admin
+- Teacher could not read student profiles → "Student" fallback
+- Student could not read teacher profiles → "Teacher" fallback
+- Fix: Added RLS policy "profiles_read_chat_participants" (SQL executed):
+  - Authenticated users can read profile only of their chat participants
+  - Narrow scope — no wide-open access
