@@ -298,6 +298,15 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       return;
     }
 
+    // F-045-FIX: Sync enrollments.teacher_id so teacher-side pages see this student
+    try {
+      await db.from('enrollments')
+        .update({ teacher_id: req.teacher_id })
+        .eq('student_id', req.student_id)
+        .eq('course_id', req.course_id);
+      console.log('[F-045] enrollments.teacher_id synced');
+    } catch (e) { console.warn('[F-045] enrollment sync failed', e); }
+
     // Notify student
     try {
       if (window.Notif && req.student_id) {
@@ -411,6 +420,15 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       alert('Change failed: ' + upd.error.message);
       return;
     }
+
+    // F-045-FIX: sync enrollments.teacher_id to new teacher
+    try {
+      await db.from('enrollments')
+        .update({ teacher_id: newTeacher.id })
+        .eq('student_id', req.student_id)
+        .eq('course_id', req.course_id);
+      console.log('[F-045] enrollments.teacher_id changed');
+    } catch (e) { console.warn('[F-045] enrollment change sync failed', e); }
 
     // Notify
     try {
