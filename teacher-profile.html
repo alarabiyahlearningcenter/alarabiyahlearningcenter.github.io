@@ -203,7 +203,8 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
       return;
     }
 
-    var result = await db.from('teachers').select('*').eq('id', id).maybeSingle();
+    var result = await db.from('teachers').select('*').eq('id', id).eq('is_active', true)
+    .maybeSingle();
     var data = result.data;
     var error = result.error;
 

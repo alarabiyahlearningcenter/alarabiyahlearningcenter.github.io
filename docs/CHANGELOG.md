@@ -132,3 +132,11 @@
 - Result: notification bell auto-mount silently failed (badge, panel empty)
 - Fix: added `window.db = db;` after createClient call in each file
 - All 9 files pass syntax check; backups preserved in ~/audit_backup/F017_*
+
+### F-020/F-021/F-022/F-023: KYC-driven teacher activation (COMPLETED)
+- Root cause: two separate authorization paths (profiles.kyc_status vs teachers.is_active)
+  were not synced, leaving rejected teachers publicly visible
+- DB migration: teachers.is_active default changed to false
+- DB trigger: profiles.kyc_status='approved' auto-activates, 'rejected' auto-deactivates
+- teacher-profile.html: added .eq('is_active', true) to prevent direct URL access to hidden teachers
+- Existing 3 teachers remain active (kyc_status='approved')
