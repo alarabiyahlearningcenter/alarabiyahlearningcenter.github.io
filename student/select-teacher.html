@@ -141,7 +141,7 @@ window.db = db; // F-017: expose globally for notifications.js
     }
 
     async function loadCoursesAndAssignments() {
-      diag('BUILD: F-036e-v3');
+      diag('BUILD: F-036f-v4');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
 
@@ -255,10 +255,27 @@ window.db = db; // F-017: expose globally for notifications.js
         }
 
         document.getElementById('loading').classList.add('hidden');
+        try {
+        diag('--- before renderCourses ---');
         renderCourses(uniqueCourses, courseMap, assignmentMap, teacherMap);
+        diag('--- after renderCourses ---');
+      } catch (_re) {
+        diag('renderCourses EXCEPTION: ' + _re.message);
+        diag('stack: ' + (_re.stack || '').substring(0, 200));
+      }
     }
 
     function renderCourses(enrollments, courseMap, assignmentMap, teacherMap) {
+    // RENDER-DIAG
+    try {
+      diag('--- renderCourses called ---');
+      diag('enrollments: ' + (enrollments ? enrollments.length : 'null'));
+      diag('courseMap keys: ' + Object.keys(courseMap || {}).length);
+      diag('assignmentMap keys: ' + Object.keys(assignmentMap || {}).length);
+      const _c = document.getElementById('coursesContainer');
+      diag('container found: ' + (!!_c));
+      diag('container class: ' + (_c ? _c.className : 'N/A'));
+    } catch (e) { diag('RENDER-DIAG err: ' + e.message); }
         const container = document.getElementById('coursesContainer');
 
         container.innerHTML = enrollments.map(e => {
