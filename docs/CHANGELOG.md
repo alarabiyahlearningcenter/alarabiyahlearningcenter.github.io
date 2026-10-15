@@ -259,3 +259,9 @@
 - accessed ctx.user.id → TypeError inside async → silent fail
 - Fix: fetch uid via db.auth.getUser() into ADMIN_UID
 - Both RLS policies (Admins manage all + sta_admin_update) verified present
+
+### F-044: Approved status not rendered on student page (COMPLETED)
+- renderCourses checked assignment.status === 'active'
+- But admin approval sets status to 'approved' (via admin/teacher-requests.html)
+- Result: neither pending nor approved branch matched, so card had no badge/button
+- Fix: accept both 'active' OR 'approved' as the "assigned" state
