@@ -63,7 +63,7 @@
             <div id="confirmTeacherInfo" class="bg-cream rounded-xl p-4 mb-5"></div>
             <div class="flex gap-3">
                 <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-xl border-2 border-primary/20 text-charcoal font-semibold text-sm hover:bg-cream transition">Cancel</button>
-                <button onclick="confirmSelection()" class="flex-1 py-2.5 rounded-xl btn-primary font-semibold text-sm">✓ Confirm</button>
+                <button id="confirmBtn" onclick="confirmSelection(event)" class="flex-1 py-2.5 rounded-xl btn-primary font-semibold text-sm">✓ Confirm</button>
             </div>
         </div>
     </div>
@@ -142,7 +142,7 @@ window.db = db; // F-017: expose globally for notifications.js
     }
 
     async function loadCoursesAndAssignments() {
-      diag('BUILD: F-036f-v4');
+      diag('BUILD: F-038-v5');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
 
@@ -372,10 +372,13 @@ window.db = db; // F-017: expose globally for notifications.js
         currentCourseForSelection = null;
     }
 
-    async function confirmSelection() {
+    async function confirmSelection(evt) {
+        diag('--- confirmSelection called ---');
+        diag('teacher: ' + (selectedTeacherForConfirm ? selectedTeacherForConfirm.id : 'null'));
+        diag('course: ' + (currentCourseForSelection ? currentCourseForSelection.course_id : 'null'));
         if (!selectedTeacherForConfirm || !currentCourseForSelection) return;
 
-        const btn = event.target;
+        const btn = (typeof event !== 'undefined' && event && event.target) ? event.target : document.getElementById('confirmBtn');
         btn.disabled = true;
         btn.textContent = 'Saving...';
 
@@ -386,6 +389,7 @@ window.db = db; // F-017: expose globally for notifications.js
             assigned_by: 'student',
             status: 'pending'
         });
+        diag('insert error: ' + JSON.stringify(error));
 
         if (error) {
             alert('Error: ' + error.message);
