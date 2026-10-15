@@ -393,6 +393,73 @@ input:focus{outline:none}
     if (e.key === 'Enter') sendMessage();
   });
 
+
+  async function openStartConversationModal() {
+    var userId = user.id;
+    var results = await Promise.all([
+      db.from('student_teacher_assignments').select('teacher_id').eq('student_id', userId),
+      db.from('enrollments').select('teacher_id').eq('student_id', userId).not('teacher_id', 'is', null),
+      db.from('classes').select('teacher_id').eq('student_id', userId).not('teacher_id', 'is', null),
+      db.from('teacher_students').select('teacher_id').eq('student_id', userId)
+    ]);
+    var teacherIds = {};
+    results.forEach(function(res) {
+      (res.data || []).forEach(function(r) {
+        if (r.teacher_id) teacherIds[r.teacher_id] = true;
+      });
+    });
+    var ids = Object.keys(teacherIds);
+    if (!ids.length) {
+      alert('No teachers assigned yet. Please contact admin to get assigned to a teacher.');
+      return;
+    }
+    var pr = await db.from('profiles').select('id, full_name, email, avatar_url').in('id', ids);
+    var teachers = pr.data || [];
+    if (!teachers.length) { alert('Could not load teacher details.'); return; }
+    
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,54,34,0.75);backdrop-filter:blur(4px);font-family:Inter,sans-serif;';
+    var inner = '<div style="background:#F9F7F2;border-radius:20px;padding:24px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;">';
+    inner += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+    inner += '<h3 style="font-size:20px;color:#0A3622;font-family:Playfair Display,serif;margin:0;">Start a Conversation</h3>';
+    inner += '<button id="closeStartConv" style="background:none;border:none;font-size:26px;cursor:pointer;color:#666;line-height:1;padding:0;">&times;</button>';
+    inner += '</div><div style="display:flex;flex-direction:column;gap:10px;">';
+    teachers.forEach(function(t) {
+      var name = t.full_name || t.email || 'Teacher';
+      var initial = name.charAt(0).toUpperCase();
+      var safeName = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      var avatar = t.avatar_url ? '<img src="' + t.avatar_url + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">' : '<div style="width:44px;height:44px;border-radius:50%;background:#0A3622;color:#D4AF37;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;">' + initial + '</div>';
+      inner += '<button class="start-conv-item" data-tid="' + t.id + '" data-tname="' + safeName + '" style="display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid rgba(10,54,34,0.1);border-radius:12px;cursor:pointer;text-align:left;width:100%;">' + avatar + '<div><div style="font-weight:600;color:#0A3622;font-size:14px;">' + safeName + '</div><div style="font-size:12px;color:#666;">Click to start chat</div></div></button>';
+    });
+    inner += '</div></div>';
+    modal.innerHTML = inner;
+    document.body.appendChild(modal);
+    document.getElementById('closeStartConv').addEventListener('click', function() { modal.remove(); });
+    modal.addEventListener('click', function(ev) { if (ev.target === modal) modal.remove(); });
+    modal.querySelectorAll('.start-conv-item').forEach(function(btn) {
+      btn.addEventListener('click', async function() {
+        var tid = btn.getAttribute('data-tid');
+        var tname = btn.getAttribute('data-tname');
+        modal.remove();
+        await selectTeacherToChat(tid, tname);
+      });
+    });
+  }
+
+  async function selectTeacherToChat(teacherId, teacherName) {
+    var userId = user.id;
+    var existing = await db.from('chat_threads').select('*').eq('student_id', userId).eq('teacher_id', teacherId).maybeSingle();
+    if (existing.data) {
+      await loadThreads();
+      openThread(existing.data.id, teacherName);
+      return;
+    }
+    var res = await db.from('chat_threads').insert({ student_id: userId, teacher_id: teacherId, student_unread: 0, teacher_unread: 0 }).select().single();
+    if (res.error) { alert('Failed to start conversation: ' + res.error.message); return; }
+    await loadThreads();
+    openThread(res.data.id, teacherName);
+  }
+
   loadThreads();
 })();
 </script>

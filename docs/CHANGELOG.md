@@ -180,3 +180,15 @@
   - Fallback position: after Dashboard
   - Same modal opens on click — no functionality lost
   - Fail-safe: skips pages without sidebar
+
+### F-033: Student chat — cannot start conversation (COMPLETED)
+- Problem: Send button silently did nothing when no thread existed
+- sendMessage() required currentThreadId, which was always null for new students
+- Empty state showed "Your teacher will message you soon" with no action
+- Fix:
+  - Added "Start a Conversation" button in empty state
+  - Modal fetches assigned teachers from:
+    student_teacher_assignments, enrollments, classes, teacher_students
+  - Select teacher → creates chat_threads row → opens chat
+  - Idempotent: reuses existing thread if already present
+- RLS policy already allows students to insert their own threads
