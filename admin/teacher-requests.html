@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Requests | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:'Inter',sans-serif;background:#F9F7F2}
+h1,h2,h3,h4{font-family:'Playfair Display',serif}
+.btn-primary{background:#0A3622;color:white;transition:.2s}
+.btn-primary:hover{background:#062218}
+.btn-danger{background:#dc2626;color:white}
+.btn-danger:hover{background:#b91c1c}
+.card-hover{transition:.3s}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,54,34,.1)}
+.sidebar-link{transition:all .2s}
+.sidebar-link:hover,.sidebar-link.active{background:rgba(212,175,55,.15);color:#0A3622;border-left:3px solid #D4AF37}
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<div id="admin-shell"></div>
+
+<div id="page-content" class="hidden">
+  <div class="p-4 md:p-6 max-w-7xl mx-auto">
+
+    <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Teacher Requests</h1>
+        <p class="text-charcoal/60 text-sm">Approve or reject student teacher selections</p>
+      </div>
+      <button id="refreshBtn" class="btn-primary px-4 py-2 rounded-full text-sm font-medium">↻ Refresh</button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="bg-white rounded-xl p-4 border border-primary/5">
+        <div class="text-xs text-charcoal/60 uppercase mb-1">Pending</div>
+        <div id="statPending" class="text-2xl font-bold text-yellow-600">0</div>
+      </div>
+      <div class="bg-white rounded-xl p-4 border border-primary/5">
+        <div class="text-xs text-charcoal/60 uppercase mb-1">Approved</div>
+        <div id="statApproved" class="text-2xl font-bold text-green-600">0</div>
+      </div>
+      <div class="bg-white rounded-xl p-4 border border-primary/5">
+        <div class="text-xs text-charcoal/60 uppercase mb-1">Rejected</div>
+        <div id="statRejected" class="text-2xl font-bold text-red-600">0</div>
+      </div>
+      <div class="bg-white rounded-xl p-4 border border-primary/5">
+        <div class="text-xs text-charcoal/60 uppercase mb-1">Total</div>
+        <div id="statTotal" class="text-2xl font-bold text-primary">0</div>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mb-4 border-b border-primary/10">
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary" data-tab="pending">Pending <span id="tabPendingCount" class="text-xs text-charcoal/50">(0)</span></button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-charcoal/60" data-tab="approved">Approved <span id="tabApprovedCount" class="text-xs text-charcoal/50">(0)</span></button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-charcoal/60" data-tab="rejected">Rejected <span id="tabRejectedCount" class="text-xs text-charcoal/50">(0)</span></button>
+    </div>
+
+    <div id="loadingState" class="text-center py-16">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary"></div>
+      <p class="mt-3 text-charcoal/60 text-sm">Loading requests...</p>
+    </div>
+
+    <div id="emptyState" class="hidden text-center py-16">
+      <div class="text-5xl mb-3">📭</div>
+      <p class="text-charcoal/70 text-sm">No requests in this category.</p>
+    </div>
+
+    <div id="requestsList" class="space-y-3"></div>
+
+  </div>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+<script src="../assets/js/admin-shell.js"></script>
+
+<script>
+(async () => {
+  const ctx = await initAdminShell();
+  if (!ctx) return;
+  const db = ctx.db;
+
+  let allRequests = [];
+  let currentTab = 'pending';
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    try {
+      return new Date(iso).toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
+    } catch (e) { return '—'; }
+  }
+
+  function statusBadge(status) {
+    const map = {
+      pending:  'bg-yellow-100 text-yellow-800',
+      approved: 'bg-green-100 text-green-800',
+      rejected: 'bg-red-100 text-red-800'
+    };
+    return '<span class="text-xs font-semibold px-2 py-1 rounded-full ' + (map[status] || 'bg-gray-100 text-gray-800') + '">' + escapeHtml(status) + '</span>';
+  }
+
+  function requestCard(r) {
+    const studentName = r.student_name || r.student_email || 'Student';
+    const teacherName = r.teacher_name || r.teacher_email || 'Teacher';
+    const courseTitle = r.course_title || 'Course';
+    const studentInit = (studentName.charAt(0) || 'S').toUpperCase();
+    const teacherInit = (teacherName.charAt(0) || 'T').toUpperCase();
+
+    var actions = '';
+    if (r.status === 'pending') {
+      actions = '<div class="flex gap-2 mt-3 flex-wrap">' +
+        '<button class="btn-primary flex-1 px-4 py-2 rounded-full text-sm font-medium" onclick="window.approveReq(\'' + r.id + '\')">✓ Approve</button>' +
+        '<button class="btn-danger flex-1 px-4 py-2 rounded-full text-sm font-medium" onclick="window.rejectReq(\'' + r.id + '\')">✗ Reject</button>' +
+        '</div>';
+    } else if (r.status === 'approved') {
+      actions = '<div class="flex gap-2 mt-3 flex-wrap">' +
+        '<button class="border border-primary text-primary flex-1 px-4 py-2 rounded-full text-sm font-medium hover:bg-primary hover:text-white transition" onclick="window.changeTeacher(\'' + r.id + '\')">🔄 Change Teacher</button>' +
+        '</div>';
+    }
+
+    return '<div class="bg-white rounded-2xl p-5 border border-primary/5 card-hover">' +
+      '<div class="flex items-start justify-between gap-3 mb-3">' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="text-xs text-charcoal/50 uppercase mb-1">Course</div>' +
+          '<h3 class="font-bold text-primary text-lg">' + escapeHtml(courseTitle) + '</h3>' +
+        '</div>' +
+        statusBadge(r.status) +
+      '</div>' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">' +
+        '<div class="flex items-center gap-3 bg-cream rounded-lg p-3">' +
+          '<div class="w-10 h-10 rounded-full bg-primary text-secondary flex items-center justify-center font-bold flex-shrink-0">' + studentInit + '</div>' +
+          '<div class="min-w-0">' +
+            '<div class="text-xs text-charcoal/50">Student</div>' +
+            '<div class="font-semibold text-primary text-sm truncate">' + escapeHtml(studentName) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex items-center gap-3 bg-cream rounded-lg p-3">' +
+          '<div class="w-10 h-10 rounded-full bg-secondary text-primary flex items-center justify-center font-bold flex-shrink-0">' + teacherInit + '</div>' +
+          '<div class="min-w-0">' +
+            '<div class="text-xs text-charcoal/50">Teacher</div>' +
+            '<div class="font-semibold text-primary text-sm truncate">' + escapeHtml(teacherName) + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="text-xs text-charcoal/50 mt-3">Requested: ' + formatDate(r.created_at) + (r.approved_at ? ' · Approved: ' + formatDate(r.approved_at) : '') + '</div>' +
+      actions +
+    '</div>';
+  }
+
+  async function fetchRequests() {
+    const { data, error } = await db
+      .from('student_teacher_assignments')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('fetchRequests error:', error);
+      alert('Failed to load requests: ' + error.message);
+      return [];
+    }
+
+    // Fetch student / teacher / course names
+    var studentIds = [];
+    var teacherIds = [];
+    var courseIds = [];
+    (data || []).forEach(function(r) {
+      if (r.student_id) studentIds.push(r.student_id);
+      if (r.teacher_id) teacherIds.push(r.teacher_id);
+      if (r.course_id) courseIds.push(r.course_id);
+    });
+    studentIds = [...new Set(studentIds)];
+    teacherIds = [...new Set(teacherIds)];
+    courseIds = [...new Set(courseIds)];
+
+    var profileMap = {};
+    var courseMap = {};
+
+    if (studentIds.length || teacherIds.length) {
+      var idsForProfiles = [...new Set([...studentIds, ...teacherIds])];
+      var pRes = await db.from('profiles').select('id, full_name, email').in('id', idsForProfiles);
+      (pRes.data || []).forEach(function(p) { profileMap[p.id] = p; });
+    }
+
+    if (courseIds.length) {
+      var cRes = await db.from('courses').select('id, title').in('id', courseIds);
+      (cRes.data || []).forEach(function(c) { courseMap[c.id] = c; });
+    }
+
+    return (data || []).map(function(r) {
+      var stu = profileMap[r.student_id] || {};
+      var tea = profileMap[r.teacher_id] || {};
+      var course = courseMap[r.course_id] || {};
+      return Object.assign({}, r, {
+        student_name: stu.full_name,
+        student_email: stu.email,
+        teacher_name: tea.full_name,
+        teacher_email: tea.email,
+        course_title: course.title
+      });
+    });
+  }
+
+  function updateStats() {
+    var pending = allRequests.filter(function(r) { return r.status === 'pending'; });
+    var approved = allRequests.filter(function(r) { return r.status === 'approved'; });
+    var rejected = allRequests.filter(function(r) { return r.status === 'rejected'; });
+
+    document.getElementById('statPending').textContent = pending.length;
+    document.getElementById('statApproved').textContent = approved.length;
+    document.getElementById('statRejected').textContent = rejected.length;
+    document.getElementById('statTotal').textContent = allRequests.length;
+
+    document.getElementById('tabPendingCount').textContent = '(' + pending.length + ')';
+    document.getElementById('tabApprovedCount').textContent = '(' + approved.length + ')';
+    document.getElementById('tabRejectedCount').textContent = '(' + rejected.length + ')';
+  }
+
+  function renderRequests() {
+    var list = document.getElementById('requestsList');
+    var empty = document.getElementById('emptyState');
+    var loading = document.getElementById('loadingState');
+
+    loading.classList.add('hidden');
+
+    var filtered = allRequests.filter(function(r) { return r.status === currentTab; });
+
+    if (!filtered.length) {
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    empty.classList.add('hidden');
+    list.innerHTML = filtered.map(requestCard).join('');
+  }
+
+  function setActiveTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      if (b.dataset.tab === tab) {
+        b.className = 'tab-btn px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary';
+      } else {
+        b.className = 'tab-btn px-4 py-2 text-sm font-medium text-charcoal/60';
+      }
+    });
+    renderRequests();
+  }
+
+  async function loadAll() {
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('requestsList').innerHTML = '';
+    document.getElementById('emptyState').classList.add('hidden');
+
+    allRequests = await fetchRequests();
+    updateStats();
+    renderRequests();
+  }
+
+  // ===== Approve =====
+  window.approveReq = async function(id) {
+    if (!confirm('Approve this teacher assignment?')) return;
+
+    var req = allRequests.find(function(r) { return r.id === id; });
+    if (!req) return;
+
+    var upd = await db.from('student_teacher_assignments').update({
+      status: 'approved',
+      approved_at: new Date().toISOString(),
+      approved_by: ctx.user.id
+    }).eq('id', id);
+
+    if (upd.error) {
+      alert('Approve failed: ' + upd.error.message);
+      return;
+    }
+
+    // Notify student
+    try {
+      if (window.Notif && req.student_id) {
+        await Notif.send(
+          req.student_id,
+          'Teacher Approved ✅',
+          'Your teacher ' + (req.teacher_name || '') + ' for ' + (req.course_title || '') + ' has been approved.',
+          'success',
+          '/student/dashboard.html'
+        );
+      }
+      if (window.Notif && req.teacher_id) {
+        await Notif.send(
+          req.teacher_id,
+          'New Student Assigned 👨‍🎓',
+          (req.student_name || 'A student') + ' has been assigned to you for ' + (req.course_title || '') + '.',
+          'info',
+          '/teacher/dashboard.html'
+        );
+      }
+    } catch (e) { console.warn('notify failed', e); }
+
+    alert('✓ Request approved');
+    await loadAll();
+  };
+
+  // ===== Reject =====
+  window.rejectReq = async function(id) {
+    var reason = prompt('Rejection reason (optional):');
+    if (reason === null) return; // cancelled
+
+    var req = allRequests.find(function(r) { return r.id === id; });
+    if (!req) return;
+
+    var upd = await db.from('student_teacher_assignments').update({
+      status: 'rejected',
+      approved_at: new Date().toISOString(),
+      approved_by: ctx.user.id
+    }).eq('id', id);
+
+    if (upd.error) {
+      alert('Reject failed: ' + upd.error.message);
+      return;
+    }
+
+    try {
+      if (window.Notif && req.student_id) {
+        await Notif.send(
+          req.student_id,
+          'Teacher Request Rejected',
+          'Your teacher request for ' + (req.course_title || '') + ' was rejected.' + (reason ? ' Reason: ' + reason : ''),
+          'warning',
+          '/student/select-teacher.html'
+        );
+      }
+    } catch (e) { console.warn('notify failed', e); }
+
+    alert('✓ Request rejected');
+    await loadAll();
+  };
+
+  // ===== Change Teacher =====
+  window.changeTeacher = async function(id) {
+    var req = allRequests.find(function(r) { return r.id === id; });
+    if (!req) return;
+
+    // Fetch active teachers
+    var tRes = await db.from('teachers').select('profile_id').eq('is_active', true);
+    var pids = (tRes.data || []).map(function(t) { return t.profile_id; }).filter(Boolean);
+
+    if (!pids.length) {
+      alert('No active teachers available.');
+      return;
+    }
+
+    var pRes = await db.from('profiles').select('id, full_name, email').in('id', pids);
+    var teachers = pRes.data || [];
+    if (!teachers.length) {
+      alert('Could not load teacher list.');
+      return;
+    }
+
+    // Simple prompt-based selection (compact)
+    var options = teachers.map(function(t, i) {
+      return (i + 1) + '. ' + (t.full_name || t.email);
+    }).join('\n');
+
+    var choice = prompt('Select new teacher (enter number):\n\n' + options);
+    if (!choice) return;
+    var idx = parseInt(choice, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= teachers.length) {
+      alert('Invalid selection');
+      return;
+    }
+
+    var newTeacher = teachers[idx];
+    if (newTeacher.id === req.teacher_id) {
+      alert('This is already the assigned teacher.');
+      return;
+    }
+
+    // Update teacher_id on same assignment record
+    var upd = await db.from('student_teacher_assignments').update({
+      teacher_id: newTeacher.id,
+      status: 'approved',
+      approved_at: new Date().toISOString(),
+      approved_by: ctx.user.id
+    }).eq('id', id);
+
+    if (upd.error) {
+      alert('Change failed: ' + upd.error.message);
+      return;
+    }
+
+    // Notify
+    try {
+      if (window.Notif && req.student_id) {
+        await Notif.send(
+          req.student_id,
+          'Teacher Changed 🔄',
+          'Your teacher for ' + (req.course_title || '') + ' has been changed to ' + (newTeacher.full_name || '') + '.',
+          'info',
+          '/student/dashboard.html'
+        );
+      }
+      if (window.Notif) {
+        await Notif.send(
+          newTeacher.id,
+          'New Student Assigned 👨‍🎓',
+          (req.student_name || 'A student') + ' has been assigned to you for ' + (req.course_title || '') + '.',
+          'info',
+          '/teacher/dashboard.html'
+        );
+      }
+    } catch (e) { console.warn('notify failed', e); }
+
+    alert('✓ Teacher changed successfully');
+    await loadAll();
+  };
+
+  // ===== Tab handlers =====
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      setActiveTab(this.dataset.tab);
+    });
+  });
+
+  // ===== Refresh =====
+  document.getElementById('refreshBtn').addEventListener('click', loadAll);
+
+  // ===== Initial load =====
+  await loadAll();
+
+})();
+</script>
+
+</body>
+</html>

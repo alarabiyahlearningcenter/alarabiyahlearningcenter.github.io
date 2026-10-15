@@ -242,3 +242,14 @@
 - Result: all fetch calls failed with "TypeError: Failed to fetch"
 - Fix: replaced URL with confirmed correct value from Supabase dashboard
   Also re-synced anon key from working my-courses.html
+
+### F-042: Admin Teacher Requests page (COMPLETED)
+- New page: admin/teacher-requests.html (450 lines, 17KB)
+- Shows pending / approved / rejected teacher selections
+- Live stats: pending count, approved, rejected, total
+- Tab-based filtering
+- Actions:
+  - Approve → status='approved' + notify student & teacher
+  - Reject → status='rejected' + reason + notify student
+  - Change Teacher → admin selects new active teacher + notify both
+- Admin sidebar menu updated with new entry
