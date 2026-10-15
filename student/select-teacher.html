@@ -129,6 +129,23 @@ window.db = db; // F-017: expose globally for notifications.js
       diag('BUILD: F-036b-v1');
       diag('currentUser.id: ' + (currentUser ? currentUser.id : 'NULL'));
       diag('currentUser.email: ' + (currentUser ? currentUser.email : 'NULL'));
+
+      // F-036c: raw fetch test — bypass supabase-js entirely
+      diag('--- raw fetch test ---');
+      try {
+        const _url = 'https://vgsgisyneymtszuslftb.supabase.co/rest/v1/enrollments?select=*&student_id=eq.' + currentUser.id;
+        diag('fetching: ' + _url.substring(0, 80) + '...');
+        const _rawRes = await fetch(_url, {
+          headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI3OTg3NDUsImV4cCI6MjA0ODM3NDc0NX0.5kI7GvLw6eoDTLTQlvIPc1f5j4DWMVp4v3P6CwFhKB8' }
+        });
+        diag('raw status: ' + _rawRes.status);
+        const _txt = await _rawRes.text();
+        diag('raw body len: ' + _txt.length);
+        diag('raw body: ' + _txt.substring(0, 150));
+      } catch (_e) {
+        diag('raw fetch ERROR: ' + _e.message);
+      }
+      diag('--- end raw test ---');
       console.log('[DIAG] currentUser:', currentUser ? currentUser.id : 'NULL');
       console.log('[DIAG] currentUser email:', currentUser ? currentUser.email : 'NULL');
         document.getElementById('loading').classList.remove('hidden');
