@@ -124,3 +124,11 @@
 - Result: bell icon rendered (by inject-bell.js) but unread badge never appeared
 - Verified via debug-bell.html: unreadCount() returned 10 for st3@gmail.com
 - Fix: single line `window.db = db;` added after createClient call
+
+### F-017: window.db missing on 9 student/teacher pages (COMPLETED)
+- Same root cause as F-016: local const db never assigned to window.db
+- pages affected: student/payment, my-courses, profile, certificate,
+  select-teacher, live-class; teacher/my-classes, my-students, dashboard
+- Result: notification bell auto-mount silently failed (badge, panel empty)
+- Fix: added `window.db = db;` after createClient call in each file
+- All 9 files pass syntax check; backups preserved in ~/audit_backup/F017_*
