@@ -173,6 +173,30 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
       .gte('scheduled_at', dayStart)
       .lte('scheduled_at', dayEnd)
       .order('scheduled_at', { ascending: true });
+      // F-055-ATTURL: filter to one student if ?student=<id> present
+      let _urlStudentId = null;
+      try {
+        _urlStudentId = new URLSearchParams(window.location.search).get('student');
+      } catch (e) {}
+
+      let _filteredClasses = classes || [];
+      if (_urlStudentId) {
+        _filteredClasses = _filteredClasses.filter(function(cc) { return cc.student_id === _urlStudentId; });
+        // Show a small banner
+        setTimeout(function() {
+          var _banner = document.getElementById('attUrlBanner');
+          if (!_banner) {
+            _banner = document.createElement('div');
+            _banner.id = 'attUrlBanner';
+            _banner.className = 'mb-4 p-3 bg-secondary/10 border border-secondary/30 rounded-lg text-sm text-charcoal/80 flex items-center justify-between';
+            var _lbl = 'Showing attendance for 1 student only. ';
+            _banner.innerHTML = '<span>' + _lbl + '</span><a href="mark-attendance.html" class="text-primary font-medium hover:underline">Show all</a>';
+            var _host = document.getElementById('classesList');
+            if (_host && _host.parentNode) _host.parentNode.insertBefore(_banner, _host);
+          }
+        }, 100);
+      }
+      classes = _filteredClasses;
 
     const studentIds = [...new Set((classes || []).map(c => c.student_id).filter(Boolean))];
     if (studentIds.length) {
