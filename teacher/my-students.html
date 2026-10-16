@@ -467,22 +467,22 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       m.classList.remove('hidden');
 
       try {
-        var p = await db.from('profiles').select('*').eq('id', studentId).maybeSingle();
+        var p = await window.db.from('profiles').select('*').eq('id', studentId).maybeSingle();
         if (!p.data) {
           body.innerHTML = '<p class="text-red-600 text-center py-4">Profile not found.</p>';
           return;
         }
         var s = p.data;
 
-        var enr = await db.from('enrollments').select('course_id, status').eq('student_id', studentId);
+        var enr = await window.db.from('enrollments').select('course_id, status').eq('student_id', studentId);
         var courseIds = (enr.data || []).map(function(e) { return e.course_id; }).filter(Boolean);
         var courses = [];
         if (courseIds.length) {
-          var cc = await db.from('courses').select('id, title').in('id', courseIds);
+          var cc = await window.db.from('courses').select('id, title').in('id', courseIds);
           courses = cc.data || [];
         }
 
-        var cls = await db.from('classes').select('id, status', { count: 'exact' }).eq('student_id', studentId);
+        var cls = await window.db.from('classes').select('id, status', { count: 'exact' }).eq('student_id', studentId);
         var totalClasses = cls.count || 0;
         var completedClasses = (cls.data || []).filter(function(x) { return x.status === 'completed'; }).length;
 
@@ -524,7 +524,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       m.classList.remove('hidden');
 
       try {
-        var pay = await db.from('payments').select('*').eq('student_id', studentId).order('created_at', { ascending: false }).limit(10);
+        var pay = await window.db.from('payments').select('*').eq('student_id', studentId).order('created_at', { ascending: false }).limit(10);
         var rows = pay.data || [];
 
         var total = 0, verified = 0, pending = 0;
@@ -574,13 +574,13 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       var sel = document.getElementById('hwCourse');
       sel.innerHTML = '<option value="">Loading...</option>';
       try {
-        var enr = await db.from('enrollments').select('course_id').eq('student_id', studentId);
+        var enr = await window.db.from('enrollments').select('course_id').eq('student_id', studentId);
         var courseIds = (enr.data || []).map(function(e) { return e.course_id; }).filter(Boolean);
         if (!courseIds.length) {
           sel.innerHTML = '<option value="">No enrolled courses</option>';
           return;
         }
-        var cc = await db.from('courses').select('id, title').in('id', courseIds);
+        var cc = await window.db.from('courses').select('id, title').in('id', courseIds);
         sel.innerHTML = '<option value="">-- Select Course --</option>';
         (cc.data || []).forEach(function(x) {
           var o = document.createElement('option');
@@ -613,9 +613,19 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       btn.disabled = true;
       btn.textContent = 'Assigning...';
 
+      // F-058-SCOPE: fetch teacherRec fresh
+      var _hwTeacherRec = null;
+      try {
+        var _me = await window.db.auth.getUser();
+        if (_me && _me.data && _me.data.user) {
+          var _tr = await window.db.from('teachers').select('id').eq('profile_id', _me.data.user.id).maybeSingle();
+          _hwTeacherRec = _tr.data;
+        }
+      } catch (_e) { console.warn('teacherRec fetch failed', _e); }
+
       var payload = {
         course_id: courseId,
-        teacher_id: teacherRec ? teacherRec.id : null,
+        teacher_id: _hwTeacherRec ? _hwTeacherRec.id : null,
         title: title,
         description: desc || null,
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
@@ -623,7 +633,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
         is_active: true
       };
 
-      var ins = await db.from('assignments').insert(payload).select().single();
+      var ins = await window.db.from('assignments').insert(payload).select().single();
       btn.disabled = false;
       btn.textContent = 'Assign Homework';
 
@@ -655,6 +665,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       }, 1200);
     };
 
+// F-058-SCOPE: use window.db inside these global functions
 })();
 </script>
 
