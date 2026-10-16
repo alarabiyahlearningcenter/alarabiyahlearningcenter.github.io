@@ -271,3 +271,20 @@
 - Supabase REST responses were served from SW cache (stale data)
 - Fix: teacher/my-students.html now sends cache:'no-store' on all fetches
 - User must also unregister SW once manually
+
+### F-049: Teacher could not read student profiles (COMPLETED)
+- profiles RLS only allowed reading own profile or chat participants
+- Teacher's "My Students" showed only chat-partners, not assigned students
+- Fix: added profiles_teacher_read_students policy
+- Teacher can read profiles of students in their enrollments or classes
+
+### F-050: Dashboard My Students count only from classes table (COMPLETED)
+- teacher/dashboard.html counted unique student_id only from 'classes'
+- St3 had only enrollments (no class) → invisible to dashboard
+- F-050: merged classes + enrollments student_ids
+- F-050c: fixed _enrStudentIds const block-scope causing "Loading..." stuck
+
+### Session Summary (F-046 → F-050)
+Complete teacher assignment loop now works:
+Student select → Admin approve → Student notified + display
+                                  → Teacher dashboard/list updated
