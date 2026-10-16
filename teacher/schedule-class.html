@@ -368,6 +368,36 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
       '</div>' +
       (pct >= 100 ? '<div class="text-xs text-red-600 mt-1 font-medium">⚠ Monthly limit reached</div>' : '');
     el.classList.remove('hidden');
+
+    // F-052-PLANDUR: sync duration dropdown with plan's duration
+    var planDur = (info.plan && info.plan.duration_min) ? parseInt(info.plan.duration_min, 10) : 0;
+    if (planDur > 0) {
+      var sel = document.getElementById('durationSelect');
+      if (sel) {
+        // Add option if not present
+        var exists = false;
+        for (var i = 0; i < sel.options.length; i++) {
+          if (parseInt(sel.options[i].value, 10) === planDur) { exists = true; break; }
+        }
+        if (!exists) {
+          var opt = document.createElement('option');
+          opt.value = String(planDur);
+          opt.textContent = planDur + ' minutes (plan)';
+          // Insert in sorted position
+          var inserted = false;
+          for (var j = 0; j < sel.options.length; j++) {
+            if (parseInt(sel.options[j].value, 10) > planDur) {
+              sel.insertBefore(opt, sel.options[j]);
+              inserted = true;
+              break;
+            }
+          }
+          if (!inserted) sel.appendChild(opt);
+        }
+        // Auto-select plan duration
+        sel.value = String(planDur);
+      }
+    }
   }
 
   // ===== Render student select =====
