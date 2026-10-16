@@ -454,6 +454,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     `;
   }).join('');
 
+  diag("CHECKPOINT-A: reached modal section at line " + (typeof diag));
     // F-058-MODALJS: Modal openers
     window.closeModal = function(id) {
       var el = document.getElementById(id);
