@@ -315,3 +315,9 @@ Verified live on 16 Oct 2026:
 - Teacher dashboard: 2 students, 1 today's class
 - Student dashboard: upcoming class + Join button
 - Class inserted with room ALC-<course>-<stu>-<ts>-<rnd>
+
+### F-053: Dashboard "Schedule Class" button → creation form
+- Before: pointed to my-classes.html (list, not form)
+- After: points to schedule-class.html (creation form)
+- Added separate "View My Classes" button for list view
+- Now 4 quick actions on dashboard
