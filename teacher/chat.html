@@ -227,6 +227,21 @@ input:focus{outline:none}
     if (studentIds.length) {
       const { data: students } = await db.from('profiles').select('id, full_name, email, avatar_url').in('id', studentIds);
       (students || []).forEach(s => studentMap[s.id] = s);
+
+      // F-054-CHATURL: auto-open thread from ?student=<id>
+      try {
+        var _urlStudent = new URLSearchParams(window.location.search).get('student');
+        if (_urlStudent && studentMap[_urlStudent]) {
+          var _targetThread = list.find(function(x) { return x.student_id === _urlStudent; });
+          if (_targetThread) {
+            setTimeout(function() {
+              if (typeof openThread === 'function') {
+                openThread(_targetThread.id, studentMap[_urlStudent].full_name || 'Student');
+              }
+            }, 200);
+          }
+        }
+      } catch (_e) { console.warn('URL param open failed:', _e); }
     }
 
     const box = document.getElementById('threadsList');
