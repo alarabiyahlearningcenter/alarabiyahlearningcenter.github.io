@@ -127,6 +127,8 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
             <option value="">-- Select Student --</option>
           </select>
           <p class="text-xs text-charcoal/50 mt-1">Choose the student for this class</p>
+
+        <div id="planInfo" class="hidden mt-3 bg-cream rounded-lg p-3 border border-primary/10"></div>
         </div>
 
         <div>
@@ -308,6 +310,66 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
     return c.data || [];
   }
 
+    // ===== F-051-B-LOAD: Load plan info for student =====
+  async function loadPlanInfo(studentId) {
+    if (!studentId) return null;
+
+    // Active enrollment
+    const e = await db.from('enrollments')
+      .select('plan_id, course_id')
+      .eq('student_id', studentId)
+      .in('status', ['active', 'completed'])
+      .limit(1)
+      .maybeSingle();
+
+    if (!e.data || !e.data.plan_id) return null;
+
+    const planRes = await db.from('pricing_plans')
+      .select('id, name, classes_per_month, duration_min')
+      .eq('id', e.data.plan_id)
+      .maybeSingle();
+
+    if (!planRes.data) return null;
+
+    // Count classes this month for this student
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+
+    const cnt = await db.from('classes')
+      .select('id', { count: 'exact', head: true })
+      .eq('student_id', studentId)
+      .gte('scheduled_at', monthStart)
+      .lt('scheduled_at', nextMonth);
+
+    return {
+      plan: planRes.data,
+      used: cnt.count || 0,
+      limit: planRes.data.classes_per_month || 0
+    };
+  }
+
+  function renderPlanInfo(info) {
+    const el = q('planInfo');
+    if (!el) return;
+    if (!info) {
+      el.classList.add('hidden');
+      return;
+    }
+    const pct = info.limit > 0 ? Math.round((info.used / info.limit) * 100) : 0;
+    const color = pct >= 100 ? 'text-red-600' : (pct >= 80 ? 'text-amber-600' : 'text-green-600');
+    el.innerHTML =
+      '<div class="flex items-center justify-between mb-2">' +
+        '<span class="font-semibold text-primary text-sm">📋 ' + info.plan.name + '</span>' +
+        '<span class="text-xs text-charcoal/50">' + info.plan.duration_min + ' min/class</span>' +
+      '</div>' +
+      '<div class="text-sm ' + color + ' font-medium">' +
+        'This month: <strong>' + info.used + ' / ' + info.limit + '</strong> classes used' +
+      '</div>' +
+      (pct >= 100 ? '<div class="text-xs text-red-600 mt-1 font-medium">⚠ Monthly limit reached</div>' : '');
+    el.classList.remove('hidden');
+  }
+
   // ===== Render student select =====
   function renderStudentOptions() {
     const sel = q('studentSelect');
@@ -330,8 +392,13 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
 
     if (!sid) {
       cSel.innerHTML = '<option value="">-- Select Student First --</option>';
+      q('planInfo').classList.add('hidden');
       return;
     }
+
+    // F-051-B-LOAD: fetch plan info
+    const planInfo = await loadPlanInfo(sid);
+    renderPlanInfo(planInfo);
 
     const courses = await loadCoursesForStudent(sid);
     if (!courses.length) {
@@ -383,6 +450,15 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
     if (!studentId || !courseId || !date || !time) {
       status.className = 'text-sm text-red-600 mb-3';
       status.textContent = 'Please fill in all required fields.';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    // F-051-B-CHECK: verify monthly class limit
+    const limitInfo = await loadPlanInfo(studentId);
+    if (limitInfo && limitInfo.limit > 0 && limitInfo.used >= limitInfo.limit) {
+      status.className = 'text-sm text-red-600 mb-3';
+      status.innerHTML = '⚠ This student has reached their monthly class limit <strong>(' + limitInfo.used + '/' + limitInfo.limit + ')</strong> for the ' + limitInfo.plan.name + ' plan. Please contact admin to upgrade.';
       status.classList.remove('hidden');
       return;
     }

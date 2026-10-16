@@ -294,3 +294,11 @@ Student select → Admin approve → Student notified + display
 - Now: ALC-<COURSE-SHORTCODE>-<STU>-<ts>-<rnd>
 - Example: ALC-NOORANIQA-TEST-1729132658000-4521
 - Purpose: easier log filtering, debugging, class identification
+
+### F-051-B: Plan-based monthly class limit (COMPLETED)
+- Load plan info for student: pricing_plans + count of classes this month
+- Display plan card under student dropdown:
+  "📋 Starter | 30 min/class | This month: 3 / 12"
+- Submit blocked when monthly limit reached
+- Prevents scheduling more classes than plan allows
+- schema: pricing_plans.classes_per_month (integer, default 12)
