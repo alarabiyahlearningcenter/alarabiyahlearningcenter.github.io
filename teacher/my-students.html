@@ -234,30 +234,26 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   const { data: profiles } = await db.from('profiles').select('*').in('id', studentIds);
   diag('profiles fetched: ' + (profiles ? profiles.length : 'null'));
 
-  // F-048-RAW: bypass supabase-js — hit REST API directly
-  diag('--- RAW PROFILES FETCH ---');
+  // F-048b-RAW: test BOTH student ids directly via REST
+  diag('--- RAW PROFILES (STUDENT IDs) ---');
   try {
     var _sess = await db.auth.getSession();
     var _tok = _sess && _sess.data && _sess.data.session ? _sess.data.session.access_token : null;
-    var _cacheBust = SUPABASE_URL + '/rest/v1/profiles?id=eq.' + user.id + '&select=id,full_name,email&_t=' + Date.now();
-    diag('RAW URL: ' + _cacheBust.substring(0, 80) + '...');
-    var _r = await fetch(_cacheBust, {
-      cache: 'no-store',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': 'Bearer ' + _tok,
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
-    });
-    diag('RAW status: ' + _r.status);
-    diag('RAW cf-cache-status: ' + (_r.headers.get('cf-cache-status') || 'none'));
-    diag('RAW age: ' + (_r.headers.get('age') || 'none'));
-    diag('RAW x-sb-cache: ' + (_r.headers.get('x-sb-cache') || 'none'));
-    var _txt = await _r.text();
-    diag('RAW body: ' + _txt.substring(0, 250));
+    for (var _i = 0; _i < studentIds.length; _i++) {
+      var _sid = studentIds[_i];
+      var _u = SUPABASE_URL + '/rest/v1/profiles?select=id,full_name,email&id=eq.' + _sid + '&_t=' + Date.now() + '-' + _i;
+      diag('RAW URL[' + _i + ']: ...' + _u.substring(_u.lastIndexOf('profiles')));
+      var _r = await fetch(_u, {
+        cache: 'no-store',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + _tok }
+      });
+      diag('RAW status[' + _i + ']: ' + _r.status);
+      diag('RAW cf-cache[' + _i + ']: ' + (_r.headers.get('cf-cache-status') || 'none') + ' | age: ' + (_r.headers.get('age') || 'none'));
+      var _t = await _r.text();
+      diag('RAW body[' + _i + ']: ' + _t.substring(0, 200));
+    }
   } catch(e) {
-    diag('RAW fetch error: ' + e.message);
+    diag('RAW error: ' + e.message);
   }
   diag('--- END RAW ---');
   if (profiles) profiles.forEach(function(p) { diag('  profile: ' + p.full_name + ' (' + p.email + ')'); });
