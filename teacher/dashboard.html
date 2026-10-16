@@ -272,6 +272,10 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   let classes = [];
   if (teacherId) {
     const { data: c } = await db.from('classes').select('*').eq('teacher_id', teacherId).order('scheduled_at', { ascending: false });
+    // F-050-FIX: also include students from enrollments
+    const { data: _enr } = await db.from('enrollments').select('student_id, course_id').eq('teacher_id', teacherId);
+    const _enrStudentIds = (_enr || []).map(function(x) { return x.student_id; }).filter(Boolean);
+    
     classes = c || [];
   }
 
@@ -288,7 +292,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   document.getElementById('statUpcoming').textContent = upcoming;
 
   // Unique students
-  const uniqueStudents = [...new Set(classes.map(c => c.student_id).filter(Boolean))];
+  const uniqueStudents = [...new Set([...classes.map(c => c.student_id).filter(Boolean), ...(_enrStudentIds || [])])]; // F-050b-MERGE
   document.getElementById('statStudents').textContent = uniqueStudents.length;
 
   // Today's schedule
