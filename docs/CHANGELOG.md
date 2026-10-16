@@ -288,3 +288,9 @@
 Complete teacher assignment loop now works:
 Student select → Admin approve → Student notified + display
                                   → Teacher dashboard/list updated
+
+### F-051-A: Room name now includes course context (COMPLETED)
+- Before: ALC-Class-<ts>-<rnd> (generic)
+- Now: ALC-<COURSE-SHORTCODE>-<STU>-<ts>-<rnd>
+- Example: ALC-NOORANIQA-TEST-1729132658000-4521
+- Purpose: easier log filtering, debugging, class identification

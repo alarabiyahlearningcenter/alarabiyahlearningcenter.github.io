@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule Class | Al-Arabiyah Learning Center</title>
+<meta name="theme-color" content="#0A3622">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: { colors: { primary: '#0A3622', 'primary-dark': '#062218', secondary: '#D4AF37', cream: '#F9F7F2', charcoal: '#1A1A1A' }, fontFamily: { heading: ['Playfair Display','serif'], body: ['Inter','sans-serif'], arabic: ['Amiri','serif'] } } } }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background: #F9F7F2; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.btn-primary { background: #0A3622; color: white; transition: all 0.3s; }
+.btn-primary:hover { background: #062218; }
+.sidebar-link { transition: all 0.2s; }
+.sidebar-link:hover, .sidebar-link.active { background: rgba(212,175,55,0.15); color: #0A3622; border-left: 3px solid #D4AF37; }
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white border-b border-primary/10">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="sidebarToggle" class="lg:hidden p-2 text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+      <a href="../index.html" class="flex items-center gap-2">
+        <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-10 h-10 rounded-full border-2 border-secondary object-cover">
+        <div class="hidden sm:block">
+          <div class="font-heading font-bold text-primary text-sm leading-tight">Al-Arabiyah</div>
+          <div class="text-xs text-primary/70">Teacher Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="hidden md:inline-block bg-secondary/20 text-primary text-xs font-semibold px-3 py-1 rounded-full">TEACHER</span>
+      <div class="relative">
+        <button id="userMenuBtn" class="flex items-center gap-2 p-1 rounded-full hover:bg-primary/5">
+          <div id="avatar" class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-secondary font-bold">T</div>
+        </button>
+        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary/10 py-2">
+          <div class="px-4 py-2 border-b border-primary/10">
+            <p id="userName" class="text-sm font-semibold text-primary">Teacher</p>
+            <p id="userEmail" class="text-xs text-charcoal/60 truncate">teacher@email.com</p>
+          </div>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex">
+  <aside id="sidebar" class="fixed lg:sticky top-0 lg:top-[60px] left-0 z-30 w-64 h-screen lg:h-[calc(100vh-60px)] bg-white border-r border-primary/10 transform -translate-x-full lg:translate-x-0 transition-transform overflow-y-auto">
+    <div class="p-4">
+      <div class="lg:hidden flex justify-end mb-2">
+        <button id="sidebarClose" class="p-1 text-charcoal/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          Dashboard
+        </a>
+        <a href="profile.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          My Profile
+        </a>
+        <a href="schedule-class.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Schedule Class
+        </a>
+        <a href="my-classes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          My Classes
+        </a>
+        <a href="my-students.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          My Students
+        </a>
+        <a href="mark-attendance.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Mark Attendance
+        </a>
+        <a href="chat.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+          Chat
+        </a>
+        <a href="kyc.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-charcoal/70">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+          KYC Verification
+        </a>
+      </nav>
+    </div>
+  </aside>
+  <div id="sidebarOverlay" class="hidden lg:hidden fixed inset-0 bg-black/50 z-20"></div>
+
+  <main class="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+    <div class="max-w-2xl mx-auto">
+      <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-1">Schedule a Class</h1>
+        <p class="text-charcoal/60 text-sm">Create a live class session for one of your assigned students</p>
+      </div>
+
+      <div id="loadingState" class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary"></div>
+        <p class="mt-3 text-charcoal/60 text-sm">Loading your students...</p>
+      </div>
+
+      <div id="emptyState" class="hidden bg-white rounded-2xl p-8 border border-primary/5 text-center">
+        <div class="text-5xl mb-3">👥</div>
+        <h2 class="text-lg font-bold text-primary mb-2">No Students Assigned</h2>
+        <p class="text-charcoal/60 text-sm mb-4">You don't have any students assigned yet. Please contact admin.</p>
+        <a href="dashboard.html" class="btn-primary inline-block px-6 py-3 rounded-full font-medium">Back to Dashboard</a>
+      </div>
+
+      <form id="scheduleForm" class="hidden bg-white rounded-2xl p-6 border border-primary/5 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Student <span class="text-red-500">*</span></label>
+          <select id="studentSelect" required class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+            <option value="">-- Select Student --</option>
+          </select>
+          <p class="text-xs text-charcoal/50 mt-1">Choose the student for this class</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Course <span class="text-red-500">*</span></label>
+          <select id="courseSelect" required disabled class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white disabled:bg-gray-100">
+            <option value="">-- Select Student First --</option>
+          </select>
+          <p class="text-xs text-charcoal/50 mt-1">Only courses the student is enrolled in</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-charcoal mb-1">Date <span class="text-red-500">*</span></label>
+            <input type="date" id="dateInput" required class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-charcoal mb-1">Time <span class="text-red-500">*</span></label>
+            <input type="time" id="timeInput" required class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Duration</label>
+          <select id="durationSelect" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+            <option value="15">15 minutes</option>
+            <option value="30" selected>30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">60 minutes</option>
+            <option value="90">90 minutes</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Class Title</label>
+          <input type="text" id="titleInput" maxlength="100" placeholder="e.g. Noorani Qaida - Lesson 5" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white">
+          <p class="text-xs text-charcoal/50 mt-1">Optional — a default title will be used if empty</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Notes for Student</label>
+          <textarea id="notesInput" rows="3" maxlength="500" placeholder="Any preparation or material needed before the class..." class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm focus:outline-none focus:border-primary bg-white"></textarea>
+        </div>
+
+        <div class="pt-2 border-t border-primary/10">
+          <div id="formStatus" class="text-sm hidden mb-3"></div>
+          <div class="flex gap-3">
+            <button type="submit" id="submitBtn" class="btn-primary flex-1 px-6 py-3 rounded-full font-medium text-sm">Schedule Class</button>
+            <a href="dashboard.html" class="flex-1 text-center border-2 border-primary text-primary px-6 py-3 rounded-full font-medium text-sm hover:bg-primary hover:text-white transition">Cancel</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/supabase-config.js"></script>
+<script src="../assets/js/notifications.js"></script>
+
+<script>
+(async () => {
+  const db = window.db;
+  if (!db) {
+    document.getElementById('loadingState').innerHTML = '<p class="text-red-600">Database config missing.</p>';
+    return;
+  }
+
+  let session = null;
+  let teacherRec = null;
+  let allStudents = [];   // [{id, name, email}]
+  let studentMap = {};    // id → {name, email}
+
+  function q(id) { return document.getElementById(id); }
+
+  // ===== Sidebar / user menu =====
+  q('sidebarToggle').addEventListener('click', function() {
+    q('sidebar').classList.remove('-translate-x-full');
+    q('sidebarOverlay').classList.remove('hidden');
+  });
+  q('sidebarClose').addEventListener('click', function() {
+    q('sidebar').classList.add('-translate-x-full');
+    q('sidebarOverlay').classList.add('hidden');
+  });
+  q('sidebarOverlay').addEventListener('click', function() {
+    q('sidebar').classList.add('-translate-x-full');
+    q('sidebarOverlay').classList.add('hidden');
+  });
+  q('userMenuBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    q('userMenu').classList.toggle('hidden');
+  });
+  document.addEventListener('click', function(e) {
+    if (!q('userMenu').contains(e.target) && e.target !== q('userMenuBtn')) {
+      q('userMenu').classList.add('hidden');
+    }
+  });
+  q('logoutBtn').addEventListener('click', async function() {
+    await db.auth.signOut();
+    window.location.href = '../auth/login.html';
+  });
+
+  // ===== Load teacher + students =====
+  async function loadContext() {
+    // Session — with retries
+    let user = null;
+    try {
+      const raw = localStorage.getItem('sb-vgsgisyneymtszuslftb-auth-token');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.user) user = parsed.user;
+      }
+    } catch (e) {}
+
+    if (!user) {
+      for (let i = 0; i < 15; i++) {
+        try {
+          const res = await db.auth.getSession();
+          if (res && res.data && res.data.session && res.data.session.user) {
+            user = res.data.session.user;
+            break;
+          }
+        } catch (e) {}
+        await new Promise(function(r) { setTimeout(r, 250); });
+      }
+    }
+
+    if (!user) {
+      window.location.href = '../auth/login.html';
+      return false;
+    }
+    session = { user: user };
+
+    // Profile check
+    const p = await db.from('profiles').select('role, full_name, email').eq('id', user.id).single();
+    if (!p.data || p.data.role !== 'teacher') {
+      alert('Access Denied');
+      window.location.href = '../auth/login.html';
+      return false;
+    }
+    q('userName').textContent = p.data.full_name || 'Teacher';
+    q('userEmail').textContent = p.data.email || '';
+    q('avatar').textContent = (p.data.full_name || 'T').charAt(0).toUpperCase();
+
+    // teachers record
+    const t = await db.from('teachers').select('id').eq('profile_id', user.id).maybeSingle();
+    if (!t.data) {
+      alert('Teacher profile not found');
+      return false;
+    }
+    teacherRec = t.data;
+    return true;
+  }
+
+  async function loadStudents() {
+    // Merge students from classes + enrollments where teacher_id = teacherRec.id
+    const cls = await db.from('classes').select('student_id').eq('teacher_id', teacherRec.id);
+    const enr = await db.from('enrollments').select('student_id').eq('teacher_id', teacherRec.id);
+
+    const ids = {};
+    (cls.data || []).forEach(function(r) { if (r.student_id) ids[r.student_id] = true; });
+    (enr.data || []).forEach(function(r) { if (r.student_id) ids[r.student_id] = true; });
+    const studentIds = Object.keys(ids);
+
+    if (!studentIds.length) return [];
+
+    const p = await db.from('profiles').select('id, full_name, email').in('id', studentIds);
+    const list = (p.data || []).map(function(s) {
+      return { id: s.id, name: s.full_name || s.email || 'Student', email: s.email || '' };
+    });
+    list.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    return list;
+  }
+
+  async function loadCoursesForStudent(studentId) {
+    // Get courses this student is enrolled in with this teacher
+    const e = await db.from('enrollments').select('course_id').eq('student_id', studentId).eq('teacher_id', teacherRec.id);
+    const courseIds = (e.data || []).map(function(r) { return r.course_id; }).filter(Boolean);
+    if (!courseIds.length) return [];
+    const c = await db.from('courses').select('id, title').in('id', courseIds);
+    return c.data || [];
+  }
+
+  // ===== Render student select =====
+  function renderStudentOptions() {
+    const sel = q('studentSelect');
+    allStudents.forEach(function(s) {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name + (s.email ? ' (' + s.email + ')' : '');
+      sel.appendChild(opt);
+    });
+    studentMap = {};
+    allStudents.forEach(function(s) { studentMap[s.id] = s; });
+  }
+
+  // ===== Student change → load courses =====
+  q('studentSelect').addEventListener('change', async function() {
+    const sid = this.value;
+    const cSel = q('courseSelect');
+    cSel.innerHTML = '<option value="">Loading courses...</option>';
+    cSel.disabled = true;
+
+    if (!sid) {
+      cSel.innerHTML = '<option value="">-- Select Student First --</option>';
+      return;
+    }
+
+    const courses = await loadCoursesForStudent(sid);
+    if (!courses.length) {
+      cSel.innerHTML = '<option value="">No enrolled courses</option>';
+      return;
+    }
+    cSel.innerHTML = '<option value="">-- Select Course --</option>';
+    courses.forEach(function(c) {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.title || 'Course';
+      cSel.appendChild(opt);
+    });
+    cSel.disabled = false;
+  });
+
+  // ===== F-051-A: Room name with course context =====
+  function slugifyCourse(title) {
+    if (!title) return 'CLS';
+    var s = String(title).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!s) return 'CLS';
+    return s.length > 8 ? s.substring(0, 8) : s;
+  }
+
+  function generateRoomName(courseTitle, studentName) {
+    var course = slugifyCourse(courseTitle);
+    var stu = (studentName || 'STU').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 4) || 'STU';
+    var ts = Date.now();
+    var rnd = Math.floor(Math.random() * 9000) + 1000;
+    return 'ALC-' + course + '-' + stu + '-' + ts + '-' + rnd;
+  }
+
+  // ===== Form submit =====
+  q('scheduleForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const status = q('formStatus');
+    const btn = q('submitBtn');
+
+    const studentId = q('studentSelect').value;
+    const courseId = q('courseSelect').value;
+    const date = q('dateInput').value;
+    const time = q('timeInput').value;
+    const duration = parseInt(q('durationSelect').value, 10) || 30;
+    const title = (q('titleInput').value || '').trim();
+    const notes = (q('notesInput').value || '').trim();
+
+    // Validate
+    if (!studentId || !courseId || !date || !time) {
+      status.className = 'text-sm text-red-600 mb-3';
+      status.textContent = 'Please fill in all required fields.';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    // Build ISO datetime (local time)
+    const dt = new Date(date + 'T' + time);
+    if (isNaN(dt.getTime())) {
+      status.className = 'text-sm text-red-600 mb-3';
+      status.textContent = 'Invalid date or time.';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    const scheduledAt = dt.toISOString();
+    const student = studentMap[studentId];
+    const finalTitle = title || ((student ? student.name : 'Student') + ' — Class');
+
+    btn.disabled = true;
+    btn.textContent = 'Scheduling...';
+    status.classList.add('hidden');
+
+    const _courseTitle = (q('courseSelect').selectedOptions[0] ? q('courseSelect').selectedOptions[0].textContent : '') || '';
+    const _stuName = (studentMap[studentId] ? studentMap[studentId].name : '');
+    const roomName = generateRoomName(_courseTitle, _stuName); // F-051-A
+
+    const payload = {
+      student_id: studentId,
+      teacher_id: teacherRec.id,
+      course_id: courseId,
+      title: finalTitle,
+      scheduled_at: scheduledAt,
+      duration_min: duration,
+      jitsi_room: roomName,
+      status: 'scheduled',
+      notes: notes || null,
+      class_type: 'platform',
+      is_external: false
+    };
+
+    const ins = await db.from('classes').insert(payload).select().single();
+
+    btn.disabled = false;
+    btn.textContent = 'Schedule Class';
+
+    if (ins.error) {
+      status.className = 'text-sm text-red-600 mb-3';
+      status.textContent = 'Failed: ' + ins.error.message;
+      status.classList.remove('hidden');
+      return;
+    }
+
+    // Notify student
+    try {
+      if (window.Notif && studentId) {
+        const niceDate = dt.toLocaleString('en-GB', {
+          weekday: 'short', day: '2-digit', month: 'short',
+          hour: '2-digit', minute: '2-digit'
+        });
+        await Notif.send(
+          studentId,
+          'New Class Scheduled 📅',
+          'Your teacher has scheduled "' + finalTitle + '" on ' + niceDate + '.',
+          'info',
+          '/student/my-courses.html'
+        );
+      }
+    } catch (e) { console.warn('notify failed', e); }
+
+    status.className = 'text-sm text-green-600 mb-3';
+    status.textContent = '✓ Class scheduled successfully!';
+    status.classList.remove('hidden');
+
+    // Redirect after short delay
+    setTimeout(function() {
+      window.location.href = 'my-classes.html';
+    }, 1200);
+  });
+
+  // ===== Init =====
+  try {
+    const ok = await loadContext();
+    if (!ok) return;
+
+    allStudents = await loadStudents();
+
+    q('loadingState').classList.add('hidden');
+
+    if (!allStudents.length) {
+      q('emptyState').classList.remove('hidden');
+      return;
+    }
+
+    renderStudentOptions();
+    q('scheduleForm').classList.remove('hidden');
+
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    q('dateInput').value = today;
+    q('dateInput').min = today;
+
+  } catch (err) {
+    console.error('Init error:', err);
+    q('loadingState').innerHTML = '<p class="text-red-600">Failed to load. ' + (err.message || '') + '</p>';
+  }
+
+})();
+</script>
+
+<script src="../assets/js/site-loader.js"></script>
+</body>
+</html>
