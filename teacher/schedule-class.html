@@ -589,6 +589,18 @@ h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
     q('dateInput').value = today;
     q('dateInput').min = today;
 
+    // F-056-SCHEDURL: pre-select student from ?student=<id>
+    try {
+      var _urlStudent = new URLSearchParams(window.location.search).get('student');
+      if (_urlStudent) {
+        var _opt = document.querySelector('#studentSelect option[value="' + _urlStudent + '"]');
+        if (_opt) {
+          q('studentSelect').value = _urlStudent;
+          q('studentSelect').dispatchEvent(new Event('change'));
+        }
+      }
+    } catch (_e) { console.warn('URL pre-select failed:', _e); }
+
   } catch (err) {
     console.error('Init error:', err);
     q('loadingState').innerHTML = '<p class="text-red-600">Failed to load. ' + (err.message || '') + '</p>';
