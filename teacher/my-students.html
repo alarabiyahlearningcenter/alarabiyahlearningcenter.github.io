@@ -666,6 +666,8 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     };
 
 // F-058-SCOPE: use window.db inside these global functions
+  // F-058-DIAG: verify modal functions bound
+  try { diag("FNCHECK openProfile=" + typeof window.openProfile + " openPayment=" + typeof window.openPayment + " openHomework=" + typeof window.openHomework + " submitHomework=" + typeof window.submitHomework + " closeModal=" + typeof window.closeModal); } catch(_d) {}
 })();
 </script>
 
