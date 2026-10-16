@@ -453,8 +453,270 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
       </div>
     `;
   }).join('');
+
+    // F-058-MODALJS: Modal openers
+    window.closeModal = function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    };
+
+    window.openProfile = async function(studentId) {
+      var m = document.getElementById('profileModal');
+      var body = document.getElementById('profileBody');
+      body.innerHTML = '<p class="text-center text-charcoal/60 py-8">Loading profile...</p>';
+      m.classList.remove('hidden');
+
+      try {
+        var p = await db.from('profiles').select('*').eq('id', studentId).maybeSingle();
+        if (!p.data) {
+          body.innerHTML = '<p class="text-red-600 text-center py-4">Profile not found.</p>';
+          return;
+        }
+        var s = p.data;
+
+        var enr = await db.from('enrollments').select('course_id, status').eq('student_id', studentId);
+        var courseIds = (enr.data || []).map(function(e) { return e.course_id; }).filter(Boolean);
+        var courses = [];
+        if (courseIds.length) {
+          var cc = await db.from('courses').select('id, title').in('id', courseIds);
+          courses = cc.data || [];
+        }
+
+        var cls = await db.from('classes').select('id, status', { count: 'exact' }).eq('student_id', studentId);
+        var totalClasses = cls.count || 0;
+        var completedClasses = (cls.data || []).filter(function(x) { return x.status === 'completed'; }).length;
+
+        var initial = (s.full_name || 'S').charAt(0).toUpperCase();
+        var html = '';
+        html += '<div class="flex items-center gap-4 mb-4">';
+        html += '<div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-secondary font-bold text-2xl">' + initial + '</div>';
+        html += '<div><div class="font-bold text-primary text-lg">' + (s.full_name || 'Student') + '</div>';
+        html += '<div class="text-xs text-charcoal/60">' + (s.email || '') + '</div></div></div>';
+
+        html += '<div class="grid grid-cols-2 gap-3 mb-4">';
+        html += '<div class="bg-cream rounded-lg p-3"><div class="text-xs text-charcoal/50">Total Classes</div><div class="text-xl font-bold text-primary">' + totalClasses + '</div></div>';
+        html += '<div class="bg-cream rounded-lg p-3"><div class="text-xs text-charcoal/50">Completed</div><div class="text-xl font-bold text-primary">' + completedClasses + '</div></div>';
+        html += '</div>';
+
+        if (s.phone) html += '<div class="text-sm mb-2"><span class="text-charcoal/50">Phone:</span> <strong>' + s.phone + '</strong></div>';
+        if (s.country) html += '<div class="text-sm mb-2"><span class="text-charcoal/50">Country:</span> <strong>' + s.country + '</strong></div>';
+        if (s.age) html += '<div class="text-sm mb-2"><span class="text-charcoal/50">Age:</span> <strong>' + s.age + '</strong></div>';
+
+        if (courses.length) {
+          html += '<div class="mt-4"><div class="text-xs text-charcoal/50 mb-2">Enrolled Courses</div>';
+          html += '<div class="flex flex-wrap gap-1">';
+          courses.forEach(function(cn) { html += '<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">' + cn.title + '</span>'; });
+          html += '</div></div>';
+        }
+
+        if (s.bio) html += '<div class="mt-4 text-sm text-charcoal/70"><div class="text-xs text-charcoal/50 mb-1">Bio</div>' + s.bio + '</div>';
+
+        body.innerHTML = html;
+      } catch (e) {
+        body.innerHTML = '<p class="text-red-600 text-center py-4">Failed: ' + e.message + '</p>';
+      }
+    };
+
+    window.openPayment = async function(studentId) {
+      var m = document.getElementById('paymentModal');
+      var body = document.getElementById('paymentBody');
+      body.innerHTML = '<p class="text-center text-charcoal/60 py-8">Loading payments...</p>';
+      m.classList.remove('hidden');
+
+      try {
+        var pay = await db.from('payments').select('*').eq('student_id', studentId).order('created_at', { ascending: false }).limit(10);
+        var rows = pay.data || [];
+
+        var total = 0, verified = 0, pending = 0;
+        rows.forEach(function(p) {
+          if (p.status === 'verified') { verified += 1; total += (parseFloat(p.amount) || 0); }
+          else if (p.status === 'pending') pending += 1;
+        });
+
+        var html = '';
+        html += '<div class="grid grid-cols-3 gap-2 mb-4">';
+        html += '<div class="bg-cream rounded-lg p-2 text-center"><div class="text-xs text-charcoal/50">Total BDT</div><div class="text-sm font-bold text-primary">' + total + '</div></div>';
+        html += '<div class="bg-green-50 rounded-lg p-2 text-center"><div class="text-xs text-charcoal/50">Verified</div><div class="text-sm font-bold text-green-700">' + verified + '</div></div>';
+        html += '<div class="bg-yellow-50 rounded-lg p-2 text-center"><div class="text-xs text-charcoal/50">Pending</div><div class="text-sm font-bold text-yellow-700">' + pending + '</div></div>';
+        html += '</div>';
+
+        if (!rows.length) {
+          html += '<p class="text-center text-charcoal/60 py-4 text-sm">No payments yet.</p>';
+        } else {
+          html += '<div class="space-y-2">';
+          rows.forEach(function(p) {
+            var statusColor = p.status === 'verified' ? 'bg-green-100 text-green-700' : (p.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700');
+            var dt = p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+            html += '<div class="border border-primary/10 rounded-lg p-3 flex items-center justify-between">';
+            html += '<div><div class="font-semibold text-primary text-sm">৳ ' + (p.amount || 0) + ' ' + (p.currency || 'BDT') + '</div>';
+            html += '<div class="text-xs text-charcoal/50">' + (p.method || '') + ' · ' + dt + '</div></div>';
+            html += '<span class="text-xs font-semibold px-2 py-1 rounded-full ' + statusColor + '">' + (p.status || '') + '</span>';
+            html += '</div>';
+          });
+          html += '</div>';
+        }
+        body.innerHTML = html;
+      } catch (e) {
+        body.innerHTML = '<p class="text-red-600 text-center py-4">Failed: ' + e.message + '</p>';
+      }
+    };
+
+    window.openHomework = async function(studentId) {
+      var m = document.getElementById('homeworkModal');
+      m.classList.remove('hidden');
+      document.getElementById('hwStudentId').value = studentId;
+      document.getElementById('hwTitle').value = '';
+      document.getElementById('hwDesc').value = '';
+      document.getElementById('hwDue').value = '';
+      document.getElementById('hwScore').value = '10';
+      document.getElementById('hwStatus').classList.add('hidden');
+
+      var sel = document.getElementById('hwCourse');
+      sel.innerHTML = '<option value="">Loading...</option>';
+      try {
+        var enr = await db.from('enrollments').select('course_id').eq('student_id', studentId);
+        var courseIds = (enr.data || []).map(function(e) { return e.course_id; }).filter(Boolean);
+        if (!courseIds.length) {
+          sel.innerHTML = '<option value="">No enrolled courses</option>';
+          return;
+        }
+        var cc = await db.from('courses').select('id, title').in('id', courseIds);
+        sel.innerHTML = '<option value="">-- Select Course --</option>';
+        (cc.data || []).forEach(function(x) {
+          var o = document.createElement('option');
+          o.value = x.id;
+          o.textContent = x.title;
+          sel.appendChild(o);
+        });
+      } catch (e) {
+        sel.innerHTML = '<option value="">Error: ' + e.message + '</option>';
+      }
+    };
+
+    window.submitHomework = async function() {
+      var btn = document.getElementById('hwSubmit');
+      var status = document.getElementById('hwStatus');
+      var studentId = document.getElementById('hwStudentId').value;
+      var courseId = document.getElementById('hwCourse').value;
+      var title = document.getElementById('hwTitle').value.trim();
+      var desc = document.getElementById('hwDesc').value.trim();
+      var dueDate = document.getElementById('hwDue').value;
+      var maxScore = parseInt(document.getElementById('hwScore').value, 10) || 10;
+
+      if (!courseId || !title) {
+        status.className = 'text-sm text-red-600';
+        status.textContent = 'Course and Title are required.';
+        status.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Assigning...';
+
+      var payload = {
+        course_id: courseId,
+        teacher_id: teacherRec ? teacherRec.id : null,
+        title: title,
+        description: desc || null,
+        due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        max_score: maxScore,
+        is_active: true
+      };
+
+      var ins = await db.from('assignments').insert(payload).select().single();
+      btn.disabled = false;
+      btn.textContent = 'Assign Homework';
+
+      if (ins.error) {
+        status.className = 'text-sm text-red-600';
+        status.textContent = 'Failed: ' + ins.error.message;
+        status.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        if (window.Notif && studentId) {
+          await Notif.send(
+            studentId,
+            'New Homework Assigned 📝',
+            'You have new homework: "' + title + '"',
+            'info',
+            '/student/assignments.html'
+          );
+        }
+      } catch (e) { console.warn('notify failed', e); }
+
+      status.className = 'text-sm text-green-600';
+      status.textContent = '✓ Homework assigned successfully!';
+      status.classList.remove('hidden');
+
+      setTimeout(function() {
+        window.closeModal('homeworkModal');
+      }, 1200);
+    };
+
 })();
 </script>
 
+
+<!-- F-058-MODALS-START -->
+<div id="profileModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-primary/10 px-5 py-3 flex items-center justify-between">
+      <h3 class="text-lg font-bold text-primary">Student Profile</h3>
+      <button onclick="window.closeModal('profileModal')" class="text-charcoal/50 text-2xl leading-none">&times;</button>
+    </div>
+    <div id="profileBody" class="p-5"></div>
+  </div>
+</div>
+
+<div id="paymentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-primary/10 px-5 py-3 flex items-center justify-between">
+      <h3 class="text-lg font-bold text-primary">Payment History</h3>
+      <button onclick="window.closeModal('paymentModal')" class="text-charcoal/50 text-2xl leading-none">&times;</button>
+    </div>
+    <div id="paymentBody" class="p-5"></div>
+  </div>
+</div>
+
+<div id="homeworkModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-primary/10 px-5 py-3 flex items-center justify-between">
+      <h3 class="text-lg font-bold text-primary">Assign Homework</h3>
+      <button onclick="window.closeModal('homeworkModal')" class="text-charcoal/50 text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-5">
+      <input type="hidden" id="hwStudentId">
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Course <span class="text-red-500">*</span></label>
+          <select id="hwCourse" required class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm bg-white">
+            <option value="">-- Select Course --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Title <span class="text-red-500">*</span></label>
+          <input type="text" id="hwTitle" maxlength="150" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm bg-white" placeholder="e.g. Practice Surah Al-Fatiha">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Description</label>
+          <textarea id="hwDesc" rows="3" maxlength="500" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm bg-white" placeholder="Details of homework..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Due Date</label>
+          <input type="date" id="hwDue" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm bg-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-charcoal mb-1">Max Score</label>
+          <input type="number" id="hwScore" min="0" max="1000" value="10" class="w-full px-4 py-2.5 border border-primary/20 rounded-lg text-sm bg-white">
+        </div>
+        <div id="hwStatus" class="text-sm hidden"></div>
+        <button onclick="window.submitHomework()" id="hwSubmit" class="btn-primary w-full px-6 py-3 rounded-full font-medium text-sm">Assign Homework</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- F-058-MODALS-END -->
 </body>
 </html>
