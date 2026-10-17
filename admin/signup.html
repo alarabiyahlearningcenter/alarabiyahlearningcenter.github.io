@@ -1,193 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Signup | Al-Arabiyah Learning Center</title>
-<meta name="theme-color" content="#0A3622">
-<link rel="manifest" href="../manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body{font-family:'Inter',sans-serif;background:#F9F7F2}
-h1,h2,h3{font-family:'Playfair Display',serif}
-.islamic-pattern{background-image:radial-gradient(circle at 20% 30%,rgba(212,175,55,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(10,54,34,0.05) 0%,transparent 50%)}
-.btn-primary{background:#0A3622;color:white;transition:.3s}
-.btn-primary:hover{background:#062218}
-.btn-primary:disabled{opacity:.6;cursor:not-allowed}
-input:focus{outline:none;border-color:#0A3622;box-shadow:0 0 0 3px rgba(10,54,34,.1)}
-.admin-badge{background:linear-gradient(135deg,#0A3622,#062218);color:#D4AF37}
-</style>
-<script src="../assets/js/notifications.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Registration Disabled | Al-Arabiyah Learning Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F9F7F2; }
+        h1 { font-family: 'Playfair Display', serif; color: #0A3622; }
+        .btn-primary { background-color: #0A3622; color: white; transition: 0.3s; }
+        .btn-primary:hover { background-color: #062218; }
+    </style>
 </head>
-<body class="bg-cream min-h-screen flex flex-col islamic-pattern">
-
-<header class="bg-cream border-b border-primary/10">
-  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-    <a href="../index.html" class="flex items-center gap-3">
-      <img src="../assets/images/logo.png" alt="Al-Arabiyah" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
-      <div class="hidden sm:block">
-        <div class="font-heading font-bold text-primary text-base leading-tight">Al-Arabiyah</div>
-        <div class="text-xs text-primary/70">Admin Panel</div>
-      </div>
-    </a>
-    <a href="../index.html" class="text-primary font-medium text-sm hover:text-secondary">Back to Home</a>
-  </div>
-</header>
-
-<main class="flex-1 flex items-center justify-center py-12 px-4">
-  <div class="w-full max-w-md">
-    <div class="bg-white rounded-3xl shadow-xl border border-primary/5 overflow-hidden">
-      <div class="admin-badge px-8 py-6 text-center">
-        <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-secondary/40">
-          <svg class="w-8 h-8" style="color:#D4AF37" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-gray-100">
+        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
         </div>
-        <h1 class="text-2xl font-bold" style="color:#D4AF37">Admin Registration</h1>
-        <p class="text-xs mt-1" style="color:rgba(212,175,55,.7)">Secret Code Required</p>
-      </div>
-
-      <div class="p-8">
-        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-5">
-          <p class="text-xs text-yellow-800">🔐 You need a valid secret code from the Super Admin to register as an admin.</p>
+        <h1 class="text-2xl font-bold mb-4">Admin Registration Disabled</h1>
+        <p class="text-gray-600 mb-8 text-sm leading-relaxed">
+            Public admin registration is currently disabled for security reasons.<br><br>
+            If you wish to become an admin, please sign up as a <strong>Teacher</strong>, complete your KYC verification, and contact the Super Admin to promote your account.
+        </p>
+        <div class="space-y-3">
+            <a href="../teacher/signup.html" class="btn-primary block w-full py-3 rounded-xl font-semibold">Go to Teacher Signup</a>
+            <a href="../index.html" class="block w-full py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition border border-gray-200">Back to Home</a>
         </div>
-
-        <form id="adminSignupForm" class="space-y-4">
-          <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Secret Code *</label>
-            <input type="text" id="secretCode" required placeholder="ALC-ADMIN-XXXX" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream uppercase font-mono">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Full Name *</label>
-            <input type="text" id="fullName" required placeholder="Your full name" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Email *</label>
-            <input type="email" id="email" required placeholder="admin@email.com" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Phone</label>
-            <input type="tel" id="phone" placeholder="+880 1XXX XXXXXX" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-primary mb-2">Password *</label>
-            <div class="relative">
-              <input type="password" id="password" required minlength="6" placeholder="Minimum 6 characters" class="w-full px-4 py-3 border border-primary/20 rounded-xl bg-cream pr-12">
-              <button type="button" id="togglePw" class="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/50">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-              </button>
-            </div>
-          </div>
-          <button type="submit" id="submitBtn" disabled class="btn-primary w-full py-3.5 rounded-xl font-semibold">Create Admin Account</button>
-          <p id="status" class="text-sm text-center hidden"></p>
-        </form>
-
-        <div class="mt-6 text-center text-sm text-charcoal/60">
-          Already an admin? <a href="login.html" class="text-primary font-semibold hover:text-secondary">Login</a>
-        </div>
-      </div>
     </div>
-  </div>
-</main>
-
-<script>
-const SUPABASE_URL = 'https://vgsgisyneymtszuslftb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnc2dpc3luZXltdHN6dXNsZnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NTg0NjQsImV4cCI6MjEwNjAzNDQ2NH0.HaYptmVnZCbGiOCg1NyYkcdHQDqjXlAHeq_i_bTC6Yk';
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// 🔑 SECRET CODE — পরে Supabase site_settings থেকেও পরিবর্তন করা যাবে
-
-document.getElementById('togglePw').addEventListener('click', () => {
-  const pw = document.getElementById('password');
-  pw.type = pw.type === 'password' ? 'text' : 'password';
-});
-
-document.getElementById('adminSignupForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('submitBtn');
-  const status = document.getElementById('status');
-  btn.disabled = true;
-  btn.textContent = 'Verifying...';
-  status.classList.add('hidden');
-
-  const code = document.getElementById('secretCode').value.trim().toUpperCase();
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const fullName = document.getElementById('fullName').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-
-  // Step 1: Check secret code (queries site_settings)
-  const { data: setting } = await db.from('site_settings').select('value').eq('key', 'admin_signup_code').maybeSingle();
-  const expectedCode = typeof setting?.value === 'string' ? setting.value.toUpperCase() : null;
-  if (!expectedCode || code !== expectedCode) {
-    status.textContent = '❌ Invalid secret code.';
-    status.className = 'text-sm text-center text-red-600';
-    status.classList.remove('hidden');
-    btn.disabled = false;
-    btn.textContent = 'Create Admin Account';
-    return;
-  }
-
-  // Step 2: Create auth account
-  const { data, error } = await db.auth.signUp({
-    email,
-    password,
-    options: { data: { full_name: fullName } }
-  });
-
-  if (error) {
-    status.textContent = 'Error: ' + error.message;
-    status.className = 'text-sm text-center text-red-600';
-    status.classList.remove('hidden');
-    btn.disabled = false;
-    btn.textContent = 'Create Admin Account';
-    return;
-  }
-
-  if (!data.user) {
-    status.textContent = 'Check your email to confirm your account.';
-    status.className = 'text-sm text-center text-blue-600';
-    status.classList.remove('hidden');
-    btn.disabled = false;
-    btn.textContent = 'Create Admin Account';
-    return;
-  }
-
-  // Step 3: Update profile with admin role
-  const { error: profileError } = await db.from('profiles').update({
-    full_name: fullName,
-    phone: phone
-  }).eq('id', data.user.id);
-
-  if (profileError) {
-    status.textContent = 'Profile error: ' + profileError.message;
-    status.className = 'text-sm text-center text-red-600';
-    status.classList.remove('hidden');
-    btn.disabled = false;
-    btn.textContent = 'Create Admin Account';
-    return;
-  }
-
-  // Notify other admins
-  if (window.Notif) {
-    window.Notif.toAdmins(
-      'New Admin Joined 👑',
-      fullName + ' (' + email + ') just registered as an admin.',
-      'signup',
-      '/super-admin/admins.html'
-    ).catch(() => {});
-  }
-
-  status.textContent = '✓ Admin account created! Redirecting...';
-  status.className = 'text-sm text-center text-green-600';
-  status.classList.remove('hidden');
-
-  setTimeout(() => {
-    window.location.href = 'dashboard.html';
-  }, 1500);
-});
-</script>
-
 </body>
 </html>

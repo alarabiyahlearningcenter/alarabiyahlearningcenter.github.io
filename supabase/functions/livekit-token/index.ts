@@ -93,9 +93,18 @@ Deno.serve(async (req) => {
 
     if (isAdmin) {
       isAuthorized = true;
-    } else if (isTeacher && classData.teacher_id === user.id) {
-      isAuthorized = true;
-    } else if (isStudent && classData.student_id === user.id) {
+    } else if (isTeacher) {
+          // Fetch the teacher record associated with this authenticated profile
+          const { data: teacherData, error: teacherError } = await supabase
+            .from("teachers")
+            .select("id")
+            .eq("profile_id", user.id)
+            .single();
+
+          if (!teacherError && teacherData && classData.teacher_id === teacherData.id) {
+            isAuthorized = true;
+          }
+        } else if (isStudent && classData.student_id === user.id) {
       isAuthorized = true;
     }
 
