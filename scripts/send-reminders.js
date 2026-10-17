@@ -34,7 +34,14 @@ async function logSent(classId, type) {
 async function claimReminder(classId, type) {
   // Atomic claim: insert succeeds only if no prior log entry exists
   const { error } = await sb.from('notification_log').insert({ class_id: classId, reminder_type: type });
-  return !error;
+  if (error) {
+    // 23505 is the Postgres error code for unique_violation (already claimed)
+    if (error.code === '23505') {
+      return true; // Already claimed by another run
+    }
+    throw new Error('Failed to claim reminder: ' + error.message);
+  }
+  return false; // Successfully claimed
 }
 
 async function releaseReminder(classId, type) {
@@ -113,9 +120,9 @@ async function processReminders() {
     .lte('scheduled_at', in35Min.toISOString());
 
   if (error) {
-    console.error('Supabase error:', error);
-    return;
-  }
+          console.error('Supabase error:', error);
+          throw new Error('Failed to fetch upcoming classes: ' + error.message);
+        }
 
   if (!classes || !classes.length) {
     console.log('No upcoming classes in next 35 min');
@@ -133,8 +140,8 @@ async function processReminders() {
     else if (minutesUntil >= 0 && minutesUntil <= 7) type = '5min';
 
     if (!type) continue;
-    const claimed = await claimReminder(cls.id, type);
-    if (!claimed) continue; // already sent or claimed by another run
+    const isClaimed = await claimReminder(cls.id, type);
+        if (isClaimed) continue; // already sent or claimed by another run
 
     // Build recipient list
     const recipients = [cls.student_id].filter(Boolean);
