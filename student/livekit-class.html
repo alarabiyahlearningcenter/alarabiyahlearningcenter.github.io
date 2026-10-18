@@ -236,27 +236,55 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
 
         .floating-self-view {
             position: fixed;
-            bottom: 90px; /* Above the control bar */
+            bottom: 90px;
             right: 20px;
-            width: 120px;
-            height: 160px;
             z-index: 50;
-            border-radius: 12px;
+            border-radius: 8px; /* Rectangular look, less rounded */
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
             cursor: grab;
-            border: 2px solid rgba(255,255,255,0.2);
-            touch-action: none; /* Prevents scrolling while dragging */
-            background-color: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.3);
+            touch-action: none;
+            background-color: #000;
+            
+            /* Mobile Portrait Default */
+            width: 110px;
+            height: 160px;
+            aspect-ratio: 9 / 16;
         }
+        
+        /* Desktop / Landscape Mode */
+        @media (min-width: 768px) {
+            .floating-self-view {
+                width: 220px;
+                height: 140px;
+                aspect-ratio: 16 / 9;
+                bottom: 100px;
+            }
+        }
+        
         .floating-self-view:active {
             cursor: grabbing;
         }
+        
         .floating-self-view .video-tile {
             width: 100% !important;
             height: 100% !important;
             margin: 0 !important;
             border-radius: 0 !important;
+            position: relative;
+        }
+        
+        /* Ensure the Pin/Action buttons stay visible in the corner */
+        .floating-self-view .video-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            z-index: 20;
+        }
+        .floating-self-view .video-name {
+            font-size: 10px;
+            padding: 2px 5px;
         }
     
     </style>
@@ -7046,27 +7074,55 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
 
         .floating-self-view {
             position: fixed;
-            bottom: 90px; /* Above the control bar */
+            bottom: 90px;
             right: 20px;
-            width: 120px;
-            height: 160px;
             z-index: 50;
-            border-radius: 12px;
+            border-radius: 8px; /* Rectangular look, less rounded */
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
             cursor: grab;
-            border: 2px solid rgba(255,255,255,0.2);
-            touch-action: none; /* Prevents scrolling while dragging */
-            background-color: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.3);
+            touch-action: none;
+            background-color: #000;
+            
+            /* Mobile Portrait Default */
+            width: 110px;
+            height: 160px;
+            aspect-ratio: 9 / 16;
         }
+        
+        /* Desktop / Landscape Mode */
+        @media (min-width: 768px) {
+            .floating-self-view {
+                width: 220px;
+                height: 140px;
+                aspect-ratio: 16 / 9;
+                bottom: 100px;
+            }
+        }
+        
         .floating-self-view:active {
             cursor: grabbing;
         }
+        
         .floating-self-view .video-tile {
             width: 100% !important;
             height: 100% !important;
             margin: 0 !important;
             border-radius: 0 !important;
+            position: relative;
+        }
+        
+        /* Ensure the Pin/Action buttons stay visible in the corner */
+        .floating-self-view .video-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            z-index: 20;
+        }
+        .floating-self-view .video-name {
+            font-size: 10px;
+            padding: 2px 5px;
         }
     
     </style>
@@ -7246,27 +7302,55 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
 
         .floating-self-view {
             position: fixed;
-            bottom: 90px; /* Above the control bar */
+            bottom: 90px;
             right: 20px;
-            width: 120px;
-            height: 160px;
             z-index: 50;
-            border-radius: 12px;
+            border-radius: 8px; /* Rectangular look, less rounded */
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
             cursor: grab;
-            border: 2px solid rgba(255,255,255,0.2);
-            touch-action: none; /* Prevents scrolling while dragging */
-            background-color: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.3);
+            touch-action: none;
+            background-color: #000;
+            
+            /* Mobile Portrait Default */
+            width: 110px;
+            height: 160px;
+            aspect-ratio: 9 / 16;
         }
+        
+        /* Desktop / Landscape Mode */
+        @media (min-width: 768px) {
+            .floating-self-view {
+                width: 220px;
+                height: 140px;
+                aspect-ratio: 16 / 9;
+                bottom: 100px;
+            }
+        }
+        
         .floating-self-view:active {
             cursor: grabbing;
         }
+        
         .floating-self-view .video-tile {
             width: 100% !important;
             height: 100% !important;
             margin: 0 !important;
             border-radius: 0 !important;
+            position: relative;
+        }
+        
+        /* Ensure the Pin/Action buttons stay visible in the corner */
+        .floating-self-view .video-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            z-index: 20;
+        }
+        .floating-self-view .video-name {
+            font-size: 10px;
+            padding: 2px 5px;
         }
     
     </style>
@@ -7402,27 +7486,55 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
 
         .floating-self-view {
             position: fixed;
-            bottom: 90px; /* Above the control bar */
+            bottom: 90px;
             right: 20px;
-            width: 120px;
-            height: 160px;
             z-index: 50;
-            border-radius: 12px;
+            border-radius: 8px; /* Rectangular look, less rounded */
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
             cursor: grab;
-            border: 2px solid rgba(255,255,255,0.2);
-            touch-action: none; /* Prevents scrolling while dragging */
-            background-color: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.3);
+            touch-action: none;
+            background-color: #000;
+            
+            /* Mobile Portrait Default */
+            width: 110px;
+            height: 160px;
+            aspect-ratio: 9 / 16;
         }
+        
+        /* Desktop / Landscape Mode */
+        @media (min-width: 768px) {
+            .floating-self-view {
+                width: 220px;
+                height: 140px;
+                aspect-ratio: 16 / 9;
+                bottom: 100px;
+            }
+        }
+        
         .floating-self-view:active {
             cursor: grabbing;
         }
+        
         .floating-self-view .video-tile {
             width: 100% !important;
             height: 100% !important;
             margin: 0 !important;
             border-radius: 0 !important;
+            position: relative;
+        }
+        
+        /* Ensure the Pin/Action buttons stay visible in the corner */
+        .floating-self-view .video-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            z-index: 20;
+        }
+        .floating-self-view .video-name {
+            font-size: 10px;
+            padding: 2px 5px;
         }
     
     </style>
