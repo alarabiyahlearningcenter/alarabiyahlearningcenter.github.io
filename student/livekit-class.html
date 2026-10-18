@@ -9611,6 +9611,7 @@ if (document.readyState === 'loading') {
                     source: LivekitClient.Track.Source.ScreenShare,
                     name: 'shared-document'
                 });
+                showLocalScreenShare(track);
 
                 showToast(`✅ PDF Shared (Page ${currentPage}/${pdf.numPages})`);
 
@@ -9645,6 +9646,7 @@ if (document.readyState === 'loading') {
                         track.stop();
                         await room.localParticipant.unpublishTrack(track);
                         controls.remove();
+                        hideLocalScreenShare();
                         showToast('⏹ PDF sharing stopped');
                     };
                 } else {
@@ -9670,6 +9672,7 @@ if (document.readyState === 'loading') {
                 const stream = canvas.captureStream(15);
                 const track = stream.getVideoTracks()[0];
                 await room.localParticipant.publishTrack(track, { source: LivekitClient.Track.Source.ScreenShare, name: 'shared-document' });
+                showLocalScreenShare(track);
                 showToast('✅ Image shared successfully');
             } catch (err) {
                 console.error('File share error:', err);
@@ -9680,5 +9683,44 @@ if (document.readyState === 'loading') {
         }
         event.target.value = ''; // Reset input
     };
+    
+
+    // --- LOCAL SCREEN SHARE DISPLAY HELPER ---
+    function showLocalScreenShare(track) {
+        let tile = document.getElementById('local-screenshare-tile');
+        if (!tile) {
+            tile = document.createElement('div');
+            tile.id = 'local-screenshare-tile';
+            tile.className = 'video-tile screen-sharing';
+            tile.style.position = 'absolute';
+            tile.style.top = '0';
+            tile.style.left = '0';
+            tile.style.width = '100%';
+            tile.style.height = '100%';
+            tile.style.zIndex = '50'; // Ensure it sits on top
+            tile.style.backgroundColor = '#000';
+            
+            const videoEl = document.createElement('video');
+            videoEl.autoplay = true;
+            videoEl.playsInline = true;
+            videoEl.muted = true; // Local doesn't need to hear itself
+            videoEl.style.width = '100%';
+            videoEl.style.height = '100%';
+            videoEl.style.objectFit = 'contain';
+            tile.appendChild(videoEl);
+            
+            const grid = document.getElementById('videoGrid');
+            grid.appendChild(tile);
+            
+            track.attach(videoEl);
+        }
+    }
+
+    function hideLocalScreenShare() {
+        const tile = document.getElementById('local-screenshare-tile');
+        if (tile) {
+            tile.remove();
+        }
+    }
     
 </script>
