@@ -600,6 +600,13 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
       </svg>
     </button>
+    
+    <!-- Flip Camera -->
+    <button id="flipCamBtn" class="btn-icon" title="Flip Camera">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+    </button>
 
     <!-- Screen Share -->
     <button id="screenBtn" class="btn-icon" title="Share Screen (S)">
@@ -9449,4 +9456,48 @@ if (document.readyState === 'loading') {
         }
     }
     
-    </script>
+    
+    // --- MOBILE PREMIUM FEATURES ---
+    let currentFacingMode = 'user'; // Default
+
+    // 1. Flip Camera Logic
+    document.getElementById('flipCamBtn')?.addEventListener('click', async () => {
+        if (!room || !room.localParticipant) return;
+        currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+        
+        try {
+            const videoTrack = Array.from(room.localParticipant.videoTrackPublications.values())[0]?.track;
+            if (videoTrack) {
+                await videoTrack.restartTrack({ facingMode: currentFacingMode });
+                showToast('📷 Camera switched');
+            }
+        } catch (err) {
+            console.error('Failed to flip camera:', err);
+            showToast('❌ Failed to switch camera');
+        }
+    });
+
+    // 2. Mobile Screen Share Logic (Override Desktop Modal)
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // Save the original function just in case
+    const originalScreenShareHandler = document.getElementById('screenBtn')?.onclick;
+    
+    document.getElementById('screenBtn')?.addEventListener('click', async (e) => {
+        if (isMobileDevice) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Direct call for Android (Skips the complex modal)
+            try {
+                showToast('⏳ Starting mobile screen share...');
+                await room.localParticipant.setScreenShareEnabled(true, { audio: false });
+                showToast('✅ Screen sharing started');
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Screen share not supported or cancelled.');
+            }
+        }
+    });
+    
+</script>
