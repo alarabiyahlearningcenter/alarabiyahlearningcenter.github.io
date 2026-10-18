@@ -287,6 +287,16 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
             padding: 2px 5px;
         }
     
+    
+        /* Ensure floating container is ready for dragging */
+        #localVideoContainer {
+            position: fixed;
+            touch-action: none;
+        }
+        #localVideoContainer .video-tile {
+            pointer-events: none; /* Prevents video from blocking drag events */
+        }
+    
     </style>
 </head>
 
@@ -1602,7 +1612,7 @@ async function connectToRoom(url, token) {
 // CREATE LOCAL VIDEO TILE
 // ============================================
 function createLocalTile() {
-      const grid = document.getElementById('localVideoContainer');
+      const grid = document.getElementById('videoGrid');
   if (document.getElementById('tile-' + room.localParticipant.identity)) return;
 
   const tile = document.createElement('div');
@@ -7125,6 +7135,16 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
             padding: 2px 5px;
         }
     
+    
+        /* Ensure floating container is ready for dragging */
+        #localVideoContainer {
+            position: fixed;
+            touch-action: none;
+        }
+        #localVideoContainer .video-tile {
+            pointer-events: none; /* Prevents video from blocking drag events */
+        }
+    
     </style>
 
 <style>
@@ -7353,6 +7373,16 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
             padding: 2px 5px;
         }
     
+    
+        /* Ensure floating container is ready for dragging */
+        #localVideoContainer {
+            position: fixed;
+            touch-action: none;
+        }
+        #localVideoContainer .video-tile {
+            pointer-events: none; /* Prevents video from blocking drag events */
+        }
+    
     </style>
 
 <script>
@@ -7535,6 +7565,16 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
         .floating-self-view .video-name {
             font-size: 10px;
             padding: 2px 5px;
+        }
+    
+    
+        /* Ensure floating container is ready for dragging */
+        #localVideoContainer {
+            position: fixed;
+            touch-action: none;
+        }
+        #localVideoContainer .video-tile {
+            pointer-events: none; /* Prevents video from blocking drag events */
         }
     
     </style>
@@ -8187,4 +8227,87 @@ if (document.readyState === 'loading') {
   
   console.log('✅ Universal whiteboard + screen share fix loaded');
 })();
-</script>
+
+    // --- DYNAMIC LAYOUT (Full Screen vs Floating) ---
+    function organizeVideos() {
+        if (!room || !room.localParticipant) return;
+        const remoteCount = room.remoteParticipants.size;
+        const localTile = document.getElementById('tile-' + room.localParticipant.identity);
+        const videoGrid = document.getElementById('videoGrid');
+        const floatingContainer = document.getElementById('localVideoContainer');
+
+        if (!localTile) return;
+
+        if (remoteCount === 0) {
+            // Alone: Show local full screen
+            if (localTile.parentElement !== videoGrid) {
+                videoGrid.appendChild(localTile);
+            }
+            if (floatingContainer) floatingContainer.style.display = 'none';
+        } else {
+            // Others present: Local goes to floating, others in grid
+            if (floatingContainer && localTile.parentElement !== floatingContainer) {
+                floatingContainer.appendChild(localTile);
+            }
+            if (floatingContainer) floatingContainer.style.display = 'block';
+        }
+    }
+
+    // --- DRAG LOGIC FOR FLOATING VIDEO ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('localVideoContainer');
+        if (!container) return;
+
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        function startDrag(e) {
+            // Ignore if clicking a button (like the pin button)
+            if (e.target.closest('button')) return;
+            
+            isDragging = true;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const rect = container.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            startX = clientX;
+            startY = clientY;
+
+            container.style.cursor = 'grabbing';
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('touchmove', onDrag, { passive: false });
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function onDrag(e) {
+            if (!isDragging) return;
+            e.preventDefault(); // Prevent scrolling on mobile
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+            
+            container.style.left = (initialLeft + dx) + 'px';
+            container.style.top = (initialTop + dy) + 'px';
+            container.style.bottom = 'auto';
+            container.style.right = 'auto';
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            container.style.cursor = 'grab';
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        container.addEventListener('mousedown', startDrag);
+        container.addEventListener('touchstart', startDrag, { passive: false });
+    });
+    </script>
