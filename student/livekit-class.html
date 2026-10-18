@@ -331,6 +331,89 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
             display: none;
         }
     
+    
+    /* ==================================================== */
+    /* FINAL FIX: FULLSCREEN SINGLE TILE & NO BORDER        */
+    /* ==================================================== */
+    
+    /* Remove any ugly borders on video tiles */
+    .video-tile, .video-tile:hover {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important; /* Square edges for fullscreen */
+    }
+
+    /* Force the single video (grid-1) to fill the entire screen */
+    #videoGrid.grid-1, .video-grid.grid-1 {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        grid-template-columns: none !important;
+    }
+
+    /* Override the old restrictive sizing for the single tile */
+    #videoGrid.grid-1 > .video-tile, .video-grid.grid-1 > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        border-radius: 0 !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Make sure the video inside scales perfectly without cropping */
+    #videoGrid.grid-1 > .video-tile > video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Shows whole video */
+    }
+
+    /* Floating container (Self View) styling */
+    #localVideoContainer {
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        z-index: 9999;
+        border-radius: 8px; /* Slightly rounded for floating view */
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.2);
+        touch-action: none;
+        background-color: #000;
+        
+        /* Mobile Portrait */
+        width: 110px;
+        height: 160px;
+    }
+    
+    /* Desktop/Landscape */
+    @media (min-width: 768px) {
+        #localVideoContainer {
+            width: 240px;
+            height: 150px;
+        }
+    }
+
+    /* Make the floating video fill its container */
+    #localVideoContainer > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        aspect-ratio: auto !important;
+    }
+    
+    #localVideoContainer > .video-tile > video {
+        object-fit: cover !important;
+    }
+    
     </style>
 </head>
 
@@ -7216,6 +7299,89 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
             display: none;
         }
     
+    
+    /* ==================================================== */
+    /* FINAL FIX: FULLSCREEN SINGLE TILE & NO BORDER        */
+    /* ==================================================== */
+    
+    /* Remove any ugly borders on video tiles */
+    .video-tile, .video-tile:hover {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important; /* Square edges for fullscreen */
+    }
+
+    /* Force the single video (grid-1) to fill the entire screen */
+    #videoGrid.grid-1, .video-grid.grid-1 {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        grid-template-columns: none !important;
+    }
+
+    /* Override the old restrictive sizing for the single tile */
+    #videoGrid.grid-1 > .video-tile, .video-grid.grid-1 > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        border-radius: 0 !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Make sure the video inside scales perfectly without cropping */
+    #videoGrid.grid-1 > .video-tile > video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Shows whole video */
+    }
+
+    /* Floating container (Self View) styling */
+    #localVideoContainer {
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        z-index: 9999;
+        border-radius: 8px; /* Slightly rounded for floating view */
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.2);
+        touch-action: none;
+        background-color: #000;
+        
+        /* Mobile Portrait */
+        width: 110px;
+        height: 160px;
+    }
+    
+    /* Desktop/Landscape */
+    @media (min-width: 768px) {
+        #localVideoContainer {
+            width: 240px;
+            height: 150px;
+        }
+    }
+
+    /* Make the floating video fill its container */
+    #localVideoContainer > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        aspect-ratio: auto !important;
+    }
+    
+    #localVideoContainer > .video-tile > video {
+        object-fit: cover !important;
+    }
+    
     </style>
 
 <style>
@@ -7488,6 +7654,89 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
             display: none;
         }
     
+    
+    /* ==================================================== */
+    /* FINAL FIX: FULLSCREEN SINGLE TILE & NO BORDER        */
+    /* ==================================================== */
+    
+    /* Remove any ugly borders on video tiles */
+    .video-tile, .video-tile:hover {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important; /* Square edges for fullscreen */
+    }
+
+    /* Force the single video (grid-1) to fill the entire screen */
+    #videoGrid.grid-1, .video-grid.grid-1 {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        grid-template-columns: none !important;
+    }
+
+    /* Override the old restrictive sizing for the single tile */
+    #videoGrid.grid-1 > .video-tile, .video-grid.grid-1 > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        border-radius: 0 !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Make sure the video inside scales perfectly without cropping */
+    #videoGrid.grid-1 > .video-tile > video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Shows whole video */
+    }
+
+    /* Floating container (Self View) styling */
+    #localVideoContainer {
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        z-index: 9999;
+        border-radius: 8px; /* Slightly rounded for floating view */
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.2);
+        touch-action: none;
+        background-color: #000;
+        
+        /* Mobile Portrait */
+        width: 110px;
+        height: 160px;
+    }
+    
+    /* Desktop/Landscape */
+    @media (min-width: 768px) {
+        #localVideoContainer {
+            width: 240px;
+            height: 150px;
+        }
+    }
+
+    /* Make the floating video fill its container */
+    #localVideoContainer > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        aspect-ratio: auto !important;
+    }
+    
+    #localVideoContainer > .video-tile > video {
+        object-fit: cover !important;
+    }
+    
     </style>
 
 <script>
@@ -7715,6 +7964,89 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
         #localVideoContainer {
             display: none;
         }
+    
+    
+    /* ==================================================== */
+    /* FINAL FIX: FULLSCREEN SINGLE TILE & NO BORDER        */
+    /* ==================================================== */
+    
+    /* Remove any ugly borders on video tiles */
+    .video-tile, .video-tile:hover {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important; /* Square edges for fullscreen */
+    }
+
+    /* Force the single video (grid-1) to fill the entire screen */
+    #videoGrid.grid-1, .video-grid.grid-1 {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        grid-template-columns: none !important;
+    }
+
+    /* Override the old restrictive sizing for the single tile */
+    #videoGrid.grid-1 > .video-tile, .video-grid.grid-1 > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        border-radius: 0 !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Make sure the video inside scales perfectly without cropping */
+    #videoGrid.grid-1 > .video-tile > video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Shows whole video */
+    }
+
+    /* Floating container (Self View) styling */
+    #localVideoContainer {
+        display: none;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        z-index: 9999;
+        border-radius: 8px; /* Slightly rounded for floating view */
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.2);
+        touch-action: none;
+        background-color: #000;
+        
+        /* Mobile Portrait */
+        width: 110px;
+        height: 160px;
+    }
+    
+    /* Desktop/Landscape */
+    @media (min-width: 768px) {
+        #localVideoContainer {
+            width: 240px;
+            height: 150px;
+        }
+    }
+
+    /* Make the floating video fill its container */
+    #localVideoContainer > .video-tile {
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        aspect-ratio: auto !important;
+    }
+    
+    #localVideoContainer > .video-tile > video {
+        object-fit: cover !important;
+    }
     
     </style>
 
