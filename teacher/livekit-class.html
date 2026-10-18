@@ -2126,49 +2126,22 @@ function startScreenShare(type) {
 }
 
 async function confirmScreenShare() {
-        if (!room) return;
-
-        const quality = Number(document.getElementById('shareQualitySelect').value) || 720;
-        const withAudio = document.getElementById('shareAudioCheck').checked;
-        const withMic = document.getElementById('shareMicCheck').checked;
-
-        try {
-            showToast('⏳ Starting screen share...');
-            
-            await room.localParticipant.setScreenShareEnabled(true, {
-                audio: withAudio,
-                video: {
-                    resolution: {
-                        width: quality === 1080 ? 1920 : quality === 720 ? 1280 : 854,
-                        height: quality === 1080 ? 1080 : quality === 720 ? 720 : 480,
-                        frameRate: 30,
-                    },
-                }
-            });
-            
-            isScreenSharing = true;
-            const btn = document.getElementById('screenBtn');
-            if (btn) btn.classList.add('active');
-            showToast('✅ Screen sharing started');
-            
-        } catch (err) {
-            console.error('Screen share error:', err);
-            
-            // Show a clear error message based on the error type
-            let errorMsg = "Screen share failed or was cancelled.";
-            if (err.name === 'NotAllowedError') {
-                errorMsg = "Permission denied. Please allow screen sharing.";
-            } else if (err.name === 'TypeError' || err.message.includes('not supported')) {
-                errorMsg = "Screen sharing is not supported on this device/browser.";
-            }
-            
-            showToast('❌ ' + errorMsg);
-            
-            // Reset button state if failed
-            const btn = document.getElementById('screenBtn');
-            if (btn) btn.classList.remove('active');
-            isScreenSharing = false;
-        }
+  if (!room) return;
+  
+  const quality = Number(document.getElementById('shareQualitySelect').value) || 720;
+  const withAudio = document.getElementById('shareAudioCheck').checked;
+  const withMic = document.getElementById('shareMicCheck').checked;
+  
+  try {
+    await room.localParticipant.setScreenShareEnabled(true, {
+      audio: withAudio,
+      video: {
+        resolution: {
+          width: quality === 1080 ? 1920 : quality === 720 ? 1280 : 960,
+          height: quality === 1080 ? 1080 : quality === 720 ? 720 : 540,
+          frameRate: 30,
+        },
+      },
     });
     
     isScreenSharing = true;
