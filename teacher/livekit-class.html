@@ -233,7 +233,33 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
 .no-select { user-select:none; -webkit-user-select:none; }
 .glass { background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border:1px solid var(--border); }
 .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-</style>
+
+        .floating-self-view {
+            position: fixed;
+            bottom: 90px; /* Above the control bar */
+            right: 20px;
+            width: 120px;
+            height: 160px;
+            z-index: 50;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            cursor: grab;
+            border: 2px solid rgba(255,255,255,0.2);
+            touch-action: none; /* Prevents scrolling while dragging */
+            background-color: #1a1a1a;
+        }
+        .floating-self-view:active {
+            cursor: grabbing;
+        }
+        .floating-self-view .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+    
+    </style>
 </head>
 
 <body>
@@ -400,6 +426,7 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
   <!-- ===== VIDEO STAGE ===== -->
   <div class="video-stage">
     <div id="videoGrid" class="video-grid grid-1"></div>
+        <div id="localVideoContainer" class="floating-self-view"></div>
   </div>
 
   <!-- ===== CONTROL BAR ===== -->
@@ -1547,7 +1574,7 @@ async function connectToRoom(url, token) {
 // CREATE LOCAL VIDEO TILE
 // ============================================
 function createLocalTile() {
-  const grid = document.getElementById('videoGrid');
+      const grid = document.getElementById('localVideoContainer');
   if (document.getElementById('tile-' + room.localParticipant.identity)) return;
 
   const tile = document.createElement('div');
@@ -7016,7 +7043,33 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
 .btn-icon.small { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
 .btn-icon.active { background: rgba(212,175,55,.25); border-color: #D4AF37; color: #D4AF37; }
 .btn-icon.disabled { background: rgba(220,38,38,.25); border-color: rgba(220,38,38,.5); }
-</style>
+
+        .floating-self-view {
+            position: fixed;
+            bottom: 90px; /* Above the control bar */
+            right: 20px;
+            width: 120px;
+            height: 160px;
+            z-index: 50;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            cursor: grab;
+            border: 2px solid rgba(255,255,255,0.2);
+            touch-action: none; /* Prevents scrolling while dragging */
+            background-color: #1a1a1a;
+        }
+        .floating-self-view:active {
+            cursor: grabbing;
+        }
+        .floating-self-view .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+    
+    </style>
 
 <style>
 /* ============================================
@@ -7190,7 +7243,33 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
-</style>
+
+        .floating-self-view {
+            position: fixed;
+            bottom: 90px; /* Above the control bar */
+            right: 20px;
+            width: 120px;
+            height: 160px;
+            z-index: 50;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            cursor: grab;
+            border: 2px solid rgba(255,255,255,0.2);
+            touch-action: none; /* Prevents scrolling while dragging */
+            background-color: #1a1a1a;
+        }
+        .floating-self-view:active {
+            cursor: grabbing;
+        }
+        .floating-self-view .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+    
+    </style>
 
 <script>
 // ============================================
@@ -7320,7 +7399,33 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
   width: 100% !important;
   box-sizing: border-box !important;
 }
-</style>
+
+        .floating-self-view {
+            position: fixed;
+            bottom: 90px; /* Above the control bar */
+            right: 20px;
+            width: 120px;
+            height: 160px;
+            z-index: 50;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            cursor: grab;
+            border: 2px solid rgba(255,255,255,0.2);
+            touch-action: none; /* Prevents scrolling while dragging */
+            background-color: #1a1a1a;
+        }
+        .floating-self-view:active {
+            cursor: grabbing;
+        }
+        .floating-self-view .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+    
+    </style>
 
 <script>
 // ============================================
