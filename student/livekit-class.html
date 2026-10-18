@@ -9687,6 +9687,13 @@ if (document.readyState === 'loading') {
 
     // --- LOCAL SCREEN SHARE DISPLAY HELPER ---
     function showLocalScreenShare(track) {
+        // 1. Force hide the local camera tile completely
+        const localCamTile = document.getElementById('tile-' + room.localParticipant.identity);
+        if (localCamTile) {
+            localCamTile.style.setProperty('display', 'none', 'important');
+        }
+
+        // 2. Create or update the PDF/Screen Share tile
         let tile = document.getElementById('local-screenshare-tile');
         if (!tile) {
             tile = document.createElement('div');
@@ -9697,29 +9704,40 @@ if (document.readyState === 'loading') {
             tile.style.left = '0';
             tile.style.width = '100%';
             tile.style.height = '100%';
-            tile.style.zIndex = '50'; // Ensure it sits on top
+            tile.style.zIndex = '9999'; // Ensure it covers the camera
             tile.style.backgroundColor = '#000';
             
             const videoEl = document.createElement('video');
+            videoEl.id = 'local-screenshare-video';
             videoEl.autoplay = true;
             videoEl.playsInline = true;
-            videoEl.muted = true; // Local doesn't need to hear itself
+            videoEl.muted = true; 
             videoEl.style.width = '100%';
             videoEl.style.height = '100%';
             videoEl.style.objectFit = 'contain';
             tile.appendChild(videoEl);
             
             const grid = document.getElementById('videoGrid');
-            grid.appendChild(tile);
+            if (grid) {
+                grid.style.position = 'relative';
+                grid.appendChild(tile);
+            }
             
             track.attach(videoEl);
         }
     }
 
     function hideLocalScreenShare() {
+        // 1. Remove the PDF tile
         const tile = document.getElementById('local-screenshare-tile');
         if (tile) {
             tile.remove();
+        }
+        
+        // 2. Bring back the local camera tile
+        const localCamTile = document.getElementById('tile-' + room.localParticipant.identity);
+        if (localCamTile) {
+            localCamTile.style.removeProperty('display'); 
         }
     }
     
