@@ -1627,10 +1627,17 @@ function handleTrackSubscribed(track, publication, participant) {
     tile = createRemoteTile(participant);
   }
 
-  const video = tile.querySelector('video');
-  if (track.kind === 'video' && video) {
-    track.attach(video);
-  } else if (track.kind === 'audio') {
+  if (track.kind === 'video') {
+            let video = tile.querySelector('video');
+            if (!video) {
+              video = document.createElement('video');
+              video.autoplay = true;
+              video.playsInline = true;
+              video.className = "w-full h-full object-cover rounded-2xl";
+              tile.appendChild(video);
+            }
+            track.attach(video);
+          } else if (track.kind === 'audio') {
     const audio = document.createElement('audio');
     audio.autoplay = true;
     audio.id = 'audio-' + identity;
