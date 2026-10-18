@@ -9761,3 +9761,143 @@ if (document.readyState === 'loading') {
     }
     
 </script>
+
+
+    <script>
+    // =====================================================================
+    // ULTIMATE PDF FIX: FORCED FRAME GENERATION FOR MOBILE BROWSERS
+    // =====================================================================
+    window.handleFileShare = async function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Close Share Modal instantly
+        const modal = document.getElementById('premiumShareModal');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+        if (file.type === 'application/pdf') {
+            if (typeof pdfjsLib === 'undefined') { showToast('❌ PDF Library missing.'); return; }
+            
+            try {
+                showToast('⏳ Loading PDF...');
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let currentPage = 1;
+
+                // Cleanup old
+                if (window.pdfLoopId) cancelAnimationFrame(window.pdfLoopId);
+                const oldCanvas = document.getElementById('pdf-main-canvas');
+                if (oldCanvas) oldCanvas.remove();
+
+                // Create a visible canvas on the screen
+                const canvas = document.createElement('canvas');
+                canvas.id = 'pdf-main-canvas';
+                canvas.width = 1280;
+                canvas.height = 720;
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.objectFit = 'contain';
+                canvas.style.backgroundColor = '#ffffff';
+                
+                const ctx = canvas.getContext('2d', { alpha: false });
+                const pageCanvas = document.createElement('canvas');
+                const pageCtx = pageCanvas.getContext('2d');
+
+                const renderPage = async (pageNum) => {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    pageCanvas.width = viewport.width;
+                    pageCanvas.height = viewport.height;
+                    await page.render({ canvasContext: pageCtx, viewport: viewport }).promise;
+                };
+
+                await renderPage(currentPage);
+
+                // The Magic Loop: Forces the browser to keep the stream active
+                const drawLoop = () => {
+                    if (!document.getElementById('pdf-main-canvas')) return;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Center the PDF on canvas
+                    const scale = Math.min(canvas.width / pageCanvas.width, canvas.height / pageCanvas.height);
+                    const x = (canvas.width - pageCanvas.width * scale) / 2;
+                    const y = (canvas.height - pageCanvas.height * scale) / 2;
+                    ctx.drawImage(pageCanvas, x, y, pageCanvas.width * scale, pageCanvas.height * scale);
+                    
+                    window.pdfLoopId = requestAnimationFrame(drawLoop);
+                };
+                drawLoop();
+
+                // Capture with 0 fps and manually request frames (Mobile Chrome Fix)
+                const stream = canvas.captureStream(0);
+                const track = stream.getVideoTracks()[0];
+
+                await room.localParticipant.publishTrack(track, {
+                    source: LivekitClient.Track.Source.ScreenShare,
+                    name: 'shared-document'
+                });
+
+                // Hide camera & Show Canvas
+                const localCamTile = document.getElementById('tile-' + room.localParticipant.identity);
+                if (localCamTile) localCamTile.style.setProperty('display', 'none', 'important');
+
+                let tile = document.getElementById('local-screenshare-tile');
+                if (!tile) {
+                    tile = document.createElement('div');
+                    tile.id = 'local-screenshare-tile';
+                    tile.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; z-index:9999; background:black; display:flex; justify-content:center; align-items:center;';
+                    tile.appendChild(canvas);
+                    document.getElementById('videoGrid').appendChild(tile);
+                }
+
+                showToast(`✅ PDF Shared (Page ${currentPage}/${pdf.numPages})`);
+
+                // Controls
+                let controls = document.getElementById('pdfControls');
+                if (controls) controls.remove();
+                controls = document.createElement('div');
+                controls.id = 'pdfControls';
+                controls.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white p-3 rounded-xl flex items-center gap-4 z-[99999] shadow-2xl border border-gray-700';
+                controls.innerHTML = `
+                    <button id="prevPdfPage" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">◀ Prev</button>
+                    <span id="pdfPageInfo" class="font-bold text-sm">Page ${currentPage}/${pdf.numPages}</span>
+                    <button id="nextPdfPage" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">Next ▶</button>
+                    <button id="stopPdfShare" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition ml-2">Stop</button>
+                `;
+                document.body.appendChild(controls);
+
+                document.getElementById('prevPdfPage').onclick = async () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        await renderPage(currentPage);
+                        document.getElementById('pdfPageInfo').innerText = `Page ${currentPage}/${pdf.numPages}`;
+                    }
+                };
+                document.getElementById('nextPdfPage').onclick = async () => {
+                    if (currentPage < pdf.numPages) {
+                        currentPage++;
+                        await renderPage(currentPage);
+                        document.getElementById('pdfPageInfo').innerText = `Page ${currentPage}/${pdf.numPages}`;
+                    }
+                };
+                document.getElementById('stopPdfShare').onclick = async () => {
+                    if (window.pdfLoopId) cancelAnimationFrame(window.pdfLoopId);
+                    track.stop();
+                    await room.localParticipant.unpublishTrack(track);
+                    controls.remove();
+                    if (tile) tile.remove();
+                    if (canvas) canvas.remove();
+                    if (localCamTile) localCamTile.style.removeProperty('display');
+                    showToast('⏹ PDF sharing stopped');
+                };
+
+            } catch (err) {
+                console.error('PDF error:', err);
+                showToast('❌ Failed to load PDF.');
+            }
+        }
+        event.target.value = '';
+    };
+    </script>
+    
