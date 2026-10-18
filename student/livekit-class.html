@@ -8637,6 +8637,33 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
         height: 100% !important;
         object-fit: contain !important; /* Or cover, depending on preference */
     }
+    
+    /* ==================================================== */
+    /* FIX 1: REMOVE BLACK BARS AND FIX GREEN BORDER        */
+    /* ==================================================== */
+
+    /* 1. Remove old borders/background from the main tile */
+    #videoGrid > .video-tile {
+        border: none !important;
+        box-shadow: none !important;
+        background: #000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    /* 2. Force video to completely fill the container (removes black side bars) */
+    #videoGrid > .video-tile > video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* 'cover' fills the screen, hiding black bars */
+    }
+
+    /* 3. Perfect Green Border around the edges when speaking */
+    #videoGrid > .video-tile.speaking {
+        border: 4px solid #22c55e !important;
+        box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.5) !important;
+    }
     </style>
 
 <script>
