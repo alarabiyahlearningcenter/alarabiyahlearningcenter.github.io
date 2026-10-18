@@ -9508,74 +9508,103 @@ if (document.readyState === 'loading') {
     });
     
 
-    // --- PREMIUM SHARE LOGIC ---
     
-    // Override the default screen share button to open our new menu
-    const oldScreenBtn = document.getElementById('screenBtn');
-    if(oldScreenBtn) {
-        const newScreenBtn = oldScreenBtn.cloneNode(true);
-        oldScreenBtn.parentNode.replaceChild(newScreenBtn, oldScreenBtn);
-        newScreenBtn.addEventListener('click', () => {
-            const modal = document.getElementById('premiumShareModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        });
-    }
+    
 
-    function handlePremiumShare(type) {
-        document.getElementById('premiumShareModal').classList.add('hidden');
-        document.getElementById('premiumShareModal').classList.remove('flex');
+    // --- SAFE PREMIUM SHARE & PDF LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Override Screen Share Button to open our custom menu
+        const oldScreenBtn = document.getElementById('screenBtn');
+        if (oldScreenBtn) {
+            const newScreenBtn = oldScreenBtn.cloneNode(true);
+            oldScreenBtn.parentNode.replaceChild(newScreenBtn, oldScreenBtn);
+            
+            newScreenBtn.addEventListener('click', () => {
+                let modal = document.getElementById('premiumShareModal');
+                if (!modal) {
+                    // Create Modal Dynamically if not found
+                    const modalHTML = `
+                    <div id="premiumShareModal" class="fixed inset-0 bg-black/80 z-[99999] hidden flex-col justify-end" style="backdrop-filter: blur(5px);">
+                        <div class="bg-[#1e1e1e] w-full rounded-t-3xl p-6 text-white transform transition-transform duration-300 translate-y-0" style="max-height: 80vh; overflow-y: auto;">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-xl font-bold">Share</h3>
+                                <button onclick="document.getElementById('premiumShareModal').classList.add('hidden'); document.getElementById('premiumShareModal').classList.remove('flex');" class="text-gray-400 hover:text-white">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="handlePremiumShare('screen')" class="flex flex-col items-center justify-center p-4 bg-[#2d2d2d] rounded-2xl hover:bg-[#3d3d3d] transition border border-gray-700">
+                                    <div class="w-12 h-12 bg-green-900/50 rounded-full flex items-center justify-center mb-2">
+                                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <span class="text-sm font-medium">Screen</span>
+                                </button>
+                                <button onclick="document.getElementById('docInput').click()" class="flex flex-col items-center justify-center p-4 bg-[#2d2d2d] rounded-2xl hover:bg-[#3d3d3d] transition border border-gray-700">
+                                    <div class="w-12 h-12 bg-blue-900/50 rounded-full flex items-center justify-center mb-2">
+                                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <span class="text-sm font-medium">Photo / PDF</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="docInput" accept="image/*,application/pdf" class="hidden" onchange="handleFileShare(event)">
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    modal = document.getElementById('premiumShareModal');
+                }
+                
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+            });
+        }
+    });
+
+    // Global function for modal buttons
+    window.handlePremiumShare = function(type) {
+        const modal = document.getElementById('premiumShareModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
         
         if (type === 'screen') {
-            // Try direct screen share (works on Android mostly)
-            if(window.startScreenShare) {
-                window.startScreenShare('screen');
-            }
-        } else if (type === 'whiteboard') {
-            if(window.openWhiteboard) window.openWhiteboard();
-        } else if (type === 'camera') {
-            // Just flip to rear camera
-            document.getElementById('flipCamBtn')?.click();
+            if(window.startScreenShare) window.startScreenShare('screen');
         }
-    }
+    };
 
-    async function handleFileShare(event) {
+    // Global function for file upload
+    window.handleFileShare = async function(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        const fileType = file.type;
-        
-        if (fileType === 'application/pdf') {
-            // --- PDF SHARING LOGIC ---
+        if (file.type === 'application/pdf') {
+            // --- PDF LOGIC ---
             try {
                 showToast('⏳ Loading PDF Document...');
+                if (typeof pdfjsLib === 'undefined') {
+                    showToast('❌ PDF.js library not loaded.');
+                    return;
+                }
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 let currentPage = 1;
                 
-                // Create Canvas
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Function to render a specific page
                 const renderPage = async (pageNum) => {
                     const page = await pdf.getPage(pageNum);
                     const viewport = page.getViewport({ scale: 1.5 });
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
-                    
-                    const renderContext = {
-                        canvasContext: ctx,
-                        viewport: viewport
-                    };
-                    await page.render(renderContext).promise;
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
                 };
 
-                // Render first page
                 await renderPage(currentPage);
-
-                // Start Streaming Canvas
-                const stream = canvas.captureStream(5); // 5 FPS is enough for documents
+                const stream = canvas.captureStream(5);
                 const track = stream.getVideoTracks()[0];
                 
                 await room.localParticipant.publishTrack(track, {
@@ -9585,7 +9614,6 @@ if (document.readyState === 'loading') {
 
                 showToast(`✅ PDF Shared (Page ${currentPage}/${pdf.numPages})`);
 
-                // Show PDF Controls
                 let controls = document.getElementById('pdfControls');
                 if (!controls) {
                     controls = document.createElement('div');
@@ -9599,7 +9627,6 @@ if (document.readyState === 'loading') {
                     `;
                     document.body.appendChild(controls);
 
-                    // Pagination Events
                     document.getElementById('prevPdfPage').onclick = async () => {
                         if (currentPage > 1) {
                             currentPage--;
@@ -9623,45 +9650,27 @@ if (document.readyState === 'loading') {
                 } else {
                     controls.style.display = 'flex';
                 }
-
             } catch (err) {
                 console.error('PDF share error:', err);
-                showToast('❌ Failed to load PDF');
+                showToast('❌ Failed to load PDF. Try a smaller file.');
             }
-        } else if (fileType.startsWith('image/')) {
-            // --- IMAGE SHARING LOGIC ---
+        } else if (file.type.startsWith('image/')) {
+            // --- IMAGE LOGIC ---
             try {
                 showToast('⏳ Preparing image to share...');
                 const img = new Image();
                 img.src = URL.createObjectURL(file);
-                await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = reject;
-                });
-
+                await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
                 const canvas = document.createElement('canvas');
-                canvas.width = 1280;
-                canvas.height = 720;
+                canvas.width = 1280; canvas.height = 720;
                 const ctx = canvas.getContext('2d');
-
-                ctx.fillStyle = "black";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
+                ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-                const x = (canvas.width / 2) - (img.width / 2) * scale;
-                const y = (canvas.height / 2) - (img.height / 2) * scale;
-                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
+                ctx.drawImage(img, (canvas.width / 2) - (img.width / 2) * scale, (canvas.height / 2) - (img.height / 2) * scale, img.width * scale, img.height * scale);
                 const stream = canvas.captureStream(15);
                 const track = stream.getVideoTracks()[0];
-
-                await room.localParticipant.publishTrack(track, {
-                    source: LivekitClient.Track.Source.ScreenShare,
-                    name: 'shared-document'
-                });
-
+                await room.localParticipant.publishTrack(track, { source: LivekitClient.Track.Source.ScreenShare, name: 'shared-document' });
                 showToast('✅ Image shared successfully');
-                
             } catch (err) {
                 console.error('File share error:', err);
                 showToast('❌ Failed to share image');
@@ -9669,8 +9678,7 @@ if (document.readyState === 'loading') {
         } else {
             showToast('⚠️ Please select a PDF or Image file.');
         }
-        
-        event.target.value = '';
-    }
+        event.target.value = ''; // Reset input
+    };
     
 </script>
