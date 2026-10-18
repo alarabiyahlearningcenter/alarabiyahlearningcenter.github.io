@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     // 4. Verify the class exists and is active
     const { data: classData, error: classError } = await supabase
       .from("classes")
-      .select("id, student_id, teacher_id, status")
+      .select("id, student_id, teacher_id, status, scheduled_at, duration_min")
       .eq("jitsi_room", trimmedRoom)
       .single();
 
@@ -107,6 +107,24 @@ Deno.serve(async (req) => {
         } else if (isStudent && classData.student_id === user.id) {
       isAuthorized = true;
     }
+
+        // 5.5 Time Window Check (Skip for Admins)
+        if (!isAdmin) {
+          const now = new Date().getTime();
+          const scheduledTime = new Date(classData.scheduled_at).getTime();
+          const durationMs = (classData.duration_min || 60) * 60 * 1000; // fallback to 60 mins if null
+          const endTime = scheduledTime + durationMs;
+
+          const WINDOW_BEFORE_MS = 15 * 60 * 1000; // 15 mins before
+          const WINDOW_AFTER_MS = 15 * 60 * 1000;  // 15 mins after
+
+          if (now < (scheduledTime - WINDOW_BEFORE_MS)) {
+             return new Response(JSON.stringify({ error: "Class has not started yet. You can join 15 minutes before the scheduled time." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          if (now > (endTime + WINDOW_AFTER_MS)) {
+             return new Response(JSON.stringify({ error: "This class has already ended." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
 
     if (!isAuthorized) {
       return new Response(JSON.stringify({ error: "You are not authorized to join this class" }), {
