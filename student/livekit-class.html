@@ -9581,7 +9581,6 @@ if (document.readyState === 'loading') {
         if (!file) return;
 
         if (file.type === 'application/pdf') {
-            // --- PDF LOGIC ---
             try {
                 showToast('⏳ Loading PDF Document...');
                 if (typeof pdfjsLib === 'undefined') {
@@ -9592,7 +9591,18 @@ if (document.readyState === 'loading') {
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 let currentPage = 1;
                 
-                const canvas = document.createElement('canvas');
+                // Create Canvas and APPEND to DOM (hidden) to prevent browser from pausing it
+                let canvas = document.getElementById('pdf-render-canvas');
+                if (canvas) canvas.remove();
+                
+                canvas = document.createElement('canvas');
+                canvas.id = 'pdf-render-canvas';
+                canvas.style.position = 'absolute';
+                canvas.style.opacity = '0'; // Hide it but keep it rendered
+                canvas.style.pointerEvents = 'none';
+                canvas.style.zIndex = '-1';
+                document.body.appendChild(canvas); // CRITICAL FIX: Must be in DOM
+
                 const ctx = canvas.getContext('2d');
                 
                 const renderPage = async (pageNum) => {
@@ -9600,10 +9610,17 @@ if (document.readyState === 'loading') {
                     const viewport = page.getViewport({ scale: 1.5 });
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
+                    
+                    // Fill black background
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
                     await page.render({ canvasContext: ctx, viewport: viewport }).promise;
                 };
 
                 await renderPage(currentPage);
+                
+                // Capture stream from DOM-attached canvas
                 const stream = canvas.captureStream(5);
                 const track = stream.getVideoTracks()[0];
                 
@@ -9611,15 +9628,15 @@ if (document.readyState === 'loading') {
                     source: LivekitClient.Track.Source.ScreenShare,
                     name: 'shared-document'
                 });
+                
                 showLocalScreenShare(track);
-
                 showToast(`✅ PDF Shared (Page ${currentPage}/${pdf.numPages})`);
 
                 let controls = document.getElementById('pdfControls');
                 if (!controls) {
                     controls = document.createElement('div');
                     controls.id = 'pdfControls';
-                    controls.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white p-3 rounded-xl flex items-center gap-4 z-[9999] shadow-2xl border border-gray-700';
+                    controls.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white p-3 rounded-xl flex items-center gap-4 z-[99999] shadow-2xl border border-gray-700';
                     controls.innerHTML = `
                         <button id="prevPdfPage" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">◀ Prev</button>
                         <span id="pdfPageInfo" class="font-bold text-sm">Page ${currentPage}/${pdf.numPages}</span>
@@ -9647,6 +9664,7 @@ if (document.readyState === 'loading') {
                         await room.localParticipant.unpublishTrack(track);
                         controls.remove();
                         hideLocalScreenShare();
+                        if (canvas) canvas.remove(); // Cleanup
                         showToast('⏹ PDF sharing stopped');
                     };
                 } else {
@@ -9724,6 +9742,7 @@ if (document.readyState === 'loading') {
             }
             
             track.attach(videoEl);
+            videoEl.play().catch(e => console.log("Autoplay prevented", e));
         }
     }
 
