@@ -8048,6 +8048,28 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
         object-fit: cover !important;
     }
     
+    
+    /* --- RESTORE GREEN SPEAKING BORDER --- */
+    .video-tile {
+        border: 3px solid transparent !important;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+    }
+    
+    .video-tile.speaking {
+        border: 3px solid #22c55e !important; /* Bright Green */
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.8) !important; /* Green Glow */
+    }
+
+    /* Apply to Fullscreen single tile */
+    #videoGrid.grid-1 > .video-tile {
+        border: 3px solid transparent !important;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+    }
+    
+    #videoGrid.grid-1 > .video-tile.speaking {
+        border: 3px solid #22c55e !important;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.8) !important;
+    }
     </style>
 
 <script>
