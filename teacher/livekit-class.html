@@ -297,6 +297,40 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
             pointer-events: none; /* Prevents video from blocking drag events */
         }
     
+    
+        #videoGrid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden;
+        }
+        
+        /* Force the tile inside videoGrid to fill the screen */
+        #videoGrid .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            background: black;
+        }
+
+        #videoGrid .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Use 'cover' if you want it to fill entirely */
+        }
+
+        /* Ensure floating container is hidden by default */
+        #localVideoContainer {
+            display: none;
+        }
+    
     </style>
 </head>
 
@@ -1573,6 +1607,7 @@ async function connectToRoom(url, token) {
 
     // Enable camera + mic
     await room.localParticipant.enableCameraAndMicrophone();
+        setTimeout(organizeVideos, 500);
 
     // Apply background blur if selected in prejoin
     if (selectedBg !== 'none') {
@@ -4695,6 +4730,7 @@ async function enterBreakoutRoom(breakoutId, token, url) {
     attachRoomEvents();
     await room.connect(url, token);
     await room.localParticipant.enableCameraAndMicrophone();
+        setTimeout(organizeVideos, 500);
     
     currentBreakoutId = breakoutId;
     document.getElementById('videoGrid').innerHTML = '';
@@ -4730,6 +4766,7 @@ async function returnToMainRoom() {
     attachRoomEvents();
     await room.connect(mainRoomUrl, mainRoomToken);
     await room.localParticipant.enableCameraAndMicrophone();
+        setTimeout(organizeVideos, 500);
     
     currentBreakoutId = null;
     document.getElementById('videoGrid').innerHTML = '';
@@ -7145,6 +7182,40 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
             pointer-events: none; /* Prevents video from blocking drag events */
         }
     
+    
+        #videoGrid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden;
+        }
+        
+        /* Force the tile inside videoGrid to fill the screen */
+        #videoGrid .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            background: black;
+        }
+
+        #videoGrid .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Use 'cover' if you want it to fill entirely */
+        }
+
+        /* Ensure floating container is hidden by default */
+        #localVideoContainer {
+            display: none;
+        }
+    
     </style>
 
 <style>
@@ -7383,6 +7454,40 @@ body.low-quality-mode .video-tile video { filter: brightness(.9) contrast(1.05);
             pointer-events: none; /* Prevents video from blocking drag events */
         }
     
+    
+        #videoGrid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden;
+        }
+        
+        /* Force the tile inside videoGrid to fill the screen */
+        #videoGrid .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            background: black;
+        }
+
+        #videoGrid .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Use 'cover' if you want it to fill entirely */
+        }
+
+        /* Ensure floating container is hidden by default */
+        #localVideoContainer {
+            display: none;
+        }
+    
     </style>
 
 <script>
@@ -7575,6 +7680,40 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
         }
         #localVideoContainer .video-tile {
             pointer-events: none; /* Prevents video from blocking drag events */
+        }
+    
+    
+        #videoGrid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden;
+        }
+        
+        /* Force the tile inside videoGrid to fill the screen */
+        #videoGrid .video-tile {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            background: black;
+        }
+
+        #videoGrid .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Use 'cover' if you want it to fill entirely */
+        }
+
+        /* Ensure floating container is hidden by default */
+        #localVideoContainer {
+            display: none;
         }
     
     </style>
@@ -8229,29 +8368,7 @@ if (document.readyState === 'loading') {
 })();
 
     // --- DYNAMIC LAYOUT (Full Screen vs Floating) ---
-    function organizeVideos() {
-        if (!room || !room.localParticipant) return;
-        const remoteCount = room.remoteParticipants.size;
-        const localTile = document.getElementById('tile-' + room.localParticipant.identity);
-        const videoGrid = document.getElementById('videoGrid');
-        const floatingContainer = document.getElementById('localVideoContainer');
-
-        if (!localTile) return;
-
-        if (remoteCount === 0) {
-            // Alone: Show local full screen
-            if (localTile.parentElement !== videoGrid) {
-                videoGrid.appendChild(localTile);
-            }
-            if (floatingContainer) floatingContainer.style.display = 'none';
-        } else {
-            // Others present: Local goes to floating, others in grid
-            if (floatingContainer && localTile.parentElement !== floatingContainer) {
-                floatingContainer.appendChild(localTile);
-            }
-            if (floatingContainer) floatingContainer.style.display = 'block';
-        }
-    }
+    
 
     // --- DRAG LOGIC FOR FLOATING VIDEO ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -8310,4 +8427,31 @@ if (document.readyState === 'loading') {
         container.addEventListener('mousedown', startDrag);
         container.addEventListener('touchstart', startDrag, { passive: false });
     });
+
+    function organizeVideos() {
+        if (!room || !room.localParticipant) return;
+        const remoteCount = room.remoteParticipants.size;
+        const localTile = document.getElementById('tile-' + room.localParticipant.identity);
+        const videoGrid = document.getElementById('videoGrid');
+        const floatingContainer = document.getElementById('localVideoContainer');
+
+        if (!localTile) return;
+
+        if (remoteCount === 0) {
+            // Alone: Local video in main grid full screen
+            if (localTile.parentElement !== videoGrid) {
+                videoGrid.appendChild(localTile);
+            }
+            if (floatingContainer) floatingContainer.style.display = 'none';
+        } else {
+            // Others present: Local video floats
+            if (floatingContainer) {
+                if (localTile.parentElement !== floatingContainer) {
+                    floatingContainer.appendChild(localTile);
+                }
+                floatingContainer.style.display = 'block';
+            }
+        }
+    }
+    
     </script>
