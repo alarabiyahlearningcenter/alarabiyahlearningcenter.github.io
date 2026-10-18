@@ -415,6 +415,13 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
     }
     
     </style>
+
+    <!-- PDF.js for Document Sharing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
 </head>
 
 <body>
@@ -9536,55 +9543,134 @@ if (document.readyState === 'loading') {
         const file = event.target.files[0];
         if (!file) return;
 
-        // For now, we only support Image rendering to Canvas for sharing
-        if (!file.type.startsWith('image/')) {
-            showToast('⚠️ Please select an Image file (JPG/PNG) for mobile sharing.');
-            return;
+        const fileType = file.type;
+        
+        if (fileType === 'application/pdf') {
+            // --- PDF SHARING LOGIC ---
+            try {
+                showToast('⏳ Loading PDF Document...');
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let currentPage = 1;
+                
+                // Create Canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Function to render a specific page
+                const renderPage = async (pageNum) => {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    const renderContext = {
+                        canvasContext: ctx,
+                        viewport: viewport
+                    };
+                    await page.render(renderContext).promise;
+                };
+
+                // Render first page
+                await renderPage(currentPage);
+
+                // Start Streaming Canvas
+                const stream = canvas.captureStream(5); // 5 FPS is enough for documents
+                const track = stream.getVideoTracks()[0];
+                
+                await room.localParticipant.publishTrack(track, {
+                    source: LivekitClient.Track.Source.ScreenShare,
+                    name: 'shared-document'
+                });
+
+                showToast(`✅ PDF Shared (Page ${currentPage}/${pdf.numPages})`);
+
+                // Show PDF Controls
+                let controls = document.getElementById('pdfControls');
+                if (!controls) {
+                    controls = document.createElement('div');
+                    controls.id = 'pdfControls';
+                    controls.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white p-3 rounded-xl flex items-center gap-4 z-[9999] shadow-2xl border border-gray-700';
+                    controls.innerHTML = `
+                        <button id="prevPdfPage" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">◀ Prev</button>
+                        <span id="pdfPageInfo" class="font-bold text-sm">Page ${currentPage}/${pdf.numPages}</span>
+                        <button id="nextPdfPage" class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition">Next ▶</button>
+                        <button id="stopPdfShare" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition ml-2">Stop</button>
+                    `;
+                    document.body.appendChild(controls);
+
+                    // Pagination Events
+                    document.getElementById('prevPdfPage').onclick = async () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            await renderPage(currentPage);
+                            document.getElementById('pdfPageInfo').innerText = `Page ${currentPage}/${pdf.numPages}`;
+                        }
+                    };
+                    document.getElementById('nextPdfPage').onclick = async () => {
+                        if (currentPage < pdf.numPages) {
+                            currentPage++;
+                            await renderPage(currentPage);
+                            document.getElementById('pdfPageInfo').innerText = `Page ${currentPage}/${pdf.numPages}`;
+                        }
+                    };
+                    document.getElementById('stopPdfShare').onclick = async () => {
+                        track.stop();
+                        await room.localParticipant.unpublishTrack(track);
+                        controls.remove();
+                        showToast('⏹ PDF sharing stopped');
+                    };
+                } else {
+                    controls.style.display = 'flex';
+                }
+
+            } catch (err) {
+                console.error('PDF share error:', err);
+                showToast('❌ Failed to load PDF');
+            }
+        } else if (fileType.startsWith('image/')) {
+            // --- IMAGE SHARING LOGIC ---
+            try {
+                showToast('⏳ Preparing image to share...');
+                const img = new Image();
+                img.src = URL.createObjectURL(file);
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = 1280;
+                canvas.height = 720;
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = "black";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                const x = (canvas.width / 2) - (img.width / 2) * scale;
+                const y = (canvas.height / 2) - (img.height / 2) * scale;
+                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+                const stream = canvas.captureStream(15);
+                const track = stream.getVideoTracks()[0];
+
+                await room.localParticipant.publishTrack(track, {
+                    source: LivekitClient.Track.Source.ScreenShare,
+                    name: 'shared-document'
+                });
+
+                showToast('✅ Image shared successfully');
+                
+            } catch (err) {
+                console.error('File share error:', err);
+                showToast('❌ Failed to share image');
+            }
+        } else {
+            showToast('⚠️ Please select a PDF or Image file.');
         }
-
-        try {
-            showToast('⏳ Preparing file to share...');
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-            });
-
-            // Create a canvas to stream the image as a video track
-            const canvas = document.createElement('canvas');
-            canvas.width = 1280;
-            canvas.height = 720;
-            const ctx = canvas.getContext('2d');
-
-            // Draw image on black background (Maintain aspect ratio)
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-            const x = (canvas.width / 2) - (img.width / 2) * scale;
-            const y = (canvas.height / 2) - (img.height / 2) * scale;
-            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
-            // Capture stream from canvas
-            const stream = canvas.captureStream(15); // 15 FPS is smooth for images
-            const track = stream.getVideoTracks()[0];
-
-            // Publish the track to LiveKit
-            await room.localParticipant.publishTrack(track, {
-                source: LivekitClient.Track.Source.ScreenShare,
-                name: 'shared-document'
-            });
-
-            showToast('✅ Document shared successfully');
-            
-            // Clean up input
-            event.target.value = '';
-
-        } catch (err) {
-            console.error('File share error:', err);
-            showToast('❌ Failed to share file');
-        }
+        
+        event.target.value = '';
     }
     
 </script>
