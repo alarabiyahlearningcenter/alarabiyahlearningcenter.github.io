@@ -8128,6 +8128,46 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
         font-weight: 600 !important;
         letter-spacing: 0.5px;
     }
+    
+    /* ==================================================== */
+    /* PERFECT BORDER HUG & CONTROL BAR FIX                 */
+    /* ==================================================== */
+
+    /* 1. Remove border from the video element itself */
+    .video-tile.speaking video, 
+    #videoGrid.grid-1 > .video-tile.speaking video {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* 2. Apply border to the container so it hugs the video perfectly */
+    .video-tile.speaking, 
+    #videoGrid.grid-1 > .video-tile.speaking {
+        border: 4px solid #22c55e !important;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.5) !important; /* Outer glow */
+        background-color: black !important;
+        border-radius: 0 !important;
+    }
+
+    /* 3. Ensure video fills the container completely (removes black gap) */
+    .video-tile video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* 'cover' ensures no black bars */
+    }
+
+    /* 4. Fix the (?) button overlap */
+    /* Push the control bar slightly up to make room for the (?) button */
+    .control-bar {
+        bottom: 24px !important; /* Moved up from 16px */
+    }
+    
+    /* Ensure the (?) button stays on the far left without overlapping */
+    #helpBtn, .help-btn, [title*="Help"] {
+        z-index: 100 !important; 
+        bottom: 24px !important; 
+        left: 12px !important;
+    }
     </style>
 
 <script>
