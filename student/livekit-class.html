@@ -8489,6 +8489,83 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
     .control-bar > div {
         flex-shrink: 0 !important;
     }
+    
+    /* ==================================================== */
+    /* PREMIUM CONTROL BAR POLISH                           */
+    /* ==================================================== */
+
+    /* 1. Standardizing Button Shapes & Hover Effects */
+    .control-bar .btn-icon {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important;
+        color: #e2e8f0 !important;
+        transition: all 0.2s ease-in-out !important;
+        cursor: pointer !important;
+    }
+
+    .control-bar .btn-icon:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        transform: scale(1.05) !important;
+    }
+
+    /* 2. Premium Disabled State (Mute / Camera Off) */
+    .control-bar .btn-icon.disabled {
+        background: rgba(239, 68, 68, 0.2) !important; /* Light red background */
+        color: #ef4444 !important; /* Red icon */
+    }
+
+    /* 3. Styling the "Islamic Tools" Emoji to match SVGs */
+    #islamicBtn span {
+        font-size: 20px !important;
+        line-height: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #e2e8f0 !important;
+        padding-bottom: 2px !important;
+    }
+
+    /* 4. The Red Leave Button (Make it stand out) */
+    #leaveBtn {
+        width: 50px !important; /* Wider pill shape */
+        background: #ef4444 !important; /* Solid Red */
+        color: white !important;
+        border-radius: 25px !important;
+        margin-left: 8px !important;
+    }
+    #leaveBtn:hover {
+        background: #dc2626 !important;
+        transform: scale(1.05) !important;
+    }
+
+    /* 5. Divider Styling */
+    .control-divider {
+        width: 1px !important;
+        height: 24px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        margin: 0 4px !important;
+    }
+
+    /* 6. Notification Badges (Chat & Participants) */
+    .control-bar span[id$="Badge"], 
+    .control-bar span[id$="Count"] {
+        background: #ef4444 !important; /* Red badge */
+        color: white !important;
+        font-weight: bold !important;
+        border: 2px solid #0f1714 !important; /* Match control bar bg */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        min-width: 20px !important;
+        height: 20px !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
     </style>
 
 <script>
