@@ -8435,6 +8435,60 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
     }
+    
+    /* ==================================================== */
+    /* ULTIMATE CONTROL BAR FIX (SCROLLABLE & LEFT ALIGNED) */
+    /* ==================================================== */
+
+    /* 1. Hide the (?) button completely */
+    .absolute.bottom-3.left-3,
+    #helpBtn,
+    .help-btn {
+        display: none !important;
+    }
+
+    /* 2. Fix the Control Bar Scroll & Alignment */
+    .control-bar {
+        position: fixed !important;
+        bottom: 16px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        
+        /* Crucial fix for missing left buttons */
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important; /* Starts from left, prevents cutting off */
+        align-items: center !important;
+        
+        gap: 8px !important;
+        padding: 10px 16px !important;
+        background: rgba(15, 23, 20, 0.9) !important;
+        border-radius: 50px !important;
+        width: max-content !important;
+        max-width: 95vw !important;
+        
+        /* Enable smooth scrolling */
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        z-index: 9999 !important;
+    }
+
+    /* 3. Hide the scrollbar for a clean look */
+    .control-bar::-webkit-scrollbar {
+        display: none !important;
+    }
+    .control-bar {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
+
+    /* 4. Ensure the buttons don't shrink or squash */
+    .control-bar > button,
+    .control-bar > div {
+        flex-shrink: 0 !important;
+    }
     </style>
 
 <script>
