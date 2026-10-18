@@ -9500,4 +9500,91 @@ if (document.readyState === 'loading') {
         }
     });
     
+
+    // --- PREMIUM SHARE LOGIC ---
+    
+    // Override the default screen share button to open our new menu
+    const oldScreenBtn = document.getElementById('screenBtn');
+    if(oldScreenBtn) {
+        const newScreenBtn = oldScreenBtn.cloneNode(true);
+        oldScreenBtn.parentNode.replaceChild(newScreenBtn, oldScreenBtn);
+        newScreenBtn.addEventListener('click', () => {
+            const modal = document.getElementById('premiumShareModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        });
+    }
+
+    function handlePremiumShare(type) {
+        document.getElementById('premiumShareModal').classList.add('hidden');
+        document.getElementById('premiumShareModal').classList.remove('flex');
+        
+        if (type === 'screen') {
+            // Try direct screen share (works on Android mostly)
+            if(window.startScreenShare) {
+                window.startScreenShare('screen');
+            }
+        } else if (type === 'whiteboard') {
+            if(window.openWhiteboard) window.openWhiteboard();
+        } else if (type === 'camera') {
+            // Just flip to rear camera
+            document.getElementById('flipCamBtn')?.click();
+        }
+    }
+
+    async function handleFileShare(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // For now, we only support Image rendering to Canvas for sharing
+        if (!file.type.startsWith('image/')) {
+            showToast('⚠️ Please select an Image file (JPG/PNG) for mobile sharing.');
+            return;
+        }
+
+        try {
+            showToast('⏳ Preparing file to share...');
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+
+            // Create a canvas to stream the image as a video track
+            const canvas = document.createElement('canvas');
+            canvas.width = 1280;
+            canvas.height = 720;
+            const ctx = canvas.getContext('2d');
+
+            // Draw image on black background (Maintain aspect ratio)
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+            const x = (canvas.width / 2) - (img.width / 2) * scale;
+            const y = (canvas.height / 2) - (img.height / 2) * scale;
+            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+            // Capture stream from canvas
+            const stream = canvas.captureStream(15); // 15 FPS is smooth for images
+            const track = stream.getVideoTracks()[0];
+
+            // Publish the track to LiveKit
+            await room.localParticipant.publishTrack(track, {
+                source: LivekitClient.Track.Source.ScreenShare,
+                name: 'shared-document'
+            });
+
+            showToast('✅ Document shared successfully');
+            
+            // Clean up input
+            event.target.value = '';
+
+        } catch (err) {
+            console.error('File share error:', err);
+            showToast('❌ Failed to share file');
+        }
+    }
+    
 </script>
