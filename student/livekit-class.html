@@ -8394,6 +8394,47 @@ window.openWhiteboard = window.openWhiteboard || openWhiteboard;
     .control-bar > div {
         flex-shrink: 0 !important;
     }
+    
+    /* ==================================================== */
+    /* FIX: RESTORE ORIGINAL CONTROL BAR & HIDE (?) BUTTON  */
+    /* ==================================================== */
+
+    /* 1. Completely hide the (?) button */
+    .absolute.bottom-3.left-3 {
+        display: none !important;
+    }
+
+    /* 2. Restore Control Bar to perfectly centered and scrollable */
+    .control-bar {
+        position: fixed !important;
+        bottom: 16px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important; /* Back to original centering */
+        width: max-content !important;
+        max-width: 95vw !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background: rgba(15, 23, 20, 0.9) !important;
+        padding: 10px 16px !important;
+        border-radius: 50px !important;
+        overflow-x: auto !important; /* Enable scroll if needed */
+        z-index: 9999 !important;
+        
+        /* Reset the broken margins */
+        margin: 0 !important;
+        right: auto !important;
+    }
+
+    /* Ensure the scrollbar is hidden but scrolling works */
+    .control-bar::-webkit-scrollbar {
+        display: none !important;
+    }
+    .control-bar {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
     </style>
 
 <script>
