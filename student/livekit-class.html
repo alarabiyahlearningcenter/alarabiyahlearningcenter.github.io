@@ -10725,3 +10725,75 @@ window.setupPresenterControls = function(totalPages) {
     };
 };
 </script>
+
+
+    <script>
+    // =====================================================================
+    // CLEANUP SCRIPT: REMOVE ALL OLD LISTENERS & APPLY ONE PERFECT FIX
+    // =====================================================================
+    setTimeout(() => {
+        // Ensure room is global
+        if (typeof room !== 'undefined' && room !== null) {
+            window.room = room;
+        }
+
+        if (window.room) {
+            // 1. 🔥 THE MAGIC: Remove ALL previous DataReceived listeners
+            window.room.off(livekitClient.RoomEvent.DataReceived);
+            console.log("🔥 Cleared all 12 old DataReceived listeners!");
+
+            // 2. Attach ONE perfect listener for PDF
+            window.room.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
+                try {
+                    const data = JSON.parse(new TextDecoder().decode(payload));
+                    
+                    if (data.type === 'pdf_share') {
+                        // Show a visual indicator (since we can't check console easily)
+                        showToast('📄 Teacher shared a document');
+                        
+                        // Load PDF
+                        const loadingTask = pdfjsLib.getDocument(data.url);
+                        window.currentPdfDoc = await loadingTask.promise;
+                        window.isPdfShared = true;
+                        
+                        // Render PDF
+                        window.renderLocalPdf(window.currentPdfDoc, 1);
+                        
+                        // Float the teacher's video
+                        const remoteTiles = document.querySelectorAll('.video-tile:not([id^="tile-'+window.room.localParticipant.identity+'"])');
+                        remoteTiles.forEach(tile => {
+                            tile.style.position = 'absolute';
+                            tile.style.bottom = '90px';
+                            tile.style.right = '15px';
+                            tile.style.width = '100px';
+                            tile.style.height = '140px';
+                            tile.style.zIndex = '100001';
+                            tile.style.borderRadius = '8px';
+                            tile.style.overflow = 'hidden';
+                        });
+
+                    } else if (data.type === 'pdf_page' && window.isPdfShared) {
+                        window.renderLocalPdf(window.currentPdfDoc, data.page);
+                    } else if (data.type === 'pdf_stop') {
+                        const container = document.getElementById('pdf-local-viewer');
+                        if (container) container.remove();
+                        window.isPdfShared = false;
+                        window.currentPdfDoc = null;
+                        if (typeof updateGridLayout === 'function') updateGridLayout();
+                        showToast('⏹ Document closed');
+                    }
+                } catch (e) {
+                    console.error("Data channel error:", e);
+                }
+            });
+
+            // 3. Force layout update when teacher joins
+            window.room.on(livekitClient.RoomEvent.ParticipantConnected, () => {
+                setTimeout(() => {
+                    if (typeof updateGridLayout === 'function') updateGridLayout();
+                }, 1000);
+            });
+        }
+    }, 3000); // Wait 3s for room to initialize
+    </script>
+    
