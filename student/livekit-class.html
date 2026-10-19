@@ -10293,3 +10293,86 @@ if (typeof room !== 'undefined' && room) {
     });
 }
 </script>
+
+<style>
+/* =====================================================================
+   PREMIUM LAYOUT FIX: KEEP BARS VISIBLE & FLOAT STUDENT VIDEO
+   ===================================================================== */
+#pdf-local-viewer {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    z-index: 100 !important; /* Below top bar (9999) and bottom bar (9999) */
+    background: #111 !important;
+    display: flex; justify-content: center; align-items: center;
+}
+#pdf-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+}
+/* Float all remote participants (students/teachers) when PDF is active */
+.pdf-active .video-tile:not(#tile-local) {
+    position: absolute !important;
+    bottom: 90px !important;
+    right: 15px !important;
+    width: 100px !important;
+    height: 140px !important;
+    z-index: 200 !important; /* Above PDF */
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+</style>
+
+<script>
+// =====================================================================
+// PREMIUM LAYOUT OVERRIDES
+// =====================================================================
+window.renderLocalPdf = async function(pdfDoc, pageNum) {
+    window.currentPdfPage = pageNum;
+    let container = document.getElementById('pdf-local-viewer');
+    
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'pdf-local-viewer';
+        container.innerHTML = '<canvas id="pdf-canvas"></canvas>';
+        
+        // Hide ONLY local user's camera tile
+        const localTile = document.getElementById('tile-' + room.localParticipant.identity);
+        if (localTile) localTile.style.setProperty('display', 'none', 'important');
+        
+        // Append to videoGrid so it stays between top and bottom bars
+        const grid = document.getElementById('videoGrid');
+        grid.appendChild(container);
+        
+        // Add class to float remote videos
+        grid.classList.add('pdf-active');
+    }
+    
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const page = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 2.0 }); 
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+};
+
+window.closeLocalPdf = function() {
+    const container = document.getElementById('pdf-local-viewer');
+    if (container) container.remove();
+    
+    const grid = document.getElementById('videoGrid');
+    grid.classList.remove('pdf-active');
+    
+    const localTile = document.getElementById('tile-' + room.localParticipant.identity);
+    if (localTile) localTile.style.removeProperty('display');
+    
+    const controls = document.getElementById('pdfControls');
+    if (controls) controls.remove();
+};
+</script>
