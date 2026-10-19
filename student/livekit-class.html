@@ -10150,7 +10150,7 @@ window.closeLocalPdf = function() {
 };
 
 // 3. Premium Top Controls (Positioned at Top)
-window.setupPresenterControls = function(totalPages) {
+window.oldSetupPresenterControls1 = function(totalPages) {
     let controls = document.getElementById('pdfControls');
     if (controls) controls.remove();
 
@@ -10400,7 +10400,7 @@ window.closeLocalPdf = function() {
 
 <script>
 // Override the setupPresenterControls function
-window.setupPresenterControls = function(totalPages) {
+window.oldSetupPresenterControls2 = function(totalPages) {
     let controls = document.getElementById('pdfControls');
     if (controls) controls.remove();
 
