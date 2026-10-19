@@ -10053,7 +10053,7 @@ async function syncPage(pageNum) {
 
 // 4. STUDENT: Listen for Data Channel messages
 if (typeof room !== 'undefined' && room) {
-    // room.on(livekitClient.RoomEvent.DataReceived_DISABLED, async (payload, participant, kind, topic) => {
+    // // room.on(livekitClient.RoomEvent.DataReceived_DISABLED, async (payload, participant, kind, topic) => {
         try {
             const data = JSON.parse(new TextDecoder().decode(payload));
             
@@ -10267,7 +10267,7 @@ window.handleFileShare = async function(event) {
 // 5. Override the DataChannel logic to ensure student receives it perfectly
 if (typeof room !== 'undefined' && room) {
     // Remove old listeners if possible (LiveKit doesn't support removing anonymous functions easily, so we just add a clean one)
-    // room.on(livekitClient.RoomEvent.DataReceived_DISABLEDroom.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
+    // // room.on(livekitClient.RoomEvent.DataReceived_DISABLED// room.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
         try {
             const data = JSON.parse(new TextDecoder().decode(payload));
             
@@ -10378,26 +10378,7 @@ window.closeLocalPdf = function() {
 };
 </script>
 
-<style>
-/* =====================================================================
-   PREMIUM DRAGGABLE & AUTO-HIDE CONTROLS
-   ===================================================================== */
-#pdfControls {
-    transition: opacity 0.4s ease-in-out !important;
-    cursor: grab;
-}
-#pdfControls:active {
-    cursor: grabbing;
-}
-#pdfControls.hidden-ui {
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-/* Make buttons unselectable while dragging */
-#pdfControls button, #pdfControls input, #pdfControls span {
-    user-select: none;
-}
-</style>
+
 
 <script>
 // Override the setupPresenterControls function
@@ -10743,7 +10724,7 @@ window.setupPresenterControls = function(totalPages) {
             console.log("🔥 Cleared all 12 old DataReceived listeners!");
 
             // 2. Attach ONE perfect listener for PDF
-            window.room.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
+            window.// room.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
                 try {
                     const data = JSON.parse(new TextDecoder().decode(payload));
                     
