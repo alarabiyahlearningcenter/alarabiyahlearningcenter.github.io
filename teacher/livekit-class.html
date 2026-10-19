@@ -422,6 +422,7 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     
+<script>window.pdfjsLib = pdfjsLib;</script>
 </head>
 
 <body>
@@ -10052,11 +10053,11 @@ async function syncPage(pageNum) {
 
 // 4. STUDENT: Listen for Data Channel messages
 if (typeof room !== 'undefined' && room) {
-    room.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
+    // room.on(livekitClient.RoomEvent.DataReceived_DISABLED, async (payload, participant, kind, topic) => {
         try {
             const data = JSON.parse(new TextDecoder().decode(payload));
             
-            if (data.type === 'pdf_share') {
+            if (false && data.type === 'pdf_share') // DISABLED OLD LOGIC {
                 showToast('📄 Teacher shared a document');
                 const loadingTask = pdfjsLib.getDocument(data.url);
                 currentPdfDoc = await loadingTask.promise;
@@ -10266,11 +10267,11 @@ window.handleFileShare = async function(event) {
 // 5. Override the DataChannel logic to ensure student receives it perfectly
 if (typeof room !== 'undefined' && room) {
     // Remove old listeners if possible (LiveKit doesn't support removing anonymous functions easily, so we just add a clean one)
-    room.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
+    // room.on(livekitClient.RoomEvent.DataReceived_DISABLEDroom.on(livekitClient.RoomEvent.DataReceived, async (payload, participant, kind, topic) => {
         try {
             const data = JSON.parse(new TextDecoder().decode(payload));
             
-            if (data.type === 'pdf_share') {
+            if (false && data.type === 'pdf_share') // DISABLED OLD LOGICif (data.type === 'pdf_share') {
                 showToast('📄 Teacher shared a document');
                 const loadingTask = pdfjsLib.getDocument(data.url);
                 window.currentPdfDoc = await loadingTask.promise;
