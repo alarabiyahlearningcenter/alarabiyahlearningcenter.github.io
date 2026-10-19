@@ -10554,3 +10554,173 @@ window.setupPresenterControls = function(totalPages) {
     };
 };
 </script>
+
+<script>
+// =====================================================================
+// FINAL PREMIUM CONTROLS: RIGHT SIDE, DRAGGABLE, AUTO-HIDE
+// =====================================================================
+window.setupPresenterControls = function(totalPages) {
+    let controls = document.getElementById('pdfControls');
+    if (controls) controls.remove();
+
+    controls = document.createElement('div');
+    controls.id = 'pdfControls';
+    
+    // INITIAL POSITION: Right side, slightly below top bar
+    // Added transition for smooth auto-hide
+    controls.className = 'fixed top-24 right-4 bg-black/70 backdrop-blur-xl text-white px-3 py-2 rounded-full flex items-center gap-2 z-[100000] shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-white/20 transition-opacity duration-500 cursor-grab active:cursor-grabbing';
+    
+    controls.innerHTML = `
+        <!-- Drag Handle -->
+        <div id="pdfDragHandle" class="px-1 text-gray-400 hover:text-white cursor-grab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9h8M8 15h8"/></svg>
+        </div>
+
+        <button id="prevPdfPage" class="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition"><span class="text-sm">◀</span></button>
+        
+        <div class="flex items-center gap-1 text-sm font-medium">
+            <input type="number" id="pdfJumpInput" value="${window.currentPdfPage}" min="1" max="${totalPages}" class="w-12 bg-black/50 border border-white/30 rounded-md px-1 py-1 text-center text-white outline-none focus:border-green-400 text-sm">
+            <span class="text-gray-400 text-xs">/ ${totalPages}</span>
+        </div>
+
+        <button id="nextPdfPage" class="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition"><span class="text-sm">▶</span></button>
+        
+        <div class="w-px h-5 bg-white/20 mx-1"></div>
+        
+        <button id="stopPdfShare" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-full transition text-xs font-bold shadow-lg">Stop</button>
+    `;
+    document.body.appendChild(controls);
+
+    // --- 1. AUTO HIDE LOGIC ---
+    let hideTimeout;
+    const resetAutoHide = () => {
+        controls.style.opacity = '1';
+        controls.style.pointerEvents = 'auto';
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+            // Don't hide if user is typing in the input box
+            if (document.activeElement !== document.getElementById('pdfJumpInput')) {
+                controls.style.opacity = '0.2'; // Fade out but keep visible slightly
+            }
+        }, 3000); // 3 seconds
+    };
+    
+    // Reset timer on interaction
+    controls.addEventListener('mousemove', resetAutoHide);
+    controls.addEventListener('touchstart', resetAutoHide);
+    controls.addEventListener('click', resetAutoHide);
+    
+    // Show fully when hovering over it
+    controls.addEventListener('mouseenter', () => {
+        controls.style.opacity = '1';
+        controls.style.pointerEvents = 'auto';
+        clearTimeout(hideTimeout);
+    });
+    controls.addEventListener('mouseleave', resetAutoHide);
+
+    // Start the timer initially
+    resetAutoHide();
+
+    // Show controls when tapping the PDF
+    const pdfViewer = document.getElementById('pdf-local-viewer');
+    if (pdfViewer) {
+        pdfViewer.addEventListener('click', resetAutoHide);
+        pdfViewer.addEventListener('touchstart', resetAutoHide);
+    }
+
+    // --- 2. DRAGGABLE LOGIC ---
+    let isDragging = false;
+    let startX, startY, initialLeft, initialTop;
+
+    const startDrag = (e) => {
+        // Only drag if clicking the handle or empty space, not buttons
+        if (e.target.closest('button') || e.target.tagName === 'INPUT') return; 
+        
+        isDragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const rect = controls.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+        startX = clientX;
+        startY = clientY;
+
+        // Remove right constraint to allow free movement
+        controls.style.right = 'auto';
+        controls.style.left = initialLeft + 'px';
+        controls.style.top = initialTop + 'px';
+
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('touchmove', onDrag, { passive: false });
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
+    };
+
+    const onDrag = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        controls.style.left = (initialLeft + clientX - startX) + 'px';
+        controls.style.top = (initialTop + clientY - startY) + 'px';
+    };
+
+    const stopDrag = () => {
+        isDragging = false;
+        document.removeEventListener('mousemove', onDrag);
+        document.removeEventListener('touchmove', onDrag);
+        document.removeEventListener('mouseup', stopDrag);
+        document.removeEventListener('touchend', stopDrag);
+    };
+
+    controls.addEventListener('mousedown', startDrag);
+    controls.addEventListener('touchstart', startDrag, { passive: false });
+
+    // --- 3. BUTTON LOGIC ---
+    const jumpInput = document.getElementById('pdfJumpInput');
+    jumpInput.addEventListener('change', async (e) => {
+        let page = parseInt(e.target.value);
+        if (page >= 1 && page <= totalPages) {
+            window.currentPdfPage = page;
+            await renderLocalPdf(window.currentPdfDoc, page);
+            syncPage(page);
+        } else {
+            e.target.value = window.currentPdfPage;
+        }
+        resetAutoHide();
+    });
+
+    document.getElementById('prevPdfPage').onclick = async () => {
+        if (window.currentPdfPage > 1) {
+            window.currentPdfPage--;
+            jumpInput.value = window.currentPdfPage;
+            await renderLocalPdf(window.currentPdfDoc, window.currentPdfPage);
+            syncPage(window.currentPdfPage);
+        }
+        resetAutoHide();
+    };
+    
+    document.getElementById('nextPdfPage').onclick = async () => {
+        if (window.currentPdfPage < totalPages) {
+            window.currentPdfPage++;
+            jumpInput.value = window.currentPdfPage;
+            await renderLocalPdf(window.currentPdfDoc, window.currentPdfPage);
+            syncPage(window.currentPdfPage);
+        }
+        resetAutoHide();
+    };
+    
+    document.getElementById('stopPdfShare').onclick = async () => {
+        clearTimeout(hideTimeout);
+        closeLocalPdf();
+        window.isPdfShared = false;
+        await room.localParticipant.publishData(
+            new TextEncoder().encode(JSON.stringify({ type: 'pdf_stop' })), 
+            { reliable: true }
+        );
+        showToast('⏹ PDF sharing stopped');
+    };
+};
+</script>
