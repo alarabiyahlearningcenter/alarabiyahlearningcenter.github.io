@@ -12598,3 +12598,164 @@ window.handleFileShare = async function(event) {
     event.target.value = '';
 };
 </script>
+
+
+<style>
+/* =====================================================================
+   FINAL LAYOUT: NO JS NEEDED FOR HIDING CAMERA
+   ===================================================================== */
+#videoGrid {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+#pdf-viewer {
+    position: fixed !important; 
+    top: 60px !important; /* Leaves room for Top Header */
+    bottom: 80px !important; /* Leaves room for Bottom Control Bar */
+    left: 0 !important;
+    width: 100vw !important; 
+    height: calc(100vh - 140px) !important;
+    z-index: 1000 !important; /* Above video, below controls */
+    background: #111 !important;
+    display: flex !important; 
+    justify-content: center !important; 
+    align-items: center !important;
+}
+
+#pdf-canvas {
+    width: 100% !important; 
+    height: 100% !important; 
+    object-fit: contain !important;
+}
+
+/* HIDE the local camera completely using CSS :has selector */
+body.pdf-active .video-tile:has(video[data-lk-local-participant="true"]),
+body.pdf-active #tile-local,
+body.pdf-active .video-tile[data-is-local="true"] {
+    display: none !important;
+}
+
+/* FLOAT the remote camera (Student/Teacher) */
+body.pdf-active .video-tile:not([data-is-local="true"]):not(:has(video[data-lk-local-participant="true"])) {
+    position: fixed !important; 
+    bottom: 90px !important; 
+    right: 15px !important;
+    width: 100px !important; 
+    height: 140px !important;
+    z-index: 1001 !important; 
+    border-radius: 8px !important; 
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important; 
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// ULTIMATE CRASH-PROOF LOGIC (Null checks everywhere)
+// =====================================================================
+
+window.renderPdfFromUrl = async function(url, pageNum) {
+    window.currentPdfPage = pageNum;
+    let container = document.getElementById('pdf-viewer');
+    
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'pdf-viewer';
+        container.innerHTML = '<canvas id="pdf-canvas"></canvas>';
+        
+        // Add class to trigger CSS hide
+        document.body.classList.add('pdf-active');
+        
+        // Append to body to ensure fixed positioning works
+        document.body.appendChild(container);
+    }
+    
+    if (url && !window.currentPdfDoc) {
+        const loadingTask = pdfjsLib.getDocument(url);
+        window.currentPdfDoc = await loadingTask.promise;
+    }
+    
+    if (!window.currentPdfDoc) return;
+
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    try {
+        const page = await window.currentPdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.0 }); 
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    } catch (e) { 
+        console.error("Render error:", e); 
+    }
+};
+
+window.closePdf = function() {
+    const container = document.getElementById('pdf-viewer');
+    if (container) container.remove();
+    document.body.classList.remove('pdf-active');
+    const controls = document.getElementById('pdfControls');
+    if (controls) controls.remove();
+    window.currentPdfDoc = null;
+    window.isPdfShared = false;
+};
+
+window.handleFileShare = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const modal = document.getElementById('premiumShareModal');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+    if (file.type === 'application/pdf') {
+        try {
+            showToast('⏳ Loading PDF locally...');
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            
+            window.currentPdfDoc = pdf;
+            window.currentPdfPage = 1;
+            window.isPdfShared = true;
+
+            // Render locally (No room dependency)
+            await window.renderPdfFromUrl(null, 1);
+            window.setupPresenterControls(pdf.numPages);
+            showToast('✅ PDF Loaded! Syncing...');
+
+            // Background Upload
+            setTimeout(() => {
+                const fileName = 'pdf_' + Date.now() + '_' + (window.room ? window.room.name : 'class') + '.pdf';
+                
+                sb.storage.from('shared-documents').upload(fileName, file).then(({data, error}) => {
+                    if (error) {
+                        showToast('❌ Upload Error: ' + error.message);
+                        return;
+                    }
+                    
+                    const { data: urlData } = sb.storage.from('shared-documents').getPublicUrl(fileName);
+                    window.presenterPdfUrl = urlData.publicUrl;
+
+                    // Safely access room
+                    if (window.room && window.room.localParticipant) {
+                        window.room.localParticipant.publishData(
+                            new TextEncoder().encode(JSON.stringify({ type: 'pdf_share', url: window.presenterPdfUrl, totalPages: pdf.numPages })), 
+                            { reliable: true }
+                        );
+                    }
+                    showToast('✅ PDF Shared!');
+                }).catch(err => {
+                    showToast('❌ Network Error: ' + err.message);
+                });
+            }, 500);
+
+        } catch (err) {
+            console.error('Local PDF Error:', err);
+            showToast('❌ Failed to load PDF.');
+        }
+    }
+    event.target.value = '';
+};
+</script>
