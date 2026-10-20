@@ -10724,3 +10724,37 @@ window.setupPresenterControls = function(totalPages) {
     };
 };
 </script>
+
+<script>
+// =====================================================================
+// FIX 2: AUTO LAYOUT UPDATE WHEN NEW PARTICIPANT JOINS
+// =====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait for the video grid to be available
+    setTimeout(() => {
+        const videoGrid = document.getElementById('videoGrid');
+        
+        if (videoGrid) {
+            // Create an observer instance
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    // If a child is added or removed (new video tile)
+                    if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
+                        // Small delay to ensure DOM is fully painted before calculating grid
+                        setTimeout(() => {
+                            if (typeof updateGridLayout === 'function') {
+                                updateGridLayout();
+                                console.log("✅ Grid layout updated automatically via MutationObserver");
+                            }
+                        }, 300);
+                    }
+                });
+            });
+
+            // Start observing the grid for child list changes
+            observer.observe(videoGrid, { childList: true });
+            console.log("👀 MutationObserver active on #videoGrid");
+        }
+    }, 2000); // Wait 2s for LiveKit to initialize
+});
+</script>
