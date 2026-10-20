@@ -1648,7 +1648,7 @@ async function connectToRoom(url, token) {
         console.log('Disconnected:', reason);
         clearInterval(classTimerInterval);
         showToast('⚠️ Disconnected from class');
-        setTimeout(() => window.location.href = 'live-class.html', 2000);
+        setTimeout(() => window.location.href = 'dashboard.html', 2000);
       })
       .on(LivekitClient.RoomEvent.Reconnecting, () => {
         showToast('🔄 Reconnecting...');
@@ -2416,7 +2416,7 @@ async function confirmLeave() {
   });
   
   clearInterval(classTimerInterval);
-  window.location.href = 'live-class.html';
+  window.location.href = 'dashboard.html';
 }
 
 // Warn on page unload
@@ -4527,7 +4527,7 @@ const MAX_RECONNECT = 5;
 async function attemptReconnect() {
   if (reconnectAttempts >= MAX_RECONNECT) {
     showToast('❌ Failed to reconnect. Please rejoin.');
-    setTimeout(() => window.location.href = 'live-class.html', 2000);
+    setTimeout(() => window.location.href = 'dashboard.html', 2000);
     return;
   }
   reconnectAttempts++;
