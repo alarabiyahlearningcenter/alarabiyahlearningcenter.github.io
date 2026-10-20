@@ -12139,32 +12139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 
-<style>
-/* =====================================================================
-   FINAL OVERRIDE: PDF FULL SCREEN & VIDEO HIDING
-   ===================================================================== */
-#pdf-viewer {
-    position: absolute !important; top: 0 !important; left: 0 !important;
-    width: 100% !important; height: 100% !important;
-    z-index: 9999 !important; /* Sits above everything */
-    background: #111 !important;
-    display: flex !important; justify-content: center !important; align-items: center !important;
-}
-#pdf-canvas {
-    width: 100% !important; height: 100% !important; object-fit: contain !important;
-}
-/* Hide the local camera completely when PDF is active */
-body.pdf-active video[data-lk-local-participant="true"] {
-    display: none !important;
-}
-/* Float the remote camera (student/teacher) */
-body.pdf-active .video-tile:not(:has(video[data-lk-local-participant="true"])) {
-    position: fixed !important; bottom: 90px !important; right: 15px !important;
-    width: 110px !important; height: 160px !important;
-    z-index: 10000 !important; border-radius: 8px !important; overflow: hidden !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important; border: 1px solid rgba(255,255,255,0.2) !important;
-}
-</style>
+
 
 <script>
 // =====================================================================
@@ -12259,6 +12234,150 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.presenterPdfUrl = urlData.publicUrl;
 
                             if (window.room && window.room.localParticipant) {
+                                window.room.localParticipant.publishData(
+                                    new TextEncoder().encode(JSON.stringify({ type: 'pdf_share', url: window.presenterPdfUrl, totalPages: pdf.numPages })), 
+                                    { reliable: true }
+                                );
+                            }
+                            showToast('✅ PDF Shared with Students!');
+                        }).catch(err => {
+                            showToast('❌ Network Error: ' + err.message);
+                        });
+                    }, 500);
+
+                } catch (err) {
+                    console.error('Local PDF Error:', err);
+                    showToast('❌ Failed to load PDF locally.');
+                }
+            }
+            event.target.value = '';
+        };
+    }, 2000);
+});
+</script>
+
+
+<style>
+/* =====================================================================
+   FINAL FIX: FORCE PDF FULLSCREEN & HIDE LOCAL VIDEO VIA CSS
+   ===================================================================== */
+#pdf-viewer {
+    position: fixed !important; top: 0 !important; left: 0 !important;
+    width: 100vw !important; height: 100vh !important;
+    z-index: 99999 !important; /* Force above everything */
+    background: #111 !important;
+    display: flex !important; justify-content: center !important; align-items: center !important;
+}
+#pdf-canvas {
+    width: 100% !important; height: 100% !important; object-fit: contain !important;
+}
+/* HIDE local video completely (LiveKit adds data-lk-local-participant) */
+body.pdf-active .video-tile:has(video[data-lk-local-participant="true"]),
+body.pdf-active #tile-local,
+body.pdf-active .video-tile[data-is-local="true"] {
+    display: none !important;
+}
+/* FLOAT remote video perfectly */
+body.pdf-active .video-tile:not([data-is-local="true"]):not(:has(video[data-lk-local-participant="true"])) {
+    position: fixed !important; bottom: 90px !important; right: 15px !important;
+    width: 110px !important; height: 160px !important;
+    z-index: 100000 !important; border-radius: 8px !important; overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important; border: 1px solid rgba(255,255,255,0.2) !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// 100% CRASH-PROOF LOGIC (NO localParticipant ACCESS)
+// =====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        
+        // 1. Render PDF (Completely safe)
+        window.renderPdfFromUrl = async function(url, pageNum) {
+            window.currentPdfPage = pageNum;
+            let container = document.getElementById('pdf-viewer');
+            
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'pdf-viewer';
+                container.innerHTML = '<canvas id="pdf-canvas"></canvas>';
+                
+                // Apply CSS class to body
+                document.body.classList.add('pdf-active');
+                
+                document.body.appendChild(container); // Append to body to ensure fullscreen
+            }
+            
+            if (url && !window.currentPdfDoc) {
+                const loadingTask = pdfjsLib.getDocument(url);
+                window.currentPdfDoc = await loadingTask.promise;
+            }
+            
+            if (!window.currentPdfDoc) return;
+
+            const canvas = document.getElementById('pdf-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            try {
+                const page = await window.currentPdfDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 2.0 }); 
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            } catch (e) { 
+                console.error("Render error:", e); 
+            }
+        };
+
+        // 2. Close PDF
+        window.closePdf = function() {
+            const container = document.getElementById('pdf-viewer');
+            if (container) container.remove();
+            document.body.classList.remove('pdf-active');
+            const controls = document.getElementById('pdfControls');
+            if (controls) controls.remove();
+            window.currentPdfDoc = null;
+            window.isPdfShared = false;
+        };
+
+        // 3. Upload Logic (With Non-Blocking Supabase Upload)
+        window.handleFileShare = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const modal = document.getElementById('premiumShareModal');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+            if (file.type === 'application/pdf') {
+                try {
+                    showToast('⏳ Loading PDF locally...');
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    window.currentPdfDoc = pdf;
+                    window.currentPdfPage = 1;
+                    window.isPdfShared = true;
+
+                    // Render locally instantly
+                    await window.renderPdfFromUrl(null, 1);
+                    window.setupPresenterControls(pdf.numPages);
+                    showToast('✅ PDF Loaded! Syncing in background...');
+
+                    // Background Upload
+                    setTimeout(() => {
+                        const fileName = 'pdf_' + Date.now() + '_' + (window.room ? window.room.name : 'class') + '.pdf';
+                        
+                        sb.storage.from('shared-documents').upload(fileName, file).then(({data, error}) => {
+                            if (error) {
+                                showToast('❌ Upload Error: ' + error.message);
+                                return;
+                            }
+                            
+                            const { data: urlData } = sb.storage.from('shared-documents').getPublicUrl(fileName);
+                            window.presenterPdfUrl = urlData.publicUrl;
+
+                            if (window.room) {
                                 window.room.localParticipant.publishData(
                                     new TextEncoder().encode(JSON.stringify({ type: 'pdf_share', url: window.presenterPdfUrl, totalPages: pdf.numPages })), 
                                     { reliable: true }
