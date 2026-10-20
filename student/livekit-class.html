@@ -12030,3 +12030,134 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 });
 </script>
+
+
+<style>
+/* =====================================================================
+   FINAL LAYOUT CSS (STRICT)
+   ===================================================================== */
+#pdf-viewer {
+    position: absolute !important; top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    z-index: 500 !important; background: #111 !important;
+    display: flex !important; justify-content: center !important; align-items: center !important;
+}
+#pdf-canvas {
+    width: 100% !important; height: 100% !important; object-fit: contain !important;
+}
+/* Hide LOCAL camera completely */
+.pdf-active #tile-local {
+    display: none !important;
+}
+/* Float REMOTE camera beautifully */
+.pdf-active .video-tile:not(#tile-local) {
+    position: absolute !important; bottom: 90px !important; right: 15px !important;
+    width: 110px !important; height: 160px !important;
+    z-index: 600 !important; border-radius: 8px !important; overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important; border: 1px solid rgba(255,255,255,0.2) !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// ULTIMATE SAFE LOGIC (WITH NULL CHECKS)
+// =====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        window.handleFileShare = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const modal = document.getElementById('premiumShareModal');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+            if (file.type === 'application/pdf') {
+                try {
+                    showToast('⏳ Loading PDF locally...');
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    window.currentPdfDoc = pdf;
+                    window.currentPdfPage = 1;
+                    window.isPdfShared = true;
+
+                    // 1. Render Locally (with safe checks)
+                    await window.renderPdfFromUrl(null, 1);
+                    window.setupPresenterControls(pdf.numPages);
+                    showToast('✅ PDF Loaded! Uploading...');
+
+                    // 2. Upload to Supabase (Non-blocking)
+                    setTimeout(() => {
+                        const fileName = 'pdf_' + Date.now() + '_' + (window.room ? window.room.name : 'class') + '.pdf';
+                        
+                        sb.storage.from('shared-documents').upload(fileName, file).then(({data, error}) => {
+                            if (error) {
+                                showToast('❌ Upload Error: ' + error.message);
+                                return;
+                            }
+                            
+                            const { data: urlData } = sb.storage.from('shared-documents').getPublicUrl(fileName);
+                            window.presenterPdfUrl = urlData.publicUrl;
+
+                            // Send to students
+                            if (window.room) {
+                                window.room.localParticipant.publishData(
+                                    new TextEncoder().encode(JSON.stringify({ type: 'pdf_share', url: window.presenterPdfUrl, totalPages: pdf.numPages })), 
+                                    { reliable: true }
+                                );
+                            }
+                            showToast('✅ PDF Shared with Students!');
+                        }).catch(err => {
+                            showToast('❌ Network Error: ' + err.message);
+                        });
+                    }, 500);
+
+                } catch (err) {
+                    console.error('Local PDF Error:', err);
+                    showToast('❌ Failed to load PDF locally.');
+                }
+            }
+            event.target.value = '';
+        };
+
+        // Override render function with Safe LocalParticipant check
+        window.renderPdfFromUrl = async function(url, pageNum) {
+            window.currentPdfPage = pageNum;
+            let container = document.getElementById('pdf-viewer');
+            
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'pdf-viewer';
+                container.innerHTML = '<canvas id="pdf-canvas"></canvas>';
+                
+                // SAFE CHECK: Access window.room before using localParticipant
+                if (window.room && window.room.localParticipant) {
+                    const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+                    if (localTile) localTile.style.setProperty('display', 'none', 'important');
+                }
+                
+                document.getElementById('videoGrid').appendChild(container);
+                document.getElementById('videoGrid').classList.add('pdf-active');
+            }
+            
+            if (url && !window.currentPdfDoc) {
+                const loadingTask = pdfjsLib.getDocument(url);
+                window.currentPdfDoc = await loadingTask.promise;
+            }
+            
+            if (!window.currentPdfDoc) return;
+
+            const canvas = document.getElementById('pdf-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            try {
+                const page = await window.currentPdfDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 2.0 }); 
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            } catch (e) { console.error("Render error", e); }
+        };
+    }, 2000);
+});
+</script>
