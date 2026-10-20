@@ -11257,33 +11257,7 @@ setTimeout(() => {
 </script>
 
 
-<style>
-/* =====================================================================
-   FLAWLESS PDF UI
-   ===================================================================== */
-#pdf-local-viewer {
-    position: absolute !important; top: 0 !important; left: 0 !important;
-    width: 100% !important; height: 100% !important;
-    z-index: 500 !important; background: #111 !important;
-    display: flex !important; justify-content: center !important; align-items: center !important; overflow: hidden !important;
-}
-#pdf-canvas {
-    width: 100% !important; height: 100% !important; object-fit: contain !important;
-}
-.pdf-active .video-tile:not([id^="tile-" + window.room.localParticipant.identity]) {
-    position: absolute !important; bottom: 90px !important; right: 15px !important;
-    width: 110px !important; height: 160px !important;
-    z-index: 600 !important; border-radius: 8px; overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.2);
-}
-#pdfControls {
-    position: fixed !important; top: 75px !important; left: 50% !important; transform: translateX(-50%) !important;
-    background: rgba(15, 23, 20, 0.95) !important; backdrop-filter: blur(12px) !important;
-    padding: 8px 16px !important; border-radius: 30px !important;
-    display: flex; align-items: center; gap: 10px !important;
-    z-index: 99999 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
-}
-</style>
+
 
 <script>
 // =====================================================================
@@ -11438,6 +11412,208 @@ window.syncPage = async function(pageNum) {
 setTimeout(() => {
     if (typeof room !== 'undefined' && room) {
         window.room = room;
+        
+        window.room.on(livekitClient.RoomEvent.DataReceived, async (payload) => {
+            try {
+                const data = JSON.parse(new TextDecoder().decode(payload));
+                if (data.type === 'pdf_share') {
+                    showToast('📄 Document Shared');
+                    const loadingTask = pdfjsLib.getDocument(data.url);
+                    window.currentPdfDoc = await loadingTask.promise;
+                    window.isPdfShared = true;
+                    await window.renderLocalPdf(window.currentPdfDoc, 1);
+                } 
+                else if (data.type === 'pdf_page' && window.isPdfShared) {
+                    await window.renderLocalPdf(window.currentPdfDoc, data.page);
+                } 
+                else if (data.type === 'pdf_stop') {
+                    window.closeLocalPdf(); window.isPdfShared = false;
+                    showToast('⏹ Document Closed');
+                }
+            } catch (e) { console.error("Sync Error:", e); }
+        });
+    }
+}, 3000);
+</script>
+
+
+<style>
+/* =====================================================================
+   MASTER CSS: SEPARATE LAYERS FOR VIDEO, SCREEN SHARE, AND PDF
+   ===================================================================== */
+/* 1. Screen Share Viewer (Full Screen Native) */
+#screen-share-viewer {
+    position: absolute !important; top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    z-index: 400 !important; background: #000 !important;
+    display: flex !important; justify-content: center !important; align-items: center !important;
+    overflow: hidden !important;
+}
+#screen-share-viewer video {
+    width: 100% !important; height: 100% !important; object-fit: contain !important;
+}
+
+/* 2. PDF Viewer (Overlay) */
+#pdf-local-viewer {
+    position: absolute !important; top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    z-index: 500 !important; background: #111 !important;
+    display: flex !important; justify-content: center !important; align-items: center !important; overflow: hidden !important;
+}
+#pdf-canvas {
+    width: 100% !important; height: 100% !important; object-fit: contain !important;
+}
+
+/* 3. Floating Video (For PDF mode) */
+.pdf-active .video-tile:not([id^="tile-local"]) {
+    position: absolute !important; bottom: 90px !important; right: 15px !important;
+    width: 110px !important; height: 160px !important;
+    z-index: 600 !important; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* 4. Premium Top Controls */
+#pdfControls {
+    position: fixed !important; top: 75px !important; left: 50% !important; transform: translateX(-50%) !important;
+    background: rgba(15, 23, 20, 0.95) !important; backdrop-filter: blur(12px) !important;
+    padding: 8px 16px !important; border-radius: 30px !important;
+    display: flex; align-items: center; gap: 10px !important;
+    z-index: 99999 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+}
+</style>
+
+<script>
+// =====================================================================
+// MASTER OVERRIDE: SCREEN SHARE AND PDF LOGIC
+// =====================================================================
+
+// 1. OVERRIDE SCREEN SHARE RECEIVER (Fixes the black screen issue)
+window.handleScreenShareTrack = function(track, publication, participant) {
+    if (track.kind === 'audio') {
+        const audio = document.createElement('audio');
+        audio.autoplay = true;
+        audio.id = 'screen-audio-' + participant.identity;
+        track.attach(audio);
+        document.body.appendChild(audio);
+        return;
+    }
+
+    if (track.kind === 'video') {
+        let viewer = document.getElementById('screen-share-viewer');
+        if (!viewer) {
+            viewer = document.createElement('div');
+            viewer.id = 'screen-share-viewer';
+            viewer.innerHTML = `<video id="screen-video-${participant.identity}" autoplay playsinline></video>`;
+            document.getElementById('videoGrid').appendChild(viewer);
+            
+            // Hide local camera
+            const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+            if (localTile) localTile.style.setProperty('display', 'none', 'important');
+        }
+        
+        const videoEl = document.getElementById('screen-video-' + participant.identity);
+        if (videoEl) {
+            track.attach(videoEl);
+            videoEl.play().catch(e => console.log(e));
+        }
+        showToast('🖥️ ' + (participant.name || 'Someone') + ' is sharing their screen');
+    }
+};
+
+// Cleanup when screen share stops
+window.room?.on(livekitClient.RoomEvent.TrackUnsubscribed, (track, pub, participant) => {
+    if (pub.source === LivekitClient.Track.Source.ScreenShare && track.kind === 'video') {
+        const viewer = document.getElementById('screen-share-viewer');
+        if (viewer) {
+            viewer.remove();
+            const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+            if (localTile) localTile.style.removeProperty('display');
+        }
+    }
+});
+
+
+// 2. PDF LOGIC (Flawless Local Render + Background Upload)
+window.handleFileShare = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const modal = document.getElementById('premiumShareModal');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+    if (file.type === 'application/pdf') {
+        try {
+            showToast('⏳ Loading PDF...');
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            
+            window.currentPdfDoc = pdf;
+            window.currentPdfPage = 1;
+            window.isPdfShared = true;
+            
+            await window.renderLocalPdf(pdf, 1);
+            window.setupPresenterControls(pdf.numPages);
+            showToast('✅ PDF Loaded! Syncing...');
+
+            const fileName = 'pdf_' + window.room.name + '_' + Date.now() + '.pdf';
+            sb.storage.from('shared-documents').upload(fileName, file).then(({data, error}) => {
+                if (error) return;
+                const { data: urlData } = sb.storage.from('shared-documents').getPublicUrl(fileName);
+                window.presenterPdfUrl = urlData.publicUrl;
+                window.room.localParticipant.publishData(
+                    new TextEncoder().encode(JSON.stringify({ type: 'pdf_share', url: window.presenterPdfUrl, totalPages: pdf.numPages })), 
+                    { reliable: true }
+                );
+                showToast('✅ PDF Shared!');
+            });
+        } catch (err) { console.error(err); showToast('❌ Failed.'); }
+    }
+    event.target.value = '';
+};
+
+// 3. RENDER PDF FUNCTION
+window.renderLocalPdf = async function(pdfDoc, pageNum) {
+    window.currentPdfPage = pageNum;
+    let container = document.getElementById('pdf-local-viewer');
+    
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'pdf-local-viewer';
+        container.innerHTML = '<canvas id="pdf-canvas"></canvas>';
+        
+        // Hide local camera
+        const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+        if (localTile) localTile.style.setProperty('display', 'none', 'important');
+        
+        document.getElementById('videoGrid').appendChild(container);
+        document.getElementById('videoGrid').classList.add('pdf-active');
+    }
+    
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    const page = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 2.0 }); 
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+};
+
+window.closeLocalPdf = function() {
+    const container = document.getElementById('pdf-local-viewer');
+    if (container) container.remove();
+    document.getElementById('videoGrid').classList.remove('pdf-active');
+    const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+    if (localTile) localTile.style.removeProperty('display');
+    document.getElementById('pdfControls')?.remove();
+};
+
+// 4. STUDENT LISTENER (Clean Single Listener)
+setTimeout(() => {
+    if (typeof room !== 'undefined' && room) {
+        window.room = room;
+        
+        // Remove old listeners if possible, then attach one
+        window.room.off(livekitClient.RoomEvent.DataReceived);
         
         window.room.on(livekitClient.RoomEvent.DataReceived, async (payload) => {
             try {
