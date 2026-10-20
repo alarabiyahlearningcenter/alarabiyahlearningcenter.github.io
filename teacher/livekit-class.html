@@ -10758,3 +10758,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000); // Wait 2s for LiveKit to initialize
 });
 </script>
+
+<script>
+// =====================================================================
+// FIX 3: FORCE UPDATE PARTICIPANT COUNT & VIDEO LAYOUT ON NEW JOIN
+// =====================================================================
+setTimeout(() => {
+    if (window.room) {
+        console.log("🚀 Applying robust auto-update logic...");
+
+        // 1. Force Update when someone joins
+        window.room.on(livekitClient.RoomEvent.ParticipantConnected, (participant) => {
+            console.log("👤 Participant Joined:", participant.identity);
+            
+            // Update UI text
+            if (typeof updateParticipantsCount === 'function') updateParticipantsCount();
+            if (typeof addParticipantToList === 'function') addParticipantToList(participant);
+            
+            // Wait for video track to be established, then force layout update
+            setTimeout(() => {
+                if (typeof updateGridLayout === 'function') updateGridLayout();
+            }, 1000); // 1 second delay to ensure video element is in DOM
+        });
+
+        // 2. Force Update when video track actually arrives
+        window.room.on(livekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+            console.log("🎥 Video Track Subscribed from:", participant.identity);
+            
+            // Ensure the video tile exists in the DOM
+            setTimeout(() => {
+                if (typeof updateGridLayout === 'function') {
+                    updateGridLayout();
+                    console.log("✅ Layout forced updated after track subscribe.");
+                }
+            }, 500);
+        });
+
+        // 3. Run once immediately in case someone is already there
+        if (typeof updateParticipantsCount === 'function') updateParticipantsCount();
+        if (typeof updateGridLayout === 'function') updateGridLayout();
+
+    } else {
+        console.log("⚠️ Room not found for Fix 3");
+    }
+}, 3500); // Wait 3.5s to ensure LiveKit is fully initialized
+</script>
