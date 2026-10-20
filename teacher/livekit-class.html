@@ -11924,3 +11924,109 @@ setTimeout(() => {
     }, 2000);
     </script>
     
+<style>
+/* =====================================================================
+   ULTIMATE CSS FIX: FORCE FLOATING VIDEO & HIDE LOCAL
+   ===================================================================== */
+/* যখন পিডিএফ অ্যাক্টিভ থাকবে, তখন রিমোট ভিডিও (শিক্ষক/স্টুডেন্ট) ডানদিকে ছোট হবে */
+body .pdf-active .video-tile {
+    position: absolute !important;
+    bottom: 90px !important;
+    right: 15px !important;
+    width: 110px !important;
+    height: 160px !important;
+    z-index: 600 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
+    border: 2px solid rgba(255,255,255,0.2) !important;
+}
+/* নিজের (লোকাল) ভিডিও সম্পূর্ণ হাইড থাকবে */
+.pdf-active #tile-local {
+    display: none !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// ULTIMATE JS FIX: FIX UPLOAD BLOCKING & FORCE LAYOUT
+// =====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // ১. পিডিএফ অ্যাক্টিভ হলে ভিডিও গ্রিডে `pdf-active` ক্লাস নিশ্চিত করা
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes.length) {
+                const pdfViewer = document.getElementById('pdf-viewer');
+                const videoGrid = document.getElementById('videoGrid');
+                if (pdfViewer && videoGrid) {
+                    videoGrid.classList.add('pdf-active');
+                } else if (!pdfViewer && videoGrid) {
+                    videoGrid.classList.remove('pdf-active');
+                }
+            }
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // ২. আপলোড ফাংশন ওভাররাইড (যাতে রেন্ডারিং ব্লক না করে)
+    setTimeout(() => {
+        window.handleFileShare = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const modal = document.getElementById('premiumShareModal');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+            if (file.type === 'application/pdf') {
+                try {
+                    // ধাপ ১: লোকাল রেন্ডার
+                    showToast('⏳ Loading PDF locally...');
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    window.currentPdfDoc = pdf;
+                    window.currentPdfPage = 1;
+                    window.isPdfShared = true;
+
+                    await window.renderPdfFromUrl(null, 1);
+                    window.setupPresenterControls(pdf.numPages);
+                    showToast('✅ PDF Loaded! Uploading...');
+
+                    // ধাপ ২: আপলোড (setTimeout দিয়ে মেইন থ্রেড ফ্রি করা হলো)
+                    setTimeout(() => {
+                        const fileName = 'pdf_' + Date.now() + '_' + window.room.name + '.pdf';
+                        
+                        console.log("Starting upload for:", fileName);
+                        
+                        sb.storage.from('shared-documents').upload(fileName, file).then(({data, error}) => {
+                            if (error) {
+                                showToast('❌ Upload Error: ' + error.message);
+                                console.error("Upload Error:", error);
+                                return;
+                            }
+                            
+                            console.log("Upload successful!", data);
+                            const { data: urlData } = sb.storage.from('shared-documents').getPublicUrl(fileName);
+                            window.presenterPdfUrl = urlData.publicUrl;
+
+                            window.room.localParticipant.publishData(
+                                new TextEncoder().encode(JSON.stringify({ type: 'pdf_share', url: window.presenterPdfUrl, totalPages: pdf.numPages })), 
+                                { reliable: true }
+                            );
+                            showToast('✅ PDF Shared with Students!');
+                        }).catch(err => {
+                            console.error("Fetch Error:", err);
+                            showToast('❌ Network Error: ' + err.message);
+                        });
+                    }, 500); // ০.৫ সেকেন্ড পর আপলোড শুরু হবে
+
+                } catch (err) {
+                    console.error('Local PDF Error:', err);
+                    showToast('❌ Failed to load PDF locally.');
+                }
+            }
+            event.target.value = '';
+        };
+    }, 1000);
+});
+</script>
