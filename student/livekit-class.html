@@ -423,6 +423,11 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
     </script>
     
 <script>window.pdfjsLib = pdfjsLib;</script>
+
+    <!-- Eruda Mobile DevTools -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+    
 </head>
 
 <body>
@@ -11850,3 +11855,72 @@ setTimeout(() => {
     }
 }, 2500);
 </script>
+
+
+    <script>
+    // =====================================================================
+    // DEBUG: FORCE ERROR DISPLAY ON SCREEN & FIX UPLOAD LOGIC
+    // =====================================================================
+    setTimeout(() => {
+        const originalHandleFileShare = window.handleFileShare;
+        
+        window.handleFileShare = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const modal = document.getElementById('premiumShareModal');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+            if (file.type === 'application/pdf') {
+                try {
+                    // STEP 1: INSTANT LOCAL RENDER
+                    showToast('⏳ Loading PDF locally...');
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
+                    window.currentPdfDoc = pdf;
+                    window.currentPdfPage = 1;
+                    window.isPdfShared = true;
+
+                    await window.renderPdfFromUrl(null, 1);
+                    window.setupPresenterControls(pdf.numPages);
+
+                    // STEP 2: UPLOAD TO SUPABASE (With direct error display)
+                    showToast('⏳ Syncing to students...');
+                    const fileName = 'pdf_' + Date.now() + '_' + window.room.name + '.pdf';
+                    
+                    sb.storage.from('shared-documents').upload(fileName, file).then(({data, error}) => {
+                        if (error) {
+                            // 🔥 SHOW ERROR ON SCREEN
+                            showToast('❌ Upload Error: ' + error.message);
+                            console.error("Upload Error:", error);
+                            return;
+                        }
+                        
+                        const { data: urlData } = sb.storage.from('shared-documents').getPublicUrl(fileName);
+                        window.presenterPdfUrl = urlData.publicUrl;
+
+                        window.room.localParticipant.publishData(
+                            new TextEncoder().encode(JSON.stringify({ 
+                                type: 'pdf_share', 
+                                url: window.presenterPdfUrl, 
+                                totalPages: pdf.numPages 
+                            })), 
+                            { reliable: true }
+                        );
+                        showToast('✅ PDF Shared with Students!');
+                    }).catch(err => {
+                        showToast('❌ Network Error: ' + err.message);
+                    });
+
+                } catch (err) {
+                    console.error('Local PDF Error:', err);
+                    showToast('❌ Failed to load PDF locally.');
+                }
+            }
+            event.target.value = '';
+        };
+        console.log("✅ Debug handleFileShare attached!");
+    }, 2000);
+    </script>
+    
