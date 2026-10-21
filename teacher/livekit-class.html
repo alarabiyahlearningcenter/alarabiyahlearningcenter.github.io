@@ -10934,65 +10934,70 @@ setTimeout(() => {
 
 <script>
 // =====================================================================
-// FIX 9: ULTIMATE SYNC LOOP (Fixes Join Failed & Missing Video)
+
+<style>
+/* =====================================================================
+   FORCE GRID TO SPLIT WHEN 2 PARTICIPANTS ARE PRESENT
+   ===================================================================== */
+#videoGrid.grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+    height: 100% !important;
+    align-items: center !important;
+}
+@media (max-width: 768px) {
+    #videoGrid.grid-2 {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: repeat(2, 1fr) !important;
+    }
+}
+#videoGrid.grid-2 .video-tile {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 50vh !important;
+}
+</style>
+
+<script>
 // =====================================================================
-console.log("🚀 Ultimate Sync Loop Started...");
+// FINAL FIX: FORCE PLAY REMOTE VIDEO & UPDATE LAYOUT
+// =====================================================================
+setTimeout(() => {
+    if (!window.room) return;
 
-setInterval(() => {
-    // 1. Ensure room is loaded
-    if (!window.room || !window.room.localParticipant) return;
-
-    // 2. If PDF is active, don't mess with the layout
-    if (document.body.classList.contains('pdf-active')) return;
-
-    // 3. Loop through all remote participants (e.g., the Teacher)
-    window.room.remoteParticipants.forEach((participant) => {
-        // Find all their track publications
-        participant.trackPublications.forEach((pub) => {
-            if (pub.kind === 'video') {
-                // Force subscribe in case it was dropped during "Join Failed"
-                pub.setSubscribed(true);
-
-                // Check if the video track exists
-                if (pub.track) {
-                    const tile = document.getElementById('tile-' + participant.identity);
-                    
-                    if (tile) {
-                        let videoEl = tile.querySelector('video');
-                        
-                        // If video element is missing, create it
-                        if (!videoEl) {
-                            videoEl = document.createElement('video');
-                            videoEl.autoplay = true;
-                            videoEl.playsInline = true;
-                            videoEl.className = "w-full h-full object-cover rounded-2xl";
-                            tile.appendChild(videoEl);
-                        }
-
-                        // Attach the track if not already attached
-                        if (videoEl.srcObject === null || pub.track.sid !== videoEl.dataset.trackSid) {
-                            console.log("🔄 Force attaching video for:", participant.identity);
-                            pub.track.attach(videoEl);
-                            videoEl.dataset.trackSid = pub.track.sid; // Remember which track is attached
-                        }
-
-                        // Force Play (Mobile browsers often pause videos to save battery)
-                        if (videoEl.paused) {
-                            videoEl.play().catch(e => console.log("Autoplay blocked:", e));
-                        }
-                    }
-                }
+    // Force layout update and video play when a track is subscribed
+    window.room.on(livekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+        console.log("📥 Track Subscribed:", track.kind, "from:", participant.identity);
+        
+        if (track.kind === 'video') {
+            // Force the grid to split
+            const grid = document.getElementById('videoGrid');
+            if (grid) {
+                grid.classList.remove('grid-1');
+                grid.classList.add('grid-2');
             }
-        });
+
+            // Find the video element and force it to play
+            setTimeout(() => {
+                const videoEl = document.querySelector(`#tile-${participant.identity} video`);
+                if (videoEl) {
+                    videoEl.play().catch(e => console.log("Autoplay blocked:", e));
+                }
+            }, 500);
+        }
     });
 
-    // Force the grid layout to update if there is a mismatch
-    const expectedCount = window.room.remoteParticipants.size + 1;
-    const domTiles = document.querySelectorAll('#videoGrid .video-tile').length;
-    
-    if (expectedCount !== domTiles) {
-        if (typeof updateGridLayout === 'function') updateGridLayout();
-    }
+    // Also force layout update on Participant Connected just in case
+    window.room.on(livekitClient.RoomEvent.ParticipantConnected, (participant) => {
+        console.log("👤 Participant Connected. Forcing split layout.");
+        const grid = document.getElementById('videoGrid');
+        if (grid) {
+            grid.classList.remove('grid-1');
+            grid.classList.add('grid-2');
+        }
+    });
 
-}, 1500); // Runs every 1.5 seconds
+}, 2500);
 </script>
