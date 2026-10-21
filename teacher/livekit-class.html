@@ -11142,3 +11142,69 @@ setTimeout(() => {
 
 }, 2500); // Wait for Room to initialize
 </script>
+
+<script>
+// =====================================================================
+// FIX 10: ULTIMATE WATCHDOG (FORCE ATTACH REMOTE VIDEO)
+// =====================================================================
+setInterval(() => {
+    // 1. Ensure room and local participant are ready
+    if (!window.room || !window.room.localParticipant) return;
+
+    // 2. Check if anyone else is in the room
+    const remoteCount = window.room.remoteParticipants.size;
+    if (remoteCount === 0) return;
+
+    const grid = document.getElementById('videoGrid');
+    if (!grid) return;
+
+    // 3. Force the split layout
+    if (!grid.classList.contains('grid-2')) {
+        grid.className = 'video-grid grid-2';
+        console.log("🔄 Layout forced to grid-2 by Watchdog");
+    }
+
+    // 4. Loop through remote participants (Teacher)
+    window.room.remoteParticipants.forEach((participant) => {
+        participant.trackPublications.forEach((pub) => {
+            if (pub.kind === 'video' && pub.track) {
+                
+                // Find or create the tile container
+                let tile = document.getElementById('tile-' + participant.identity);
+                if (!tile) {
+                    tile = document.createElement('div');
+                    tile.id = 'tile-' + participant.identity;
+                    tile.className = 'video-tile';
+                    grid.appendChild(tile);
+                }
+
+                // Find or create the video element
+                let videoEl = tile.querySelector('video');
+                if (!videoEl) {
+                    videoEl = document.createElement('video');
+                    videoEl.autoplay = true;
+                    videoEl.playsInline = true;
+                    videoEl.className = 'w-full h-full object-cover rounded-2xl';
+                    tile.appendChild(videoEl);
+                }
+
+                // Check if track is attached. If not, force attach.
+                if (videoEl.srcObject === null || !videoEl.dataset.trackSid) {
+                    console.log("🔥 Watchdog: Force attaching video for", participant.identity);
+                    pub.track.attach(videoEl);
+                    videoEl.dataset.trackSid = pub.track.sid;
+                }
+
+                // Force play (handles mobile autoplay restrictions)
+                if (videoEl.paused) {
+                    videoEl.play().catch(e => {
+                        console.warn("⚠️ Autoplay blocked, muting and playing...");
+                        videoEl.muted = true;
+                        videoEl.play();
+                    });
+                }
+            }
+        });
+    });
+}, 1500); // Runs every 1.5 seconds
+</script>
