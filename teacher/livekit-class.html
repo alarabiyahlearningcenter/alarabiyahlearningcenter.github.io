@@ -10803,3 +10803,66 @@ setTimeout(() => {
     }
 }, 3500); // Wait 3.5s to ensure LiveKit is fully initialized
 </script>
+
+
+
+<script>
+// =====================================================================
+// FIX 5: SMART SYNC WATCHDOG (LIMITED AUTO-REFRESH TO PREVENT LOOP)
+// =====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Get or set refresh count for this session
+    let refreshCount = parseInt(sessionStorage.getItem('syncRefreshCount') || '0');
+    const MAX_REFRESHES = 2; // Max 2 auto refreshes allowed
+
+    setInterval(() => {
+        // 1. Ensure room is loaded and we are not in PDF mode
+        if (!window.room || !window.room.localParticipant) return;
+        if (document.body.classList.contains('pdf-active')) return;
+
+        // 2. Calculate expected participants vs actual DOM tiles
+        const expectedCount = window.room.remoteParticipants.size + 1; 
+        const domTiles = document.querySelectorAll('#videoGrid .video-tile').length;
+
+        // 3. If there is a mismatch, try to fix it
+        if (expectedCount !== domTiles) {
+            console.warn(`⚠️ Sync Mismatch! Expected: ${expectedCount}, DOM Tiles: ${domTiles}`);
+            
+            // Attempt A: Force CSS layout update
+            if (typeof updateGridLayout === 'function') updateGridLayout();
+            
+            // Attempt B: Force all videos to play
+            document.querySelectorAll('#videoGrid video').forEach(v => {
+                if (v.paused) v.play().catch(e => console.log('Autoplay blocked:', e));
+            });
+            
+            // Attempt C: Auto-Refresh (Only if we haven't exceeded max refreshes)
+            if (!window.syncWatchdogTimer) {
+                window.syncWatchdogTimer = setTimeout(() => {
+                    const currentDomTiles = document.querySelectorAll('#videoGrid .video-tile').length;
+                    if (expectedCount !== currentDomTiles) {
+                        if (refreshCount < MAX_REFRESHES) {
+                            console.log(`🔄 Forcing auto-refresh (${refreshCount + 1}/${MAX_REFRESHES}) to fix video sync...`);
+                            sessionStorage.setItem('syncRefreshCount', refreshCount + 1);
+                            window.location.reload(); 
+                        } else {
+                            console.error("❌ Max refresh limit reached. Please refresh manually.");
+                            showToast('⚠️ Please refresh manually to see video.');
+                        }
+                    }
+                    window.syncWatchdogTimer = null;
+                }, 3000);
+            }
+        } else {
+            // Everything is in sync. Reset the counter.
+            if (window.syncWatchdogTimer) {
+                clearTimeout(window.syncWatchdogTimer);
+                window.syncWatchdogTimer = null;
+            }
+            if (refreshCount > 0) {
+                sessionStorage.setItem('syncRefreshCount', '0');
+            }
+        }
+    }, 2000); 
+});
+</script>
