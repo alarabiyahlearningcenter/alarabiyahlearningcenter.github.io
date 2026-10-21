@@ -10866,3 +10866,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000); 
 });
 </script>
+
+<script>
+// =====================================================================
+// FIX 6: MODERN SOLUTION (FORCE VIDEO PLAY & DOM PAINT)
+// =====================================================================
+setTimeout(() => {
+    if (!window.room) return;
+
+    // 1. When a new participant joins
+    window.room.on(livekitClient.RoomEvent.ParticipantConnected, (participant) => {
+        console.log("👤 Participant Connected:", participant.identity);
+        
+        // Force layout update after a tiny delay
+        requestAnimationFrame(() => {
+            if (typeof updateGridLayout === 'function') updateGridLayout();
+        });
+    });
+
+    // 2. When their video track is subscribed (arrives)
+    window.room.on(livekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === 'video') {
+            console.log("🎥 Video Track Subscribed from:", participant.identity);
+            
+            // Wait for the browser to paint the new video element in the DOM
+            requestAnimationFrame(() => {
+                // Find the newly created video element
+                const videoEl = document.querySelector(`#tile-${participant.identity} video`);
+                
+                if (videoEl) {
+                    // FORCE PLAY (Overrides mobile autoplay restrictions)
+                    videoEl.play().then(() => {
+                        console.log("✅ Forced Video Playback Success");
+                    }).catch(e => {
+                        console.warn("⚠️ Autoplay blocked, muting and trying again...");
+                        videoEl.muted = true;
+                        videoEl.play(); // Try muted autoplay
+                    });
+                }
+
+                // Force the CSS grid to recalculate
+                if (typeof updateGridLayout === 'function') {
+                    updateGridLayout();
+                }
+            });
+        }
+    });
+
+    // 3. Run once immediately in case someone is already there
+    if (typeof updateGridLayout === 'function') updateGridLayout();
+    document.querySelectorAll('#videoGrid video').forEach(v => v.play().catch(e => {}));
+
+}, 2500); // Wait for LiveKit to initialize
+</script>
