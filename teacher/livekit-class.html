@@ -11059,3 +11059,21 @@ setInterval(() => {
     }
 }, 2000);
 </script>
+
+<script>
+// =====================================================================
+// FINAL SAFETY NET: FORCE LOCAL VIDEO TO PLAY
+// =====================================================================
+setInterval(() => {
+    if (!window.room || !window.room.localParticipant) return;
+    
+    // Find local video element
+    const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+    if (localTile) {
+        const videoEl = localTile.querySelector('video');
+        if (videoEl && videoEl.paused && videoEl.srcObject) {
+            videoEl.play().catch(e => console.log("Force local play blocked:", e));
+        }
+    }
+}, 2000);
+</script>
