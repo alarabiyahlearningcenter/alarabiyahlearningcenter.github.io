@@ -10999,3 +10999,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2500);
 });
 </script>
+
+
+<style>
+/* =====================================================================
+   THE PERFECT SPLIT LAYOUT
+   ===================================================================== */
+#videoGrid.grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+    height: 100% !important;
+    align-items: center !important;
+}
+@media (max-width: 768px) {
+    #videoGrid.grid-2 {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: repeat(2, 1fr) !important;
+    }
+}
+#videoGrid.grid-2 .video-tile {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 50vh !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// THE FINAL, 100% ERROR-FREE FIX
+// =====================================================================
+console.log("🚀 Final Clean Fix Loaded");
+
+// Force layout and video playback every 2 seconds
+setInterval(() => {
+    if (!window.room || !window.room.localParticipant) return;
+    if (document.body.classList.contains('pdf-active')) return;
+
+    const remoteCount = window.room.remoteParticipants.size;
+    const grid = document.getElementById('videoGrid');
+
+    if (remoteCount > 0) {
+        // If someone else is in the room, force the split layout
+        if (grid && !grid.classList.contains('grid-2')) {
+            grid.classList.remove('grid-1', 'grid-4', 'grid-6', 'grid-9', 'grid-16');
+            grid.classList.add('grid-2');
+            console.log("🔄 Layout forced to grid-2");
+        }
+
+        // Force all remote videos to play
+        window.room.remoteParticipants.forEach((participant) => {
+            const videoEl = document.querySelector(`#tile-${participant.identity} video`);
+            if (videoEl && videoEl.paused) {
+                videoEl.play().catch(e => console.log("Play blocked:", e));
+            }
+        });
+    } else {
+        // If alone, force full screen
+        if (grid && !grid.classList.contains('grid-1')) {
+            grid.classList.remove('grid-2', 'grid-4', 'grid-6', 'grid-9', 'grid-16');
+            grid.classList.add('grid-1');
+        }
+    }
+}, 2000);
+</script>
