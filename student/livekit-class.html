@@ -10935,10 +10935,10 @@ setTimeout(() => {
 <script>
 // =====================================================================
 
+
+
 <style>
-/* =====================================================================
-   FORCE GRID TO SPLIT WHEN 2 PARTICIPANTS ARE PRESENT
-   ===================================================================== */
+/* FORCE GRID TO SPLIT WHEN 2 PARTICIPANTS ARE PRESENT */
 #videoGrid.grid-2 {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
@@ -10964,40 +10964,38 @@ setTimeout(() => {
 // =====================================================================
 // FINAL FIX: FORCE PLAY REMOTE VIDEO & UPDATE LAYOUT
 // =====================================================================
-setTimeout(() => {
-    if (!window.room) return;
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (!window.room) return;
 
-    // Force layout update and video play when a track is subscribed
-    window.room.on(livekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-        console.log("📥 Track Subscribed:", track.kind, "from:", participant.identity);
-        
-        if (track.kind === 'video') {
-            // Force the grid to split
+        window.room.on(livekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+            console.log("📥 Track Subscribed:", track.kind, "from:", participant.identity);
+            
+            if (track.kind === 'video') {
+                const grid = document.getElementById('videoGrid');
+                if (grid) {
+                    grid.classList.remove('grid-1');
+                    grid.classList.add('grid-2');
+                }
+
+                setTimeout(() => {
+                    const videoEl = document.querySelector(`#tile-${participant.identity} video`);
+                    if (videoEl) {
+                        videoEl.play().catch(e => console.log("Autoplay blocked:", e));
+                    }
+                }, 500);
+            }
+        });
+
+        window.room.on(livekitClient.RoomEvent.ParticipantConnected, (participant) => {
+            console.log("👤 Participant Connected. Forcing split layout.");
             const grid = document.getElementById('videoGrid');
             if (grid) {
                 grid.classList.remove('grid-1');
                 grid.classList.add('grid-2');
             }
+        });
 
-            // Find the video element and force it to play
-            setTimeout(() => {
-                const videoEl = document.querySelector(`#tile-${participant.identity} video`);
-                if (videoEl) {
-                    videoEl.play().catch(e => console.log("Autoplay blocked:", e));
-                }
-            }, 500);
-        }
-    });
-
-    // Also force layout update on Participant Connected just in case
-    window.room.on(livekitClient.RoomEvent.ParticipantConnected, (participant) => {
-        console.log("👤 Participant Connected. Forcing split layout.");
-        const grid = document.getElementById('videoGrid');
-        if (grid) {
-            grid.classList.remove('grid-1');
-            grid.classList.add('grid-2');
-        }
-    });
-
-}, 2500);
+    }, 2500);
+});
 </script>
