@@ -11077,3 +11077,68 @@ setInterval(() => {
     }
 }, 2000);
 </script>
+
+<script>
+// =====================================================================
+// THE ULTIMATE FIX: RACE CONDITION & FORCE ATTACH
+// =====================================================================
+setTimeout(() => {
+    if (!window.room) return;
+
+    console.log("🛡️ Ultimate Race Condition Fixer Loaded");
+
+    // Listen for when the remote video track arrives
+    window.room.on(livekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === 'video') {
+            console.log("🎥 Remote Video Track Arrived from:", participant.identity);
+            
+            // Wait a tiny bit to ensure the DOM is ready, then force attach
+            setTimeout(() => {
+                const grid = document.getElementById('videoGrid');
+                
+                // Force the split layout immediately
+                if (grid) {
+                    grid.className = 'video-grid grid-2';
+                }
+
+                // Find or create the tile for this participant
+                let tile = document.getElementById('tile-' + participant.identity);
+                if (!tile) {
+                    tile = document.createElement('div');
+                    tile.id = 'tile-' + participant.identity;
+                    tile.className = 'video-tile';
+                    if (grid) grid.appendChild(tile);
+                }
+
+                // Find or create the video element inside the tile
+                let videoEl = tile.querySelector('video');
+                if (!videoEl) {
+                    videoEl = document.createElement('video');
+                    videoEl.autoplay = true;
+                    videoEl.playsInline = true;
+                    videoEl.className = 'w-full h-full object-cover rounded-2xl';
+                    tile.appendChild(videoEl);
+                }
+
+                // Force attach the track
+                track.attach(videoEl);
+                
+                // Force play (handles mobile autoplay restrictions)
+                videoEl.play().then(() => {
+                    console.log("✅ Successfully forced play for:", participant.identity);
+                }).catch(e => {
+                    console.warn("⚠️ Autoplay blocked, muting and trying again...");
+                    videoEl.muted = true;
+                    videoEl.play();
+                });
+
+                // Force the grid layout to update to 2 columns
+                if (typeof updateGridLayout === 'function') {
+                    updateGridLayout();
+                }
+            }, 500); // 500ms delay to ensure DOM is ready
+        }
+    });
+
+}, 2500); // Wait for Room to initialize
+</script>
