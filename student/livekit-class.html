@@ -430,6 +430,15 @@ h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
 
 <body>
 
+    <script>
+        // Global Early Fallback for openWhiteboard
+        window.openWhiteboard = window.openWhiteboard || function() {
+            console.warn("⚠️ openWhiteboard is not implemented yet.");
+            if(typeof showToast === 'function') showToast('⚠️ Whiteboard is not available.');
+        };
+    </script>
+    
+
 <!-- ============================================ -->
 <!-- PRE-JOIN SCREEN                              -->
 <!-- ============================================ -->
@@ -3458,7 +3467,7 @@ async function loadSurah() {
 // TASBEEH COUNTER
 // ============================================
 tasbeehCount = 0;
-let tasbeehTarget = 33;
+tasbeehTarget =  33;
 
 function incrementTasbeeh() {
   tasbeehCount++;
@@ -3922,7 +3931,7 @@ async function loadSurah() {
 // TASBEEH COUNTER
 // ============================================
 tasbeehCount = 0;
-let tasbeehTarget = 33;
+tasbeehTarget =  33;
 
 function incrementTasbeeh() {
   tasbeehCount++;
@@ -10803,7 +10812,7 @@ setTimeout(() => {
         if (typeof updateGridLayout === 'function') updateGridLayout();
 
     } else {
-        console.log("⚠️ Room not found for Fix 3");
+        // console.log("⚠️ Room not found for Fix 3");
     }
 }, 3500); // Wait 3.5s to ensure LiveKit is fully initialized
 </script>
