@@ -3123,7 +3123,7 @@ async function loadQibla() {
 }
 
 // Auto-load islamic tools when panel opens
-const originalToggleSidePanel = toggleSidePanel;
+let originalToggleSidePanel = toggleSidePanel;
 toggleSidePanel = function(id) {
   originalToggleSidePanel(id);
   if (id === 'islamicPanel' && document.getElementById('islamicPanel').classList.contains('open')) {
