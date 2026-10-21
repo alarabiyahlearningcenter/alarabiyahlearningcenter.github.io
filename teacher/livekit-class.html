@@ -11208,3 +11208,142 @@ setInterval(() => {
     });
 }, 1500); // Runs every 1.5 seconds
 </script>
+
+<style>
+/* =====================================================================
+   OVERRIDE: FORCE FLOATING SELF-VIEW (LIKE TEACHER)
+   ===================================================================== */
+#localVideoContainer {
+    display: none; /* Hidden by default */
+    position: fixed !important;
+    bottom: 100px !important;
+    right: 15px !important;
+    width: 110px !important;
+    height: 160px !important;
+    z-index: 9999 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
+    border: 2px solid rgba(255,255,255,0.2) !important;
+    background-color: #000 !important;
+    touch-action: none !important;
+    cursor: grab !important;
+}
+
+/* When active, show the floating container */
+body.floating-active #localVideoContainer {
+    display: block !important;
+}
+
+/* Ensure remote video fills the main grid */
+body.floating-active #videoGrid {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+body.floating-active #videoGrid > .video-tile {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// FIX 11: FLOATING DRAGGABLE SELF-VIEW FOR BOTH TEACHER & STUDENT
+// =====================================================================
+setInterval(() => {
+    if (!window.room || !window.room.localParticipant) return;
+
+    const remoteCount = window.room.remoteParticipants.size;
+    const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+    const floatingContainer = document.getElementById('localVideoContainer');
+    const videoGrid = document.getElementById('videoGrid');
+
+    if (!localTile || !floatingContainer || !videoGrid) return;
+
+    if (remoteCount > 0) {
+        // SOMEONE ELSE IS IN THE ROOM -> Move local video to floating box
+        document.body.classList.add('floating-active');
+        videoGrid.className = 'video-grid grid-1'; // Force remote to take full screen
+        
+        if (localTile.parentElement !== floatingContainer) {
+            floatingContainer.appendChild(localTile);
+        }
+    } else {
+        // ALONE IN THE ROOM -> Move local video back to main grid
+        document.body.classList.remove('floating-active');
+        videoGrid.className = 'video-grid grid-1';
+        
+        if (localTile.parentElement !== videoGrid) {
+            videoGrid.appendChild(localTile);
+        }
+    }
+
+    // Ensure local video plays
+    const videoEl = localTile.querySelector('video');
+    if (videoEl && videoEl.paused) {
+        videoEl.play().catch(e => {});
+    }
+
+}, 1000); // Runs every 1 second
+
+// =====================================================================
+// DRAG LOGIC FOR FLOATING SELF-VIEW
+// =====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const container = document.getElementById('localVideoContainer');
+        if (!container) return;
+
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        const startDrag = (e) => {
+            // Ignore if clicking buttons
+            if (e.target.closest('button')) return; 
+            
+            isDragging = true;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const rect = container.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            startX = clientX;
+            startY = clientY;
+
+            container.style.cursor = 'grabbing';
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('touchmove', onDrag, { passive: false });
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+        };
+
+        const onDrag = (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // Prevent scrolling
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            container.style.left = (initialLeft + clientX - startX) + 'px';
+            container.style.top = (initialTop + clientY - startY) + 'px';
+            container.style.bottom = 'auto';
+            container.style.right = 'auto';
+        };
+
+        const stopDrag = () => {
+            isDragging = false;
+            container.style.cursor = 'grab';
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchend', stopDrag);
+        };
+
+        container.addEventListener('mousedown', startDrag);
+        container.addEventListener('touchstart', startDrag, { passive: false });
+    }, 2000);
+});
+</script>
