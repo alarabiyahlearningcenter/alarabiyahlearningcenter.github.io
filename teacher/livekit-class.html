@@ -12070,3 +12070,87 @@ setInterval(() => {
     }
 }, 1000); // Check every 1 second
 </script>
+
+<style>
+/* =====================================================================
+   FINAL CLEAN LAYOUT (NO DOM MOVING - PREVENTS STREAM DROP)
+   ===================================================================== */
+
+/* 1. Hide the old broken floating container */
+#localVideoContainer, .floating-self-view {
+    display: none !important;
+}
+
+/* 2. Setup Grid as a relative container */
+#videoGrid {
+    display: block !important; /* Kills flexbox 50/50 split */
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #000 !important;
+}
+
+/* 3. Make Remote Video (Teacher) Full Screen */
+body.has-remote #videoGrid > .video-tile:not([data-is-local="true"]) {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    z-index: 10 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 4. Make Local Video (Student) a Floating PiP Box */
+body.has-remote #videoGrid > .video-tile[data-is-local="true"] {
+    position: absolute !important;
+    bottom: 90px !important;
+    right: 15px !important;
+    width: 110px !important;
+    height: 160px !important;
+    z-index: 9999 !important;
+    border-radius: 12px !important;
+    border: 2px solid #D4AF37 !important;
+    overflow: hidden !important;
+    background: #000 !important;
+    max-height: 160px !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
+}
+
+/* 5. Ensure videos fit perfectly */
+#videoGrid .video-tile video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// JS: OVERRIDE LAYOUT & TOGGLE CLASS (NO DOM MOVING)
+// =====================================================================
+// 1. Override the old function so it stops adding 'grid-2'
+window.updateGridLayout = function() {
+    // Do absolutely nothing. Let CSS handle everything based on 'has-remote' class.
+};
+
+// 2. Toggle the 'has-remote' class based on participant count
+setInterval(() => {
+    if (!window.room || !window.room.localParticipant) return;
+    
+    if (window.room.remoteParticipants.size > 0) {
+        document.body.classList.add('has-remote');
+    } else {
+        document.body.classList.remove('has-remote');
+    }
+}, 500);
+</script>
