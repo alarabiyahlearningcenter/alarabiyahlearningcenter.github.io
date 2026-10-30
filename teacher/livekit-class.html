@@ -11883,3 +11883,97 @@ setInterval(() => {
     }
 }, 500); // Execute every 0.5 seconds
 </script>
+
+<style>
+/* =====================================================================
+   FIX 19: FORCE VISIBILITY OF FLOATING BOX
+   ===================================================================== */
+#localVideoContainer {
+    position: fixed !important;
+    bottom: 90px !important;
+    right: 15px !important;
+    width: 110px !important;
+    height: 160px !important;
+    z-index: 999999 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
+    border: 2px solid #D4AF37 !important;
+    background: #000 !important;
+    display: none !important; /* Hidden by default */
+}
+
+body.force-floating #localVideoContainer {
+    display: block !important;
+}
+
+#localVideoContainer .video-tile {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    position: relative !important;
+}
+
+#localVideoContainer .video-tile video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// FIX 19: RE-ATTACH VIDEO AND FORCE DISPLAY
+// =====================================================================
+setInterval(() => {
+    if (!window.room || !window.room.localParticipant) return;
+
+    const remoteCount = window.room.remoteParticipants.size;
+    const grid = document.getElementById('videoGrid');
+    const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+    const floatingBox = document.getElementById('localVideoContainer');
+
+    if (!grid || !localTile || !floatingBox) return;
+
+    if (remoteCount > 0) {
+        // 1. Force the body class to show the floating box
+        document.body.classList.add('force-floating');
+
+        // 2. Move local tile to floating box if not there
+        if (localTile.parentElement !== floatingBox) {
+            floatingBox.appendChild(localTile);
+            console.log("✅ Tile moved to floating box.");
+        }
+
+        // 3. Ensure the local video is playing (in case it detached)
+        const videoEl = localTile.querySelector('video');
+        if (videoEl && videoEl.paused) {
+            videoEl.play().catch(e => console.log("Play blocked:", e));
+        }
+
+        // 4. Force inline styles on the floating box to override everything
+        floatingBox.style.setProperty('display', 'block', 'important');
+        floatingBox.style.setProperty('z-index', '999999', 'important');
+        
+        // 5. Make sure the remote video is full screen
+        grid.querySelectorAll('.video-tile').forEach(t => {
+            if (t !== localTile) {
+                t.style.setProperty('position', 'absolute', 'important');
+                t.style.setProperty('width', '100vw', 'important');
+                t.style.setProperty('height', '100%', 'important');
+                t.style.setProperty('z-index', '10', 'important');
+            }
+        });
+
+    } else {
+        // Alone -> Restore normal view
+        document.body.classList.remove('force-floating');
+        if (localTile.parentElement !== grid) {
+            grid.appendChild(localTile);
+        }
+        floatingBox.style.display = 'none';
+    }
+}, 500); // Check every 0.5 seconds
+</script>
