@@ -11740,3 +11740,34 @@ window.updateGridLayout = function() {
 // 3. Force run it every 500ms to ensure it sticks
 setInterval(window.updateGridLayout, 500);
 </script>
+
+<script>
+// =====================================================================
+// FIX 17: A TO Z DOM DIAGNOSTIC LOGGER
+// =====================================================================
+setInterval(() => {
+    if (!window.room || !window.room.localParticipant) return;
+    if (window.room.remoteParticipants.size === 0) return;
+
+    const localId = window.room.localParticipant.identity;
+    const localTile = document.getElementById('tile-' + localId);
+    const grid = document.getElementById('videoGrid');
+    const floatingBox = document.getElementById('localVideoContainer');
+
+    if (!grid || !localTile || !floatingBox) return;
+
+    // Log exactly what is happening
+    console.log("=== A TO Z DOM DIAGNOSTIC ===");
+    console.log("1. VideoGrid Classes:", grid.className);
+    console.log("2. VideoGrid Inline Style:", grid.getAttribute('style'));
+    console.log("3. Local Tile Parent:", localTile.parentElement.id || 'No ID');
+    console.log("4. Local Tile Style:", localTile.getAttribute('style'));
+    console.log("5. Floating Box Display:", floatingBox.style.display);
+    console.log("6. Is updateGridLayout overridden?", window.updateGridLayout.toString().includes('force-floating'));
+    
+    // Force hide the grid-2 class visually just to see if it works
+    if (grid.classList.contains('grid-2')) {
+        console.warn("⚠️ grid-2 is STILL active!");
+    }
+}, 2000); // Logs every 2 seconds
+</script>
