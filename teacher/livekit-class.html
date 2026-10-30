@@ -11347,3 +11347,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
 });
 </script>
+
+<script>
+// =====================================================================
+// FIX 12: OVERRIDE UPDATE GRID LAYOUT TO FORCE FLOATING VIEW
+// =====================================================================
+setTimeout(() => {
+    if (typeof window.updateGridLayout === 'function') {
+        // Save the original function just in case
+        const originalUpdateGridLayout = window.updateGridLayout;
+
+        // Override it with our custom logic
+        window.updateGridLayout = function() {
+            if (!window.room || !window.room.localParticipant) {
+                if (originalUpdateGridLayout) originalUpdateGridLayout();
+                return;
+            }
+
+            const remoteCount = window.room.remoteParticipants.size;
+            const videoGrid = document.getElementById('videoGrid');
+            const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+            const floatingContainer = document.getElementById('localVideoContainer');
+
+            if (!videoGrid || !localTile || !floatingContainer) return;
+
+            if (remoteCount > 0) {
+                // SOMEONE ELSE IS HERE -> Force Floating Mode
+                videoGrid.className = 'video-grid grid-1'; // Keep it single grid for remote
+                document.body.classList.add('floating-active');
+                
+                // Move local video to floating box
+                if (localTile.parentElement !== floatingContainer) {
+                    floatingContainer.appendChild(localTile);
+                }
+            } else {
+                // ALONE -> Restore normal view
+                document.body.classList.remove('floating-active');
+                videoGrid.className = 'video-grid grid-1';
+                
+                if (localTile.parentElement !== videoGrid) {
+                    videoGrid.appendChild(localTile);
+                }
+            }
+        };
+        console.log("✅ updateGridLayout Overridden successfully!");
+    }
+}, 2000); // Wait for the original script to load
+</script>
