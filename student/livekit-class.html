@@ -11641,3 +11641,102 @@ setInterval(() => {
     }
 }, 500); // Check every 0.5 seconds
 </script>
+
+<style>
+/* =====================================================================
+   FIX 16: FORCE FLOATING LAYOUT & OVERRIDE MAX-HEIGHT
+   ===================================================================== */
+/* Kill the 50vh limit */
+.video-tile, .video-tile video {
+    max-height: none !important;
+}
+
+/* Force the remote video to be full screen */
+#videoGrid:not(.grid-1) > .video-tile {
+    width: 100vw !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    border-radius: 0 !important;
+}
+
+/* Force the floating container to work */
+#localVideoContainer {
+    display: none;
+    position: fixed !important;
+    bottom: 90px !important;
+    right: 15px !important;
+    width: 110px !important;
+    height: 160px !important;
+    z-index: 99999 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
+    border: 2px solid #D4AF37 !important;
+    background: #000 !important;
+}
+#localVideoContainer video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+body.force-floating #localVideoContainer {
+    display: block !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// FIX 16: KILL MUTATION OBSERVER & OVERRIDE UPDATE GRID LAYOUT
+// =====================================================================
+console.log("🚀 Applying Final Override...");
+
+// 1. Kill all MutationObservers
+window.MutationObserver = function() {
+    return {
+        observe: function() { console.log("🚫 MutationObserver Blocked!"); },
+        disconnect: function() {}
+    };
+};
+
+// 2. Completely override updateGridLayout
+window.updateGridLayout = function() {
+    if (!window.room || !window.room.localParticipant) return;
+
+    const remoteCount = window.room.remoteParticipants.size;
+    const grid = document.getElementById('videoGrid');
+    const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+    const floatingBox = document.getElementById('localVideoContainer');
+
+    if (!grid || !localTile || !floatingBox) return;
+
+    // Remove grid classes
+    grid.className = 'video-grid';
+
+    if (remoteCount > 0) {
+        // Teacher is here -> Force Floating Mode
+        document.body.classList.add('force-floating');
+        grid.classList.add('grid-1'); // Keep it simple for remote
+        
+        // Move local tile to floating box
+        if (localTile.parentElement !== floatingBox) {
+            floatingBox.appendChild(localTile);
+        }
+    } else {
+        // Alone -> Normal Mode
+        document.body.classList.remove('force-floating');
+        grid.classList.add('grid-1');
+        
+        // Move local tile back to main grid
+        if (localTile.parentElement !== grid) {
+            grid.appendChild(localTile);
+        }
+    }
+};
+
+// 3. Force run it every 500ms to ensure it sticks
+setInterval(window.updateGridLayout, 500);
+</script>
