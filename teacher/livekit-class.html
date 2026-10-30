@@ -11771,3 +11771,115 @@ setInterval(() => {
     }
 }, 2000); // Logs every 2 seconds
 </script>
+
+<style>
+/* =====================================================================
+   FIX 18: EXTREME CSS OVERRIDE
+   ===================================================================== */
+/* Force grid to behave like a block, not flex */
+#videoGrid {
+    display: block !important;
+    position: relative !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+/* Force remote video (Teacher) to fill the screen */
+#videoGrid > .video-tile {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    z-index: 10 !important;
+}
+
+/* Floating self view container */
+#localVideoContainer {
+    display: none;
+    position: fixed !important;
+    bottom: 100px !important;
+    right: 15px !important;
+    width: 110px !important;
+    height: 160px !important;
+    z-index: 99999 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
+    border: 2px solid #D4AF37 !important;
+    background: #000 !important;
+}
+
+/* Force floating local video to fit its box */
+#localVideoContainer > .video-tile {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    position: relative !important;
+}
+#localVideoContainer > .video-tile > video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+</style>
+
+<script>
+// =====================================================================
+// FIX 18: EXTREME JS DOM MOVEMENT
+// =====================================================================
+console.log("🚀 Extreme DOM Fix Loaded");
+
+setInterval(() => {
+    if (!window.room || !window.room.localParticipant) return;
+
+    const remoteCount = window.room.remoteParticipants.size;
+    const grid = document.getElementById('videoGrid');
+    const localTile = document.getElementById('tile-' + window.room.localParticipant.identity);
+    const floatingBox = document.getElementById('localVideoContainer');
+
+    if (!grid || !localTile || !floatingBox) return;
+
+    if (remoteCount > 0) {
+        // 1. Remove inline styles from the grid
+        grid.removeAttribute('style');
+        grid.className = ''; // Remove grid-1, grid-2 etc.
+
+        // 2. Move local tile to floating box
+        if (localTile.parentElement !== floatingBox) {
+            floatingBox.appendChild(localTile);
+            console.log("✅ Local video moved to floating box.");
+        }
+
+        // 3. Remove inline styles from local tile (so CSS takes over)
+        localTile.removeAttribute('style');
+
+        // 4. Show floating box
+        floatingBox.style.display = 'block';
+
+        // 5. Remove inline styles from remote tiles
+        grid.querySelectorAll('.video-tile').forEach(t => {
+            if (t !== localTile) {
+                t.removeAttribute('style');
+            }
+        });
+    } else {
+        // If alone, put local tile back to grid
+        if (localTile.parentElement !== grid) {
+            grid.appendChild(localTile);
+            console.log("✅ Local video moved back to grid.");
+        }
+        floatingBox.style.display = 'none';
+    }
+}, 500); // Execute every 0.5 seconds
+</script>
